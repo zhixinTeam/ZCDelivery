@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="gb2312"?>
+<!--++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+节点: host.param
+*.id: 节点biaoshi
+*.ip,port: 控制器地址
+
+节点: host.lines.item
+*.tunnel: 通道标识
+*.line: 继电器地址
+*.card: LED屏卡的485地址
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-->
+<relays>
+  <host name="散装库(1-2)">
+    <param>
+      <id>Host-1,2</id>
+      <ip>10.30.22.57</ip>
+      <port>8000</port>
+    </param>
+    <lines>
+      <item>
+        <tunnel>FH001</tunnel>
+        <line>0</line>
+        <card>1</card>
+      </item>
+      <item>
+        <tunnel>FH002</tunnel>
+        <line>1</line>
+        <card>2</card>
+      </item>
+    </lines>
+  </host>
+</relays>

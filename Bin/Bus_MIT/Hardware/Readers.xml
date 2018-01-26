@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="gb2312"?>
+<!--++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+节点:config
+*.local_port: udp服务端口
+*.keep_readone: 单刷读头超过间隔未刷卡,清除卡片缓存,单位毫秒
+*.keep_readkeep: 连刷读头超过间隔为刷卡,触发卡号超时,单位毫秒
+*.keep_elabel: 超过间隔时间未刷卡,触发电子签超时,单位秒
+
+节点:readon,readkeep
+*.id: 读卡器标识
+*.ip: 读卡器地址
+*.port: 读卡器端口
+*.tunnel: 所在通道
+*.printer: 绑定打印
+*.type: 读卡器类型,(0.现场;1.进厂;2.出厂)
+*.uselabel: 是否与电子签配对使用(Y/N)
+*.ledtext: LED显示内容
+*.options: 附加参数,Key=Value;Key=Value形式
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-->
+<readers>
+  <config>
+    <local_port>1234</local_port>
+    <keep_readone>6000</keep_readone>
+    <keep_readkeep>2000</keep_readkeep>
+    <keep_elabel>300</keep_elabel>
+  </config>
+  <readone>
+    <item>
+      <id>ZT001</id>
+      <ip>10.30.22.51</ip>
+      <port>8000</port>
+      <tunnel>ZT001</tunnel>
+    </item>
+    <item>
+      <id>ZT002</id>
+      <ip>10.30.22.52</ip>
+      <port>8000</port>
+      <tunnel>ZT002</tunnel>
+    </item>
+    <item>
+      <id>ZT003</id>
+      <ip>10.30.22.53</ip>
+      <port>8000</port>
+      <tunnel>ZT003</tunnel>
+    </item>
+    <item>
+      <id>ZT004</id>
+      <ip>10.30.22.54</ip>
+      <port>8000</port>
+      <tunnel>ZT004</tunnel>
+    </item>
+  </readone>
+  
+  <readkeep>
+    <item>
+      <id>FH001</id>
+      <ip>10.30.22.55</ip>
+      <port>8000</port>
+      <tunnel>FH001</tunnel>
+      <ledtext> 润心固江山  丰业酬永恒 </ledtext>
+    </item>
+    <item>
+      <id>FH002</id>
+      <ip>10.30.22.56</ip>
+      <port>8000</port>
+      <tunnel>FH002</tunnel>
+      <ledtext> 润心固江山  丰业酬永恒 </ledtext>
+    </item>
+  </readkeep>
+</readers>

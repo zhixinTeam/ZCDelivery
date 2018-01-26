@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="gb2312"?>
+<printers>
+  <item>
+    <id>bill</id>
+    <name>交货单打印机</name>
+    <ip>127.0.0.1</ip>
+    <port>8001</port>
+  </item>
+</printers>

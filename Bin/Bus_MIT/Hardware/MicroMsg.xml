@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="gb2312"?>
+<remoteserver>
+  <item>
+    <id>wx01</id>
+    <name>微信业务服务</name>
+    <ip>116.255.152.40</ip>
+    <port>8000</port>
+  </item>
+</remoteserver>

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="gb2312"?>
+<!--++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+节点: config
+*.enable: N,关闭;其它开启.
+*.thread: 线程个数(1-10)
+*.monitor: 负责扫描不活动读头的线程个数,不超过线程总数
+*.cardlen: 卡片号码最小长度,默认检查
+*.cardprefix: 卡片号码前缀,多个时用逗号(,)分割,默认不检查
+
+节点: readers.reader
+*.enable: N,关闭;其它开启.
+*.id: 节点标识
+*.ip,port: 读卡器地址
+*.tunnel: 通道号
+*.virtual: Y,虚拟读头;其它不虚拟
+*.reader: 读头标识
+*.type: 900,900m远距离;02n,现场近距离
+*.printer:打印机
+*.keeponce:同卡号连续刷卡时,卡号有效间隔,单位毫秒.
+*.keeppeer: Y,每keeponce视为一次;N,间隔keeponce刷卡视为一次.
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-->
+<TTCEM100>
+  <config>
+    <enable>Y</enable>
+    <thread>1</thread>
+    <monitor>1</monitor>
+    <cardlen>10</cardlen>
+    <cardprefix>C0F0</cardprefix>
+  </config>
+  <readers>
+    <reader id="OUT001">
+      <enable>Y</enable>
+      <ip>10.30.22.29</ip>
+      <port>8000</port>
+      <tunnel></tunnel>
+      <keeponce keeppeer="Y">5000</keeponce>
+      <virtual reader="10.30.22.92" type="2" printer="TM-U220" hy_printer="HP_M203">Y</virtual>
+    </reader>
+  </readers>
+</TTCEM100>

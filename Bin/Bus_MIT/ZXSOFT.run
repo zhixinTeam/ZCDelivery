@@ -1,0 +1,10 @@
+;Verify:9d88ff3e90311cd3136ebc152be3d16d
+[Config]
+ProgID=HXSOFT
+
+[HXSOFT]
+AppTitle=物流发货
+MainTitle=华新水泥
+HintText=华新水泥股份有限公司
+CopyRight=※.河南志信科技有限公司版权所有
+IconFile=$Path\Icons\Icon.Ini

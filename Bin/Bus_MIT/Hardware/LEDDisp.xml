@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="gb2312"?>
+<cards>
+  <config>
+    <enable>0</enable>
+    <!--开启小屏 1,开启;其它,关闭 -->
+    <default>欢迎光临 今天是: dt wk 当前时间: tm</default>
+    <!--日期dt 星期wk -->
+  </config>
+  <card ID="in" Name="大厅">
+    <ip>127.0.0.1</ip>
+    <port>5000</port>
+    <addr>1</addr>
+    <enable>1</enable>
+  </card>
+  <card ID="out" Name="大厅">
+    <ip>127.0.0.1</ip>
+    <port>5000</port>
+    <addr>1</addr>
+    <enable>1</enable>
+  </card>
+</cards>

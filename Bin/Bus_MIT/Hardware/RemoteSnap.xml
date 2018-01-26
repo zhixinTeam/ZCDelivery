@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="gb2312"?>
+<remotesnap>
+  <item>
+    <id>voice</id>
+    <name>远程抓拍服务</name>
+    <ip>127.0.0.1</ip>
+    <port>8002</port>
+    <enable>1</enable>
+    <!--是否启用 1,启用;其它,关闭 -->
+  </item>
+</remotesnap>

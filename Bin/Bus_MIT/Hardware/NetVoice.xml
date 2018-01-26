@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="gb2312"?>
+<!--++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+节点: card
+*.id,name: 合成卡标识
+*.ip,port: 合成卡地址
+*.enable: 1,启用;其它,关闭
+
+节点: card.contents.content
+*.object: 对象宏定义
+*.sleep: 多对象时,两个对象的间隔
+*.text: 待播发的语音内容
+*.times: 重复播发次数
+*.peerword: 单字时长,单位毫秒
+*.interval: 重发间隔,单位秒
+*.repeat: 单次内容循环次数
+*.reinterval: 单次内容循环间隔,单位毫秒
+
+节点: card.contents.resource
+*.key: 待处理内容
+*.value: 替换内容
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-->
+<netvoice>
+  <card id="zt" name="包装语音">
+    <ip>10.30.22.67</ip>
+    <port>8000</port>
+    <enable>1</enable>
+    <contents>
+        <content id="default">
+            <object>tk</object>
+            <sleep>650</sleep>
+            <text>车辆tk开始装车,请tk准备</text>
+            <peerword>220</peerword>
+            <times>3</times>
+            <interval>180</interval>
+            <repeat>2</repeat>
+            <reinterval>1200</reinterval>
+        </content>
+    </contents>
+    <resource>
+            <res key="藏" value="藏[=zang4]" />
+            <res key="朴" value="朴[=piao2]" />
+    </resource>
+  </card>
+
+  <card id="fh" name="散装语音">
+    <ip>10.30.22.68</ip>
+    <port>8000</port>
+    <enable>1</enable>
+    <contents>
+        <content id="default">
+            <object>tk</object>
+            <sleep>650</sleep>
+            <text>车辆tk开始装车,请tk准备</text>
+            <peerword>220</peerword>
+            <times>3</times>
+            <interval>180</interval>
+            <repeat>2</repeat>
+            <reinterval>1200</reinterval>
+        </content>
+    </contents>
+    <resource>
+            <res key="藏" value="藏[=zang4]" />
+            <res key="朴" value="朴[=piao2]" />
+    </resource>
+  </card>
+
+  <card id="in" name="门岗语音">
+    <ip>10.30.22.69</ip>
+    <port>8000</port>
+    <enable>0</enable>
+    <contents>
+        <content id="default">
+            <object>tk</object>
+            <sleep>650</sleep>
+            <text>请[p500]tk进厂</text>
+            <peerword>220</peerword>
+            <times>1</times>
+            <interval>180</interval>
+            <repeat>2</repeat>
+            <reinterval>1200</reinterval>
+        </content>
+    </contents>
+    <resource>
+            <res key="藏" value="藏[=zang4]" />
+            <res key="朴" value="朴[=piao2]" />
+    </resource>
+  </card>
+</netvoice>

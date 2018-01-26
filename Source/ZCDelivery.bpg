@@ -1,0 +1,29 @@
+#------------------------------------------------------------------------------
+VERSION = BWS.01
+#------------------------------------------------------------------------------
+!ifndef ROOT
+ROOT = $(MAKEDIR)\..
+!endif
+#------------------------------------------------------------------------------
+MAKE = $(ROOT)\bin\make.exe -$(MAKEFLAGS) -f$**
+DCC = $(ROOT)\bin\dcc32.exe $**
+BRCC = $(ROOT)\bin\brcc32.exe $**
+#------------------------------------------------------------------------------
+PROJECTS = Client.exe MIT.exe RemotePrinter.exe Voice.exe
+#------------------------------------------------------------------------------
+default: $(PROJECTS)
+#------------------------------------------------------------------------------
+
+Client.exe: DL_Client\Client.dpr
+  $(DCC)
+
+MIT.exe: Bus_MIT\Main\MIT.dpr
+  $(DCC)
+
+RemotePrinter.exe: DL_Print\RemotePrinter.dpr
+  $(DCC)
+
+Voice.exe: DL_Voice\Voice.dpr
+  $(DCC)
+
+

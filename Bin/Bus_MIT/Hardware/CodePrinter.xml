@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="gb2312"?>
+<!--++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+节点: config
+*.enableprinter: 启用喷码机(1,开启;其它,关闭)
+*.enablejsq: 启用计数器连锁(1,开启;其它,关闭)
+*.response: 应答反馈(1,启用反馈;其它,不启用)
+
+节点: printers->item
+*.driver: 驱动(zero,零点;JY,久易;WSD,威士德;SGB,仕贵宝)
+*.enable: 启用喷码机(1,开启;其它,关闭)
+*.id: 喷码机标识
+*.ip,port: 通讯地址
+*.tunnel: 通道标识
+*.response: 应答反馈(1,启用反馈;其它,不启用)
+*.options: 附加参数,用于特定业务
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-->
+<codeprinter>
+  <config>
+    <enableprinter>1</enableprinter>
+    <enablejsq>1</enablejsq>
+    <response>0</response>
+  </config>
+  <printers>
+    <item id="ZT001">
+      <driver>WSD</driver>
+      <enable>1</enable> 
+      <ip>10.30.22.61</ip>
+      <port>8000</port>
+      <tunnel>ZT001</tunnel>
+    </item>
+    
+    <item id="ZT002">
+      <driver>WSD</driver>
+      <enable>1</enable> 
+      <ip>10.30.22.62</ip>
+      <port>8000</port>
+      <tunnel>ZT002</tunnel>
+    </item>
+    
+    <item id="ZT003">
+      <driver>WSD</driver>
+      <enable>1</enable> 
+      <ip>10.30.22.63</ip>
+      <port>8000</port>
+      <tunnel>ZT003</tunnel>
+    </item>
+    
+    <item id="ZT004">
+      <driver>WSD</driver>
+      <enable>1</enable> 
+      <ip>10.30.22.64</ip>
+      <port>8000</port>
+      <tunnel>ZT004</tunnel>
+    </item>
+  </printers>
+</codeprinter>

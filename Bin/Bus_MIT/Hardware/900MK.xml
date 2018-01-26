@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="gb2312"?>
+<!--++++++++++++++++++++++++++++++++++++
+节点描述:readers.reader
+*.id: 读头标识
+*.pound: 磅站标识
+*.printer: 绑定打印
+*.keeptime: 保持时间
+*.type: 1.进;2.出;3.磅;4.门闸;5.队列门闸
++++++++++++++++++++++++++++++++++++++-->
+<config>
+  <helper>
+    <ip>127.0.0.1</ip>
+    <port>8002</port>
+    <enable>N</enable>
+    <local_udp>5006</local_udp>
+  </helper>
+  <readers>
+    <reader ID="10.30.22.91">
+      <type>1</type>
+      <pound>xx</pound>
+    </reader>
+    <reader ID="10.30.22.92">
+      <type>2</type>
+      <pound>xx</pound>
+      <printer>TM-U220</printer>
+      <options>HYPrinter=HP_M203</options>
+    </reader>
+
+    <reader ID="10.30.22.93">
+      <type>3</type>
+      <pound>XGLL02</pound>
+    </reader>
+    <reader ID="10.30.22.94">
+      <type>3</type>
+      <pound>XGLL02</pound>
+    </reader>
+    <reader ID="10.30.22.95">
+      <type>3</type>
+      <pound>XGLL01</pound>
+    </reader>
+    <reader ID="10.30.22.96">
+      <type>3</type>
+      <pound>XGLL01</pound>
+    </reader>
+  </readers>
+</config>

@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="gb2312"?>
+<cards>
+  <card ID="XGLL01" Name="发货现场" Group="A">
+    <param>
+      <type>5E1</type>
+      <ip>10.30.22.17</ip>
+      <port>5005</port>
+      <width>288</width>
+      <height>192</height>
+      <data_oe>1</data_oe>
+      <enable>Y</enable>
+      <double_paint>1</double_paint>
+    </param>
+    <head_area>
+      <rect L="2" T="0" W="284" H="25" />
+      <text>     香格里拉昆钢鸿达水泥有限公司欢迎您来提货     </text>
+      <fontname>宋体</fontname>
+      <fontsize>17</fontsize>
+      <fontbold>1</fontbold>
+      <fontspeed>5</fontspeed>
+      <fontkeep>0</fontkeep>
+      <fonteffect>4</fonteffect>
+    </head_area>
+    <data_area>
+      <rect L="2" T="25" W="284" H="147" />
+      <colwidth>
+        <w>71</w>
+        <w>71</w>
+        <w>71</w>
+        <w>71</w>
+      </colwidth>
+      <rownum>7</rownum>
+      <rowheight>21</rowheight>
+      <fontname>宋体</fontname>
+      <fontsize>10</fontsize>
+      <fontbold>0</fontbold>
+      <fontspeed>2</fontspeed>
+      <fontkeep>15</fontkeep>
+      <fonteffect>2</fonteffect>
+      <itemnum>4</itemnum>
+      <font_head_size_adjust>3</font_head_size_adjust>
+      <font_head_left_adjust>35</font_head_left_adjust>
+      <font_data_left_adjust>0</font_data_left_adjust>
+    </data_area>
+    <foot_area>
+      <rect L="2" T="172" W="284" H="20" />
+      <text>    ※.请tk进厂提货，提货道号请看大屏幕    </text>
+      <default>    ※.当前日期是: dt    </default>
+      <!--tk:车牌 dt:日期 tm:时间 -->
+      <fontname>宋体</fontname>
+      <fontsize>12</fontsize>
+      <fontbold>0</fontbold>
+      <fontspeed>5</fontspeed>
+      <fontkeep>0</fontkeep>
+      <fonteffect>4</fonteffect>
+    </foot_area>
+  </card>
+</cards>

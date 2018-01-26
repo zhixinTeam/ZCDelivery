@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="gb2312"?>
+<items>
+  <config>
+    <query>1</query>
+    <!--开启查询 1,开启;其它,关闭 -->
+    <count>1</count>
+    <!--开启计数 1,开启;其它,关闭 -->
+    <chain>1</chain>
+    <!--开启计数 1,开启;其它,关闭 -->
+  </config>
+  <item name="11111">
+    <param>
+      <ip>10.30.22.50</ip>
+      <port>8000</port>
+      <addr>1</addr>
+      <linenum>4</linenum>
+    </param>
+    <lines>
+      <line>
+        <id>zt001</id>
+        <name>装车1道</name>
+        <tunnel>1</tunnel>
+        <delay>7</delay>
+      </line>
+      <line>
+        <id>zt002</id>
+        <name>装车2道</name>
+        <tunnel>2</tunnel>
+        <delay>7</delay>
+      </line>
+      <line>
+        <id>zt003</id>
+        <name>装车3道</name>
+        <tunnel>3</tunnel>
+        <delay>7</delay>
+      </line>
+      <line>
+        <id>zt004</id>
+        <name>装车4道</name>
+        <tunnel>4</tunnel>
+        <delay>7</delay>
+      </line>
+    </lines>
+  </item>
+</items>

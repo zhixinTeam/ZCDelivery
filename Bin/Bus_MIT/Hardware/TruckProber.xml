@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="gb2312"?>
+<!--++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+节点: prober
+*.ip,port: 控制器地址
+*.enable: 1为启用
+*.signal_in: 输入信号状态
+*.signal_out: 输出信号状态
+
+节点: prober->tunnels->tunnel
+*.in: 输入通道编号(1-8)
+*.out: 输出通道编号(1-8)
+*.enable: 0为关闭
+*.auto_off: 输出自动关闭
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-->
+<probers>
+  <prober id="N2" name="进厂2#磅">
+    <ip>10.30.22.58</ip>
+    <port>8000</port>
+    <signal_in on="0" off="1" />
+    <signal_out on="1" off="2" />
+    <enable>1</enable>
+    <tunnels>
+      <tunnel id="XGLL02" name="2号磅">
+        <in>1,2</in>
+        <out>1,2</out>
+        <auto_off>15000</auto_off>
+      </tunnel>
+    </tunnels>
+  </prober>
+  
+  <prober id="N1" name="出厂1#磅">
+    <ip>10.30.22.59</ip>
+    <port>8000</port>
+    <signal_in on="0" off="1" />
+    <signal_out on="1" off="2" />
+    <enable>1</enable>
+    <tunnels>
+      <tunnel id="XGLL01" name="1号磅">
+        <in>1,2</in>
+        <out>1,2</out>
+        <auto_off>15000</auto_off>
+      </tunnel>
+    </tunnels>
+  </prober>
+</probers>

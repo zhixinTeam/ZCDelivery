@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="gb2312"?>
+<remotevoice>
+  <item>
+    <id>voice</id>
+    <name>语音合成服务</name>
+    <ip>127.0.0.1</ip>
+    <port>8001</port>
+    <enable>1</enable>
+    <!--是否启用 1,启用;其它,关闭 -->
+  </item>
+  <content>
+    <truck>tk</truck>
+    <sleep>650</sleep>
+    <text>请[p500]tk进厂,提货道号请看大屏幕</text>
+    <times>3</times>
+    <!-- 播发次数 -->
+    <interval>180</interval>
+    <!-- 重发间隔,单位秒 -->
+    <repeat>2</repeat>
+    <!-- 单内容循环 -->
+    <reinterval>1200</reinterval>
+    <!-- 单内容循环间隔 -->
+  </content>
+  <comport>
+    <port>com8</port>
+    <baud>9600</baud>
+    <data_bits>8</data_bits>
+    <stop_bits>1</stop_bits>
+  </comport>
+</remotevoice>
