@@ -381,7 +381,7 @@ begin
 
   FCardUsed := GetCardUsed(nCard);
   if FCardUsed=sFlag_Provide then
-       nRet := False //GetPurchaseOrders(nCard, sFlag_TruckBFP, nBills)
+       nRet := GetPurchaseOrders(nCard, sFlag_TruckBFP, nBills)
   else nRet := GetLadingBills(nCard, sFlag_TruckBFP, nBills);
 
   if (not nRet) or (Length(nBills) < 1) then

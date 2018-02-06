@@ -166,6 +166,9 @@ type
     FHYDan      : string;          //化验单号
     FMemo       : string;          //动作备注
     FWebOrderID : string;          //商城申请单
+    FNeiDao     : string;          //内倒
+    Fexpiretime : string;
+    FCtype      : string;          //卡类型；'L'：临时；'G'：固定
   end;
 
   TLadingBillItems = array of TLadingBillItem;
@@ -336,6 +339,9 @@ begin
         FHYDan   := Values['HYDan'];
         FMemo    := Values['Memo'];
         FWebOrderID := Values['WebOrderID'];
+        FNeiDao  := Values['NeiDao'];
+        Fexpiretime := Values['expiretime'];
+        FCtype := Values['ctype'];
       end;
 
       Inc(nInt);
@@ -419,6 +425,9 @@ begin
              Values['PrintHY'] := sFlag_Yes
         else Values['PrintHY'] := sFlag_No;
         Values['HYDan']    := FHYDan;
+        Values['NeiDao']   := FNeiDao;
+        Values['expiretime'] := Fexpiretime;
+        Values['ctype'] := FCtype;
       end;
 
       nListA.Add(PackerEncodeStr(nListB.Text));

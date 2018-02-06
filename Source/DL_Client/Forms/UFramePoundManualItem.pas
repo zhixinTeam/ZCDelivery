@@ -323,6 +323,10 @@ procedure TfFrameManualPoundItem.LoadBillItems(const nCard: string);
 var nStr,nHint: string;
     nIdx,nInt: Integer;
     nBills: TLadingBillItems;
+    nIsPreTruck:Boolean;
+    nPrePValue: Double;
+    nPrePMan: string;
+    nPrePTime: TDateTime;
 begin
   if nCard = '' then
   begin
@@ -332,27 +336,38 @@ begin
   end;
 
   FCardUsed := GetCardUsed(nCard);
-  if ((FCardUsed=sFlag_Provide)
-      and False) //(not GetPurchaseOrders(nCard, sFlag_TruckBFP, nBills)))
+  if ((FCardUsed=sFlag_Provide) and (not GetPurchaseOrders(nCard, sFlag_TruckBFP, nBills)))
     or
-    ((FCardUsed <> sFlag_Provide)
-      and (not GetLadingBills(nCard, sFlag_TruckBFP, nBills)))
+    ((FCardUsed <> sFlag_Provide) and (not GetLadingBills(nCard, sFlag_TruckBFP, nBills)))
   then
   begin
     SetUIData(True);
     Exit;
   end;
   
+  nIsPreTruck := getPrePInfo(nBills[0].FTruck,nPrePValue,nPrePMan,nPrePTime);
   nHint := '';
   nInt := 0;
 
   for nIdx:=Low(nBills) to High(nBills) do
   with nBills[nIdx] do
   begin
-    if (FStatus <> sFlag_TruckBFP) and (FNextStatus = sFlag_TruckZT) then
-      FNextStatus := sFlag_TruckBFP;
-    //状态校正
-
+    //长期卡+预置皮重
+    if (FCtype=sFlag_CardGuDing) and nIsPreTruck then
+    begin
+      if DateToStr(nPrePTime)<>DateToStr(Date) then
+      begin
+        FNextStatus := sFlag_TruckBFP;
+      end
+      else begin
+        FNextStatus := sFlag_TruckBFM
+      end;
+    end
+    else begin
+      if (FStatus <> sFlag_TruckBFP) and (FNextStatus = sFlag_TruckZT) then
+        FNextStatus := sFlag_TruckBFP;
+      //状态校正
+    end;
     FSelected := (FNextStatus = sFlag_TruckBFP) or
                  (FNextStatus = sFlag_TruckBFM);
     //可称重状态判定
@@ -768,7 +783,7 @@ begin
   end;
 
   if FCardUsed = sFlag_Provide then
-       Result := False //SavePurchaseOrders(nNextStatus, FBillItems,FPoundTunnel)
+       Result := SavePurchaseOrders(nNextStatus, FBillItems,FPoundTunnel)
   else Result := SaveTruckPoundItem(FPoundTunnel, FBillItems);
   //保存称重
 end;
@@ -905,6 +920,7 @@ end;
 procedure TfFrameManualPoundItem.BtnSaveClick(Sender: TObject);
 var nBool: Boolean;
 begin
+  {$IFNDEF DEBUG}
   {$IFDEF MITTruckProber}
   if not IsTunnelOK(FPoundTunnel.FID) then
   {$ELSE}
@@ -914,6 +930,7 @@ begin
     ShowMsg('车辆未站稳,请稍后', sHint);
     Exit;
   end;
+  {$ENDIF}
 
   nBool := False;
   try
@@ -931,10 +948,12 @@ begin
       
       Timer2.Enabled := True;
 
+      {$IFNDEF DEBUG}
       {$IFDEF MITTruckProber}
       TunnelOC(FPoundTunnel.FID, True);
       {$ELSE}
       gProberManager.TunnelOC(FPoundTunnel.FID, True);
+      {$ENDIF}
       {$ENDIF}
 
       //开红绿灯

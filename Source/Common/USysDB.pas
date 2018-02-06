@@ -159,6 +159,7 @@ const
   sFlag_ValidDate     = 'SysValidDate';              //有效期
   sFlag_PrintBill     = 'PrintStockBill';            //需打印订单
   sFlag_NFStock       = 'NoFaHuoStock';              //现场无需发货
+  sFlag_NFPurch       = 'NoFaHuoPurch';              //现场无需发货（原材料）
   sFlag_StockIfYS     = 'StockIfYS';                 //现场是否验收
   sFlag_ViaBillCard   = 'ViaBillCard';               //直接制卡
   sFlag_StrictSanVal  = 'StrictSanVal';              //严格控制散装超发
@@ -287,6 +288,20 @@ const
   sTable_PoundBak     = 'Sys_PoundBak';              //过磅作废
   sTable_Picture      = 'Sys_Picture';               //存放图片
   sTable_PoundDaiWC   = 'Sys_PoundDaiWuCha';         //包装误差
+
+  sFlag_OrderCardL     = 'L';                        //临时
+  sFlag_OrderCardG     = 'G';                        //固定
+
+  sTable_Order         = 'P_Order';                  //采购订单
+  sTable_OrderBak      = 'P_OrderBak';               //已删除采购订单
+  sTable_OrderDtl      = 'P_OrderDtl';               //采购订单明细
+  sTable_OrderDtlBak   = 'P_OrderDtlBak';            //采购订单明细
+  sTable_OrderBase     = 'P_OrderBase';              //采购申请订单
+  sTable_CardOther     = 'S_CardOther';              //临时称重
+  sTable_OrderBaseMain = 'P_OrderBaseMain';          //采购申请订单主表
+
+    sFlag_Order         = 'Bus_Order';                 //采购单号
+    sFlag_OrderDtl      = 'Bus_OrderDtl';              //采购单号
 
   {*新建表*}
   sSQL_NewSysDict = 'Create Table $Table(D_ID $Inc, D_Name varChar(15),' +
@@ -1017,6 +1032,182 @@ const
    *.$ID:信息标识
   -----------------------------------------------------------------------------}
 
+  sSQL_NewOrderBase = 'Create Table $Table(R_ID $Inc, B_ID varChar(20),' +
+       'B_Value $Float, B_SentValue $Float,B_RestValue $Float,' +
+       'B_LimValue $Float, B_WarnValue $Float,B_FreezeValue $Float,' +
+       'B_BStatus Char(1),B_Area varChar(50), B_Project varChar(100),' +
+       'B_ProID varChar(32), B_ProName varChar(80), B_ProPY varChar(80),' +
+       'B_SaleID varChar(32), B_SaleMan varChar(80), B_SalePY varChar(80),' +
+       'B_StockType Char(1), B_StockNo varChar(32), B_StockName varChar(80),' +
+       'B_Man varChar(32), B_Date DateTime, DATAAREAID varChar(3),' +
+       'B_DelMan varChar(32), B_DelDate DateTime, B_Memo varChar(500),'+
+       'B_RecID bigint not null default ((0)), B_Blocked int not null default((0)))';
+  {-----------------------------------------------------------------------------
+   采购申请单表: Order
+   *.R_ID: 编号
+   *.B_ID: 提单号
+   *.B_Value,B_SentValue,B_RestValue:订单量，已发量，剩余量
+   *.B_LimValue,B_WarnValue,B_FreezeValue:订单超发上限;订单预警量,订单冻结量
+   *.B_BStatus: 订单状态
+   *.B_Area,B_Project: 区域,项目
+   *.B_ProID,B_ProName,B_ProPY:供应商
+   *.B_SaleID,B_SaleMan,B_SalePY:业务员
+   *.B_StockType: 类型(袋,散)
+   *.B_StockNo: 原材料编号
+   *.B_StockName: 原材料名称
+   *.B_Man:操作人
+   *.B_Date:创建时间
+   *.B_DelMan: 采购申请单删除人员
+   *.B_DelDate: 采购申请单删除时间
+   *.B_Memo: 动作备注
+   *.B_RecID: 行编码
+   *.B_Blocked: 已停止
+   *.DATAAREAID：账套
+  -----------------------------------------------------------------------------}
+
+    sSQL_NewOrder = 'Create Table $Table(R_ID $Inc, O_ID varChar(20),' +
+       'O_BID varChar(20),O_Card varChar(16), O_CType varChar(1),' +
+       'O_Value $Float,O_OppositeValue $Float,O_Area varChar(50), O_Project varChar(100),' +
+       'O_ProID varChar(32), O_ProName varChar(80), O_ProPY varChar(80),' +
+       'O_SaleID varChar(32), O_SaleMan varChar(80), O_SalePY varChar(80),' +
+       'O_Type Char(1), O_StockNo varChar(32), O_StockName varChar(80),' +
+       'O_Truck varChar(15), O_OStatus Char(1),' +
+       'O_Man varChar(32), O_Date DateTime,' +
+       'O_DelMan varChar(32), O_DelDate DateTime, O_Memo varChar(500),'+
+       'O_BRecID bigint not null default ((0)),O_IfNeiDao Char(1),O_YSTDno varchar(32),O_expiretime DateTime)';
+  {-----------------------------------------------------------------------------
+   采购订单表: Order
+   *.R_ID: 编号
+   *.O_ID: 提单号
+   *.O_BID: 采购申请单据号
+   *.O_Card,O_CType: 磁卡号,磁卡类型(L、临时卡;G、固定卡)
+   *.O_Value:订单量，
+   *.O_OppositeValue:对方交货量
+   *.O_OStatus: 订单状态
+   *.O_Area,O_Project: 区域,项目
+   *.O_ProID,O_ProName,O_ProPY:供应商
+   *.O_SaleID,O_SaleMan:业务员
+   *.O_Type: 类型(袋,散)
+   *.O_StockNo: 原材料编号
+   *.O_StockName: 原材料名称
+   *.O_Truck: 车船号
+   *.O_Man:操作人
+   *.O_Date:创建时间
+   *.O_DelMan: 采购单删除人员
+   *.O_DelDate: 采购单删除时间
+   *.O_Memo: 动作备注
+   *.O_BRecID: 行编码
+   *.O_IfNeiDao: 内倒（Y: 是  N: 否）
+   *.O_YSTDno:验收通道号
+   *.O_expiretime:过期时间（针对长期卡有效）
+  -----------------------------------------------------------------------------}
+
+  sSQL_NewOrderDtl = 'Create Table $Table(R_ID $Inc, D_ID varChar(20),' +
+       'D_OID varChar(20), D_PID varChar(20), D_Card varChar(16), ' +
+       'D_Area varChar(50), D_Project varChar(100),D_Truck varChar(15), ' +
+       'D_ProID varChar(32), D_ProName varChar(80), D_ProPY varChar(80),' +
+       'D_SaleID varChar(32), D_SaleMan varChar(80), D_SalePY varChar(80),' +
+       'D_Type Char(1), D_StockNo varChar(32), D_StockName varChar(80),' +
+       'D_DStatus Char(1), D_Status Char(1), D_NextStatus Char(1),' +
+       'D_InTime DateTime, D_InMan varChar(32),' +
+       'D_PValue $Float, D_PDate DateTime, D_PMan varChar(32),' +
+       'D_MValue $Float, D_MDate DateTime, D_MMan varChar(32),' +
+       'D_YTime DateTime, D_YMan varChar(32), ' +
+       'D_Value $Float,D_KZValue $Float, D_AKValue $Float,' +
+       'D_YLine varChar(15), D_YLineName varChar(32), ' +
+       'D_DelMan varChar(32), D_DelDate DateTime, D_YSResult Char(1), ' +
+       'D_OutFact DateTime, D_OutMan varChar(32), D_Memo varChar(500),'+
+       'D_BDAX Char(1) not null default((0)),D_BDNUM int not null default((0)),'+
+       'D_RecID bigint not null default ((0)))';
+  {-----------------------------------------------------------------------------
+   采购订单明细表: OrderDetail
+   *.R_ID: 编号
+   *.D_ID: 采购明细号
+   *.D_OID: 采购单号
+   *.D_PID: 磅单号
+   *.D_Card: 采购磁卡号
+   *.D_DStatus: 订单状态
+   *.D_Area,D_Project: 区域,项目
+   *.D_ProID,D_ProName,D_ProPY:供应商
+   *.D_SaleID,D_SaleMan:业务员
+   *.D_Type: 类型(袋,散)
+   *.D_StockNo: 原材料编号
+   *.D_StockName: 原材料名称
+   *.D_Truck: 车船号
+   *.D_Status,D_NextStatus: 状态
+   *.D_InTime,D_InMan: 进厂放行
+   *.D_PValue,D_PDate,D_PMan: 称皮重
+   *.D_MValue,D_MDate,D_MMan: 称毛重
+   *.D_YTime,D_YMan: 收货时间,验收人,
+   *.D_Value,D_KZValue,D_AKValue: 收货量,验收扣除(明扣),暗扣
+   *.D_YLine,D_YLineName: 收货通道
+   *.D_YSResult: 验收结果
+   *.D_OutFact,D_OutMan: 出厂放行
+   *.D_BDAX: 是否上传
+   *.D_BDNUM: 上传次数
+   *.D_RecID: 订单行编码
+  -----------------------------------------------------------------------------}
+
+  sSQL_NewCardOther = 'Create Table $Table(R_ID $Inc, O_Card varChar(16),' +
+       'O_Truck varChar(15), O_CusID varChar(32), O_CusName varChar(80),' +
+       'O_MID varChar(32), O_MName varChar(80), ' +
+       'O_MType varChar(10), O_LimVal $Float, ' +
+       'O_Status Char(1), O_NextStatus Char(1),' +
+       'O_InTime DateTime, O_InMan varChar(32),' +
+       'O_OutTime DateTime, O_OutMan varChar(32),' +
+       'O_BFPTime DateTime, O_BFPMan varChar(32), O_BFPValue $Float Default 0,' +
+       'O_BFMTime DateTime, O_BFMMan varChar(32), O_BFMValue $Float Default 0,' +
+       'O_KeepCard varChar(1), O_Man varChar(32), O_Date DateTime,' +
+       'O_UsePValue Char(1) Default ''N'', O_OneDoor Char(1) Default ''N'', ' +
+       'O_ManDel varChar(32), O_DateDel DateTime,O_YSTDno varchar(32))';
+  {-----------------------------------------------------------------------------
+   临时磁卡:CardOther
+   *.R_ID:记录编号
+   *.O_Card:卡号
+   *.O_Truck: 车辆
+   *.O_CusID,O_CusName:供应商
+   *.O_MID,O_MName:物料
+   *.O_MType:包,散等
+   *.O_LimVal:票重
+   *.O_Status,O_NextStatus: 行车状态
+   *.O_InTime,O_InMan:进厂时间,放行人
+   *.O_OutTime,O_OutMan:出厂时间,放行人
+   *.O_BFPTime,O_BFPMan,T_BFPValue:皮重时间,操作人,皮重
+   *.O_BFMTime,O_BFMMan,T_BFMValue:毛重时间,操作人,毛重
+   *.O_KeepCard: 司机卡(Y/N),出厂时不清理
+   *.O_Man,O_Date:制卡人
+   *.O_UsePValue: 以空车为皮重
+   *.O_OneDoor: 单向过磅
+   *.O_ManDel,O_DateDel: 删除人
+   *.O_YSTDno: 验收通道编号
+  -----------------------------------------------------------------------------}
+
+  sSQL_NewOrdBaseMain = 'Create Table $Table(R_ID $Inc, M_ID varChar(20),' +
+       'M_CID varChar(50), M_BStatus Char(1), ' +
+       'M_ProID varChar(32), M_ProName varChar(80), M_ProPY varChar(80),' +
+       'M_TriangleTrade Char(1), M_IntComOriSalesId varChar(20), M_PurchType Char(1),' +
+       'M_Man varChar(32), M_Date DateTime, ' +
+       'M_DelMan varChar(32), M_DelDate DateTime, M_Memo varChar(500),'+
+       'DATAAREAID varChar(3),M_DState varChar(10))';
+  {-----------------------------------------------------------------------------
+   采购申请单主表: OrderBaseMain
+   *.R_ID: 编号
+   *.M_ID: 申请单号
+   *.M_CID: 合同号
+   *.M_BStatus: 订单状态
+   *.M_ProID,M_ProName,M_ProPY:供应商
+   *.M_TriangleTrade: 三角贸易
+   *.M_IntComOriSalesId：销售订单号（内部采购或三角贸易使用）
+   *.M_PurchType: 采购类型
+   *.M_Man:操作人
+   *.M_Date:创建时间
+   *.M_DelMan: 采购申请单删除人员
+   *.M_DelDate: 采购申请单删除时间
+   *.M_Memo: 动作备注
+   *.DATAAREAID：账套
+   *.M_DState: 审核状态(30,40有效) 0  草稿 10 正在审核 20 已拒绝  30 已批准 35 正在进行外部审查 50 定案 40 已确认
+  -----------------------------------------------------------------------------}
+
 function CardStatusToStr(const nStatus: string): string;
 //磁卡状态
 function TruckStatusToStr(const nStatus: string): string;
@@ -1122,6 +1313,14 @@ begin
   AddSysTableItem(sTable_StockHuaYan, sSQL_NewStockHuaYan);
   AddSysTableItem(sTable_StockBatcode, sSQL_NewStockBatcode);
   AddSysTableItem(sTable_BatRecord, sSQL_NewBatRecord);
+
+  AddSysTableItem(sTable_Order, sSQL_NewOrder);
+  AddSysTableItem(sTable_OrderBak, sSQL_NewOrder);
+  AddSysTableItem(sTable_OrderDtl, sSQL_NewOrderDtl);
+  AddSysTableItem(sTable_OrderDtlBak, sSQL_NewOrderDtl);
+  AddSysTableItem(sTable_OrderBase, sSQL_NewOrderBase);
+  AddSysTableItem(sTable_CardOther, sSQL_NewCardOther);
+  AddSysTableItem(sTable_OrderBaseMain, sSQL_NewOrdBaseMain);
 end;
 
 //Desc: 清理系统表

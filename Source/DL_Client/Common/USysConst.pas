@@ -50,6 +50,13 @@ const
 
   cFI_FrameProvider     = $0061;                     //供应
   cFI_FrameMaterails    = $0062;                     //原材料
+  cFI_FrameMakeOCard    = $0064;                     //办理采购磁卡
+  cFI_FrameOrder        = $0107;                     //采购订单
+  cFI_FrameOrderDetail  = $0109;                     //采购明细
+  cFI_FrameQPoundTemp   = $1112;                      //临时称重
+  CFI_FormMakeCardOther = $1113;                     //临时称重业务
+  cFI_FormGetPOrderBase = $1156;                     //采购订单
+  cFI_FormPurchase      = $1155;                     //采购验收  
 
   cFI_FrameTrucks       = $0070;                     //车辆档案
   cFI_FrameUnloading    = $0071;                     //卸货地点
@@ -109,6 +116,8 @@ const
   cFI_FormWXSendlog     = $1073;                     //微信日志
   cFI_FormTodo          = $1074;                     //需干预事件
   cFI_FormTodoSend      = $1075;                     //推送事件
+
+  cFI_FormOrder         = $1083;                     //采购订单
 
   {*Command*}
   cCmd_RefreshData      = $0002;                     //刷新数据
@@ -314,6 +323,11 @@ begin
 
   AddMenuModuleItem('MAIN_M01', cFI_FrameProvider);
   AddMenuModuleItem('MAIN_M02', cFI_FrameMaterails);
+  AddMenuModuleItem('MAIN_M03', cFI_FrameMakeOCard); 
+  AddMenuModuleItem('MAIN_M04', cFI_FrameOrder);
+  AddMenuModuleItem('MAIN_M08', cFI_FrameOrderDetail);
+  AddMenuModuleItem('MAIN_M13', cFI_FrameQPoundTemp);  
+  AddMenuModuleItem('MAIN_F05', cFI_FormPurchase,mtForm);
 
   AddMenuModuleItem('MAIN_W01', cFI_FrameWXAccount);
   AddMenuModuleItem('MAIN_W02', cFI_FrameWXSendLog);

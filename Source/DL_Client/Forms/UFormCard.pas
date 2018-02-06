@@ -222,7 +222,7 @@ begin
   end;
 
   if FParam.FParamC = sFlag_Provide then
-       nRet := False //SaveOrderCard(EditBill.Text, EditCard.Text)
+       nRet := SaveOrderCard(EditBill.Text, EditCard.Text)
   else nRet := SaveBillCard(EditBill.Text, EditCard.Text);
 
   if nRet then

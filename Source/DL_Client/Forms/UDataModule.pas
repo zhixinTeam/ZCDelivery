@@ -12,7 +12,7 @@ uses
   dxPrnPg, ULibFun, dxWrap, dxPrnDev, dxPSCompsProvider, dxPSFillPatterns,
   dxPSEdgePatterns, cxLookAndFeels, dxPSCore, dxPScxCommon, dxPScxGrid6Lnk,
   XPMan, dxLayoutLookAndFeels, cxEdit, ImgList, Controls, cxGraphics, DB,
-  ADODB, dxBkgnd, dxPSPDFExportCore, dxPSPDFExport, cxDrawTextUtils,
+  ADODB, dxBkgnd, cxDrawTextUtils,
   dxPSPrVwStd, dxPScxEditorProducers, dxPScxExtEditorProducers,
   dxPScxPageControlProducer;
 

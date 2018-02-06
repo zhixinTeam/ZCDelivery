@@ -75,7 +75,7 @@ begin
 
     gCardUsed := GetCardUsed(nStr);
     if gCardUsed = sFlag_Provide then
-         nRet := False //GetPurchaseOrders(nStr, sFlag_TruckIn, gBills)
+         nRet := GetPurchaseOrders(nStr, sFlag_TruckIn, gBills)
     else nRet := GetLadingBills(nStr, sFlag_TruckIn, gBills);
 
     if nRet and (Length(gBills)>0) then Break;
@@ -216,7 +216,7 @@ procedure TfFormTruckIn.BtnOKClick(Sender: TObject);
 var nRet: Boolean;
 begin
   if (gCardUsed = sFlag_Provide) then
-       nRet := False //SavePurchaseOrders(sFlag_TruckIn, gBills)
+       nRet := SavePurchaseOrders(sFlag_TruckIn, gBills)
   else nRet := SaveLadingBills(sFlag_TruckIn, gBills);
 
   if nRet then

@@ -428,8 +428,8 @@ begin
   try
     nWebOrderId := '';
     //查询网上商城订单
-    nSql := 'select WOM_WebOrderID from %s where WOM_LID=''%s''';
-    nSql := Format(nSql,[sTable_WebOrderMatch,nLId]);
+//    nSql := 'select WOM_WebOrderID from %s where WOM_LID=''%s''';
+//    nSql := Format(nSql,[sTable_WebOrderMatch,nLId]);
     with FDM.QueryTemp(nSql) do
     begin
       if recordcount>0 then

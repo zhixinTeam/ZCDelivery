@@ -22,7 +22,10 @@ uses
   UFormCard, UFrameBillCard, UFormTruckIn, UFrameTruckQuery,UFrameQueryDiapatch,
   UFramePoundAuto, UFramePoundManual, UFramePoundQuery, UFrameZTDispatch,
   UFormLadingDai, UFormLadingSan, UFormTruckOut,
-  UFrameQuerySaleDetail, UFrameQuerySaleTotal;
+  UFrameQuerySaleDetail, UFrameQuerySaleTotal,
+
+  UFrameOrderCard,UFramePurchaseOrder,UFrameOrderDetail,UFrameOtherCard,
+  UFormCardOther,UFormPurchaseOrder,UFormGetPOrderBase,UFormPurchasing;
   //for sale
 
 procedure InitSystemObject;
