@@ -156,5 +156,12 @@ inherited fFrameTrucks: TfFrameTrucks
       Caption = 'b.'#20851#38381
       OnClick = VIP2Click
     end
+    object N1: TMenuItem
+      Caption = '-'
+    end
+    object N10: TMenuItem
+      Caption = #28165#38500#25152#26377#39044#32622#30382#37325
+      OnClick = N10Click
+    end
   end
 end

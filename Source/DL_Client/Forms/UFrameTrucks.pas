@@ -34,6 +34,8 @@ type
     N8: TMenuItem;
     N9: TMenuItem;
     VIP3: TMenuItem;
+    N1: TMenuItem;
+    N10: TMenuItem;
     procedure EditNamePropertiesButtonClick(Sender: TObject;
       AButtonIndex: Integer);
     procedure BtnAddClick(Sender: TObject);
@@ -47,8 +49,10 @@ type
     procedure VIP1Click(Sender: TObject);
     procedure VIP2Click(Sender: TObject);
     procedure N8Click(Sender: TObject);
+    procedure N10Click(Sender: TObject);
   private
     { Private declarations }
+    procedure WriteSysLog(const nID:string);
   protected
     function InitFormDataSQL(const nWhere: string): string; override;
     {*查询SQL*}
@@ -280,6 +284,24 @@ begin
 
     InitFormData(FWhere);
   end;
+end;
+
+procedure TfFrameTrucks.N10Click(Sender: TObject);
+var
+  nStr: string;
+begin
+  nStr := '清除后不可恢复，确定要清除所有预置皮重吗?';
+  if not QueryDlg(nStr, sAsk) then Exit;
+  nStr := 'Update %s Set T_PrePValue=0,T_PrePMan=null,T_PrePTime=0 Where T_PrePUse=''%s''';
+  nStr := Format(nStr, [sTable_Truck,sFlag_Yes]);
+  FDM.ExecuteSQL(nStr);
+  WriteSysLog('清除所有预置皮重成功');
+  ShowDlg('清除所有预置皮重成功', sHint);
+end;
+
+procedure TfFrameTrucks.WriteSysLog(const nID: string);
+begin
+  FDM.WriteSysLog(sFlag_TruckItem, 'UFrameTrucks',nID);
 end;
 
 initialization

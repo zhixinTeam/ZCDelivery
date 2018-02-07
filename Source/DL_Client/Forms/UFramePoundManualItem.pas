@@ -355,12 +355,23 @@ begin
     //长期卡+预置皮重
     if (FCtype=sFlag_CardGuDing) and nIsPreTruck then
     begin
-      if DateToStr(nPrePTime)<>DateToStr(Date) then
+      //皮重过期或皮重为0，则重新保存皮重
+      if (DateToStr(nPrePTime)<>DateToStr(Date)) or (nPrePValue<0.00001) then
       begin
+        FStatus := sFlag_TruckIn;
         FNextStatus := sFlag_TruckBFP;
+        FillChar(FPData, SizeOf(FPData), 0);
+        FillChar(FMData, SizeOf(FMData), 0);
       end
+      //皮重有效，保存毛重
       else begin
-        FNextStatus := sFlag_TruckBFM
+        FNextStatus := sFlag_TruckBFM;
+        with nBills[0] do
+        begin
+          FPData.FValue := nPrePValue;
+          FPData.FOperator := nPrePMan;
+          FPData.FDate := nPrePTime;
+        end;
       end;
     end
     else begin

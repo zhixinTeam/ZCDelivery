@@ -222,8 +222,10 @@ begin
   Timer2.Tag := 0;
   Timer2.Enabled := False;
 
+  {$IFNDEF DEBUG}
   {$IFNDEF MITTruckProber}
   gProberManager.TunnelOC(FPoundTunnel.FID,False);
+  {$ENDIF}
   {$ENDIF}
 end;
 
@@ -375,6 +377,10 @@ var nRet: Boolean;
     nIdx,nInt: Integer;
     nBills: TLadingBillItems;
     nStr,nHint, nVoice: string;
+    nIsPreTruck:Boolean;
+    nPrePValue: Double;
+    nPrePMan: string;
+    nPrePTime: TDateTime;
 begin
   nStr := Format('读取到卡号[ %s ],开始执行业务.', [nCard]);
   WriteLog(nStr);
@@ -393,14 +399,35 @@ begin
     SetUIData(True);
     Exit;
   end;
-  
+
+  nIsPreTruck := getPrePInfo(nBills[0].FTruck,nPrePValue,nPrePMan,nPrePTime);
   nHint := '';
   nInt := 0;
 
   for nIdx:=Low(nBills) to High(nBills) do
   with nBills[nIdx] do
   begin
-    if (FStatus <> sFlag_TruckBFP) and (FNextStatus = sFlag_TruckZT) then
+    //长期卡+预置皮重
+    if (FCtype=sFlag_CardGuDing) and nIsPreTruck then
+    begin
+      if DateToStr(nPrePTime)<>DateToStr(Date) then
+      begin
+        FStatus := sFlag_TruckIn;
+        FNextStatus := sFlag_TruckBFP;
+        FillChar(FPData, SizeOf(FPData), 0);
+        FillChar(FMData, SizeOf(FMData), 0);
+      end
+      else begin
+        FNextStatus := sFlag_TruckBFM;
+        with nBills[0] do
+        begin
+          FPData.FValue := nPrePValue;
+          FPData.FOperator := nPrePMan;
+          FPData.FDate := nPrePTime;
+        end;
+      end;
+    end
+    else if (FStatus <> sFlag_TruckBFP) and (FNextStatus = sFlag_TruckZT) then
       FNextStatus := sFlag_TruckBFP;
     //状态校正
 
@@ -820,7 +847,7 @@ begin
     else FMData.FStation := FPoundTunnel.FID;
   end;
 
-  Result := False; //SavePurchaseOrders(nNextStatus, FBillItems,FPoundTunnel)
+  Result := SavePurchaseOrders(nNextStatus, FBillItems,FPoundTunnel)
   //保存称重
 end;
 
@@ -929,6 +956,7 @@ begin
   SetUIData(False);
   //更新界面
 
+  {$IFNDEF DEBUG}
   {$IFDEF MITTruckProber}
   if not IsTunnelOK(FPoundTunnel.FID) then
   {$ELSE}
@@ -942,6 +970,7 @@ begin
     InitSamples;
     Exit;
   end;
+  {$ENDIF}
 
   FIsSaving := True;
   if FCardUsed = sFlag_Provide then
@@ -999,12 +1028,14 @@ begin
       FIsWeighting := False;
     //磅上无道闸时，即时过磅完毕
 
+    {$IFNDEF DEBUG}
     {$IFDEF MITTruckProber}
     TunnelOC(FPoundTunnel.FID, True);
     {$ELSE}
     gProberManager.TunnelOC(FPoundTunnel.FID, True);
     {$ENDIF} //开红绿灯
-
+    {$ENDIF}
+    
     Timer2.Enabled := True;
     SetUIData(True);
   except

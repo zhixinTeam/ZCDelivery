@@ -1837,14 +1837,65 @@ begin
       nStr := SF('P_Order', FID);
       //where
       nNextStatus := sFlag_TruckOut;
-      //长期卡+预置皮重，下移状态为毛重
+      //长期卡+预置皮重，下一状态为毛重
       if (FCtype=sFlag_CardGuDing) and nIsPreTruck then
       begin
         nNextStatus := sFlag_TruckBFM;
       end;
 
       nVal := FMData.FValue - FPData.FValue;
-      if FNextStatus = sFlag_TruckBFP then
+      if (FStatus=sFlag_TruckBFM) and (FNextStatus=sFlag_TruckBFM) then
+      begin
+        FListC.Clear;
+        FListC.Values['Group'] := sFlag_BusGroup;
+        FListC.Values['Object'] := sFlag_PoundID;
+
+        if not TWorkerBusinessCommander.CallMe(cBC_GetSerialNO,
+                FListC.Text, sFlag_Yes, @nOut) then
+          raise Exception.Create(nOut.FData);
+        FOut.FData := nOut.FData;
+
+        nSQL := MakeSQLByStr([
+            SF('P_ID', nOut.FData),
+            SF('P_Type', sFlag_Provide),
+            SF('P_Order', FID),
+            SF('P_Truck', FTruck),
+            SF('P_CusID', FCusID),
+            SF('P_CusName', FCusName),
+            SF('P_MID', FStockNo),
+            SF('P_MName', FStockName),
+            SF('P_MType', FType),
+            SF('P_LimValue', 0),
+            SF('P_PValue', FPData.FValue, sfVal),
+            SF('P_PDate', FPData.FDate, sfDateTime),
+            SF('P_PMan', FPData.FOperator),
+            SF('P_MValue', FMData.FValue, sfVal),
+            SF('P_MDate', sField_SQLServer_Now, sfVal),
+            SF('P_MMan', FIn.FBase.FFrom.FUser),
+            SF('P_FactID', FFactory),
+            SF('P_PStation', FPData.FStation),
+            SF('P_Direction', '进厂'),
+            SF('P_PModel', FPModel),
+            SF('P_Status', sFlag_TruckBFP),
+            SF('P_Valid', sFlag_Yes),
+            SF('P_PrintNum', 1, sfVal)
+            ], sTable_PoundLog, '', True);
+        FListA.Add(nSQL);
+
+        nSQL := MakeSQLByStr([
+              SF('D_Status', FStatus),
+              SF('D_NextStatus', FNextStatus),
+              SF('D_PValue', FPData.FValue, sfVal),
+              SF('D_PDate', FPData.FDate, sfDateTime),
+              SF('D_PMan', FPData.FOperator),
+
+              SF('D_MValue', FMData.FValue, sfVal),
+              SF('D_MDate', sField_SQLServer_Now, sfVal),
+              SF('D_MMan', FIn.FBase.FFrom.FUser)
+              ], sTable_OrderDtl, SF('D_ID', FID), False);
+        FListA.Add(nSQL);
+      end
+      else if FNextStatus = sFlag_TruckBFP then
       begin
         nSQL := MakeSQLByStr([
                 SF('P_PValue', FPData.FValue, sfVal),
