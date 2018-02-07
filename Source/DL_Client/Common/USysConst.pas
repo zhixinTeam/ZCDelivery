@@ -47,6 +47,7 @@ const
   cFI_FrameDispatchQuery = $0051;                    //调度查询
   cFI_FrameSaleTotalQuery  = $0052;                  //累计发货
   cFI_FrameSaleDetailQuery = $0053;                  //发货明细
+  cFI_FrameOrderDetailQuery = $0057;                 //采购明细
 
   cFI_FrameProvider     = $0061;                     //供应
   cFI_FrameMaterails    = $0062;                     //原材料
@@ -314,6 +315,7 @@ begin
   AddMenuModuleItem('MAIN_L05', cFI_FrameDispatchQuery);
   AddMenuModuleItem('MAIN_L06', cFI_FrameSaleDetailQuery);
   AddMenuModuleItem('MAIN_L07', cFI_FrameSaleTotalQuery);
+  AddMenuModuleItem('MAIN_L10', cFI_FrameOrderDetailQuery);
 
   AddMenuModuleItem('MAIN_H01', cFI_FormTruckIn, mtForm);
   AddMenuModuleItem('MAIN_H02', cFI_FormTruckOut, mtForm);

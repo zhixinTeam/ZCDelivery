@@ -236,6 +236,13 @@ function SavePurchaseOrders(const nPost: string; const nData: TLadingBillItems;
 procedure LoadOrderItemToMC(const nItem: TLadingBillItem; const nMC: TStrings;
  const nDelimiter: string);
 
+function SyncPProvider(const nProID: string): Boolean;
+//同步ERP采购供应商
+function GetHhOrderPlan(const nStr: string): string;
+//获取ERP进厂计划
+function SyncHhOrderData(const nDID: string): Boolean;
+//同步ERP采购磅单
+
 implementation
 
 //Desc: 记录日志
@@ -1969,12 +1976,41 @@ begin
 
     Add(Format('品种类型:%s %s', [nDelimiter, nStr]));
     Add(Format('品种名称:%s %s', [nDelimiter, FStockName]));
-    
+
     Add(Format('%s ', [nDelimiter]));
     Add(Format('送货磁卡:%s %s', [nDelimiter, FCard]));
     Add(Format('单据类型:%s %s', [nDelimiter, BillTypeToStr(FIsVIP)]));
     Add(Format('供 应 商:%s %s', [nDelimiter, FCusName]));
   end;
+end;
+
+//Date: 2018-02-06
+//Parm: 供应商ID
+//Desc: 同步ERP采购供应商
+function SyncPProvider(const nProID: string): Boolean;
+var nOut: TWorkerBusinessCommand;
+begin
+  Result := CallBusinessCommand(cBC_SyncHhProvider, nProID, '', @nOut);
+end;
+
+//Date: 2018-02-06
+//Parm: 供应商,物料,计划年月
+//Desc: 获取ERP进厂计划
+function GetHhOrderPlan(const nStr: string): string;
+var nOut: TWorkerBusinessCommand;
+begin
+  if CallBusinessCommand(cBC_GetHhOrderPlan, nStr, '', @nOut) then
+    Result := nOut.FData
+  else Result := '';
+end;
+
+//Date: 2018-02-06
+//Parm: 采购明细ID
+//Desc: 同步ERP采购磅单
+function SyncHhOrderData(const nDID: string): Boolean;
+var nOut: TWorkerBusinessCommand;
+begin
+  Result := CallBusinessCommand(cBC_SyncHhOrderPoundData, nDID, '', @nOut);
 end;
 
 end.

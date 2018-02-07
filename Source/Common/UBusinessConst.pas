@@ -78,6 +78,13 @@ const
 
   cBC_VerifySnapTruck         = $0081;   //车牌比对
 
+  cBC_SyncHhSaleMateriel      = $0091;   //同步销售物料
+  cBC_SyncHhProvideMateriel   = $0092;   //同步采购物料
+  cBC_SyncHhCustomer          = $0093;   //同步销售客户
+  cBC_SyncHhProvider          = $0094;   //同步采购供应商
+  cBC_GetHhOrderPlan          = $0095;   //获取采购进厂计划
+  cBC_SyncHhOrderPoundData    = $0096;   //上传采购磅单
+
   cBC_WX_VerifPrintCode       = $0501;   //微信：验证喷码信息
   cBC_WX_WaitingForloading    = $0502;   //微信：工厂待装查询
   cBC_WX_BillSurplusTonnage   = $0503;   //微信：网上订单可下单数量查询

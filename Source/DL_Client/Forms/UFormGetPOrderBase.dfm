@@ -17,12 +17,12 @@ inherited fFormGetPOrderBase: TfFormGetPOrderBase
       Left = 468
       Top = 313
       Caption = #30830#23450
-      TabOrder = 4
+      TabOrder = 5
     end
     inherited BtnExit: TButton
       Left = 538
       Top = 313
-      TabOrder = 5
+      TabOrder = 6
     end
     object EditProvider: TcxButtonEdit [2]
       Left = 81
@@ -43,7 +43,7 @@ inherited fFormGetPOrderBase: TfFormGetPOrderBase
     end
     object ListQuery: TcxListView [3]
       Left = 23
-      Top = 107
+      Top = 132
       Width = 417
       Height = 145
       Columns = <
@@ -79,14 +79,14 @@ inherited fFormGetPOrderBase: TfFormGetPOrderBase
       RowSelect = True
       SmallImages = FDM.ImageBar
       Style.Edges = [bLeft, bTop, bRight, bBottom]
-      TabOrder = 3
+      TabOrder = 4
       ViewStyle = vsReport
       OnDblClick = ListQueryDblClick
       OnKeyPress = ListQueryKeyPress
     end
     object cxLabel1: TcxLabel [4]
       Left = 23
-      Top = 86
+      Top = 111
       Caption = #26597#35810#32467#26524':'
       ParentFont = False
       Transparent = True
@@ -107,6 +107,15 @@ inherited fFormGetPOrderBase: TfFormGetPOrderBase
       TabOrder = 1
       Width = 121
     end
+    object EditYear: TcxComboBox [6]
+      Left = 81
+      Top = 86
+      ParentFont = False
+      Style.BorderStyle = ebsSingle
+      Style.ButtonStyle = btsHotFlat
+      TabOrder = 2
+      Width = 121
+    end
     inherited dxLayout1Group_Root: TdxLayoutGroup
       inherited dxGroup1: TdxLayoutGroup
         Caption = #26597#35810#26465#20214
@@ -118,6 +127,11 @@ inherited fFormGetPOrderBase: TfFormGetPOrderBase
         object dxLayout1Item3: TdxLayoutItem
           Caption = #21407' '#26448' '#26009':'
           Control = EditMate
+          ControlOptions.ShowBorder = False
+        end
+        object dxLayout1Item4: TdxLayoutItem
+          Caption = #35760#36134#24180#26376':'
+          Control = EditYear
           ControlOptions.ShowBorder = False
         end
         object dxLayout1Item7: TdxLayoutItem

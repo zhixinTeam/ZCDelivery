@@ -58,6 +58,9 @@ const
   //日期相关
   sField_SQLServer_Now           = 'getDate()';
 
+  {*数据库标识*}
+  sFlag_DB_HH         = 'HH_DB';                     //恒河久远数据库
+
   {*权限项*}
   sPopedom_Read       = 'A';                         //浏览
   sPopedom_Add        = 'B';                         //添加
@@ -288,6 +291,16 @@ const
   sTable_PoundBak     = 'Sys_PoundBak';              //过磅作废
   sTable_Picture      = 'Sys_Picture';               //存放图片
   sTable_PoundDaiWC   = 'Sys_PoundDaiWuCha';         //包装误差
+
+  //恒河久远ERP数据表-----------------------------------------------------------
+  sTable_HH_MaterielType = 'T_Sys_MaterielType';    //物料分类
+  sTable_HH_Materiel     = 'T_Sys_Materiel';        //物料明细
+  sTable_HH_Customer     = 'V_SaleCustomer';        //客户信息
+  sTable_HH_CusInv       = 'T_SaleCustomerInvoiceInfo';//客户开票信息
+  sTable_HH_Provider     = 'T_SupplyProvider';      //客户信息
+  sTable_HH_OrderPlan    = 'V_SupplyMaterialEntryPlan_AllowExecute';//原材料进厂计划
+  sTable_HH_OrderPoundData = 'T_SupplyMaterialReceiveBill';//原材料磅单
+  //----------------------------------------------------------------------------
 
   sFlag_OrderCardL     = 'L';                        //临时
   sFlag_OrderCardG     = 'G';                        //固定

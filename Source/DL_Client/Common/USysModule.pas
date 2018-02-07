@@ -23,6 +23,9 @@ uses
   UFramePoundAuto, UFramePoundManual, UFramePoundQuery, UFrameZTDispatch,
   UFormLadingDai, UFormLadingSan, UFormTruckOut,
   UFrameQuerySaleDetail, UFrameQuerySaleTotal,
+  UFramePMaterails, UFormPMaterails,
+  UFramePProvider, UFormPProvider,
+  UFrameQueryOrderDetail,
 
   UFrameOrderCard,UFramePurchaseOrder,UFrameOrderDetail,UFrameOtherCard,
   UFormCardOther,UFormPurchaseOrder,UFormGetPOrderBase,UFormPurchasing;

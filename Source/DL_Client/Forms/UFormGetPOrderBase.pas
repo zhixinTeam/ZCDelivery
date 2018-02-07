@@ -46,6 +46,8 @@ type
     dxLayout1Item7: TdxLayoutItem;
     EditMate: TcxButtonEdit;
     dxLayout1Item3: TdxLayoutItem;
+    EditYear: TcxComboBox;
+    dxLayout1Item4: TdxLayoutItem;
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure BtnOKClick(Sender: TObject);
@@ -76,8 +78,8 @@ implementation
 {$R *.dfm}
 
 uses
-  IniFiles, ULibFun, UMgrControl, UFormCtrl, UFormBase, USysGrid, USysDB, 
-  USysConst, UDataModule, UBusinessPacker;
+  IniFiles, ULibFun, UMgrControl, UFormCtrl, UFormBase, USysGrid, USysDB,
+  USysConst, UDataModule, UBusinessPacker, DateUtils, USysBusiness;
 
 class function TfFormGetPOrderBase.CreateForm(const nPopedom: string;
   const nParam: Pointer): TWinControl;
@@ -112,6 +114,7 @@ end;
 
 procedure TfFormGetPOrderBase.FormCreate(Sender: TObject);
 var nIni: TIniFile;
+    nIdx, nInt: Integer;
 begin
   nIni := TIniFile.Create(gPath + sFormConfig);
   try
@@ -120,7 +123,12 @@ begin
   finally
     nIni.Free;
   end;
-
+  EditYear.Properties.Items.Clear;
+  for nIdx := 0 to 119 do
+  begin
+    nInt := 0 - nIdx;
+    EditYear.Properties.Items.Add(FormatDateTime('YYYY-MM',IncMonth(Now,nInt)));
+  end;
   FResults := TStringList.Create;
 end;
 
@@ -143,68 +151,58 @@ end;
 //Date: 2015-01-22
 //Desc: 按指定类型查询
 function TfFormGetPOrderBase.QueryData(const nQueryType: string=''): Boolean;
-var nStr, nQuery: string;
-    nIdx: Integer;
+var nStr, nQuery, nData: string;
+    nIdx, nOrderCount: Integer;
+    nListA, nListB: TStrings;
 begin
   Result := False;
   ListQuery.Items.Clear;
 
-  nStr := 'Select *,(B_Value-IsNull(B_SentValue,0)-IsNull(B_FreezeValue,0)) As B_MaxValue From $TB a, $MB b ' +
-          'Where a.B_ID=b.M_ID ' +
-          //'And ((M_DState=''30'') or (M_DState=''40''))'+
-          'And ((B_BStatus=''Y'') or (B_BStatus=''1'') or ((M_PurchType=''0'') and (B_BStatus=''0''))) '+
-          'and B_Blocked=''0'' ';
-  if nQueryType = '1' then //供应商
-  begin
-    nQuery := Trim(EditProvider.Text);
-    nStr := nStr + 'And ((M_ProID like ''%%$QUERY%%'') ' +
-            'or (M_ProName like ''%%$QUERY%%'') '+
-            'or (M_ProPY like ''%%$QUERY%%'')) ';
-  end
-  else if nQueryType = '2' then //原材料
-  begin
-    nQuery := Trim(EditMate.Text);
-    nStr := nStr + 'And ((B_StockName like ''%%$QUERY%%'') ' +
-            'or (B_StockNo  like ''%%$QUERY%%'')) ';
-  end else Exit;
+  nListA := TStringList.Create;
+  nListB := TStringList.Create;
+  try
+    nListA.Values['YearPeriod'] := EditYear.Text;
 
-  nStr := MacroValue(nStr , [MI('$TB', sTable_OrderBase), MI('$MB', sTable_OrderBaseMain),
-          MI('$QUERY', nQuery)]);
+    if nQueryType = '1' then //供应商
+    begin
+      nListA.Values['Provider'] := Trim(EditProvider.Text);
+    end
+    else if nQueryType = '2' then //原材料
+    begin
+      nListA.Values['Materiel'] := Trim(EditProvider.Text);
+    end;
 
+    nStr := PackerEncodeStr(nListA.Text);
 
-  with FDM.QueryTemp(nStr) do
-  if RecordCount > 0 then
-  begin
-    First;
+    nData := GetHhOrderPlan(nStr);
 
-    SetLength(FOrderItems, RecordCount);
-    nIdx := Low(FOrderItems);
+    if nData = '' then
+    begin
+      ShowMsg('未查询到相关信息',sHint);
+      Exit;
+    end;
 
-    while not Eof do
+    nListA.Text := PackerDecodeStr(nData);
+    nOrderCount := nListA.Count;
+    SetLength(FOrderItems,nOrderCount);
+    for nIdx := 0 to nOrderCount-1 do
     with FOrderItems[nIdx] do
     begin
-      FID       := FieldByName('B_ID').AsString;
-      FProvID   := FieldByName('M_ProID').AsString;
-      FProvName := FieldByName('M_ProName').AsString;
-      FSaleID   := FieldByName('B_SaleID').AsString;
-      FSaleName := FieldByName('B_SaleMan').AsString;
-      FStockNO  := FieldByName('B_StockNO').AsString;
-      FStockName:= FieldByName('B_StockName').AsString;
-      FArea     := FieldByName('B_Area').AsString;
-      FProject  := FieldByName('B_Project').AsString;
-      FRecID    := FieldByName('B_RecID').AsString;
-      FPurchType:= FieldByName('M_PurchType').AsString;
-      FMemo     := FieldByName('B_Memo').AsString;
-      {if FieldByName('B_Value').AsFloat>0 then
-        FRestValue:= Format('%.2f', [FieldByName('B_MaxValue').AsFloat])
-      else}
-      if FieldByName('B_Value').AsFloat>0 then
-        FRestValue:= Format('%.2f', [FieldByName('B_RestValue').AsFloat])
-      else
-        FRestValue := '0.00';
+      nListB.Text := PackerDecodeStr(nListA.Strings[nIdx]);
+      FID       := nListB.Values['Order'];
+      FProvID   := nListB.Values['ProID'];
+      FProvName := nListB.Values['ProName'];
+      FSaleID   := '';
+      FSaleName := '';
+      FStockNO  := nListB.Values['StockNo'];
+      FStockName:= nListB.Values['StockName'];
+      FArea     := '';
+      FProject  := '';
+      FRecID    := nListB.Values['Order'];
+      FPurchType:= '';
+      FMemo     := '';
+      FRestValue := nListB.Values['Value'];
 
-      {if (FieldByName('B_MaxValue').AsFloat>0)
-        or (FieldByName('B_Value').AsFloat<=0) then }
       with ListQuery.Items.Add do
       begin
         Caption := FID;
@@ -215,16 +213,13 @@ begin
         SubItems.Add(FMemo);
         ImageIndex := cItemIconIndex;
       end;
-
-      Inc(nIdx);
-      Next;
     end;
     if ListQuery.Items.Count>0 then
       ListQuery.ItemIndex := 0;
     Result := True;
-  end else
-  begin
-    ShowDlg('订单已停止',sHint);
+  finally
+    nListA.Free;
+    nListB.Free;
   end;
 end;
 
