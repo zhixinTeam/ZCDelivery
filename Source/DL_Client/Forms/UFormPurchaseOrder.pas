@@ -137,7 +137,6 @@ begin
   AdjustCtrlData(Self);
   LoadFormConfig(Self);
   dxLayout1Item7.Visible := False;
-  chkNeiDao.Visible := False;
 end;
 
 procedure TfFormPurchaseOrder.FormClose(Sender: TObject; var Action: TCloseAction);

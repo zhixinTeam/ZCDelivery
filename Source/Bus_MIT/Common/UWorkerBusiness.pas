@@ -1629,7 +1629,7 @@ var nVal, nNet, nAKVal: Double;
   nPrePValue:Double;
   nPrePMan:string;
   nPrePTime:TDateTime;
-  nNextStatus:string;
+  nStatus,nNextStatus:string;
 begin
   Result := False;
   
@@ -1836,11 +1836,18 @@ begin
     begin
       nStr := SF('P_Order', FID);
       //where
+      nStatus := sFlag_TruckBFM;
       nNextStatus := sFlag_TruckOut;
       //长期卡+预置皮重，下一状态为毛重
       if (FCtype=sFlag_CardGuDing) and nIsPreTruck then
       begin
         nNextStatus := sFlag_TruckBFM;
+      end;
+      //内倒，下一状态为皮重
+      if FNeiDao=sFlag_Yes then
+      begin
+        nStatus := sFlag_TruckIn;
+        nNextStatus := sFlag_TruckBFP;
       end;
 
       nVal := FMData.FValue - FPData.FValue;
@@ -1883,7 +1890,7 @@ begin
         FListA.Add(nSQL);
 
         nSQL := MakeSQLByStr([
-              SF('D_Status', FStatus),
+              SF('D_Status', nStatus),
               SF('D_NextStatus', FNextStatus),
               SF('D_PValue', FPData.FValue, sfVal),
               SF('D_PDate', FPData.FDate, sfDateTime),
@@ -1911,7 +1918,7 @@ begin
         FListA.Add(nSQL);
 
         nSQL := MakeSQLByStr([
-                SF('D_Status', sFlag_TruckBFM),
+                SF('D_Status', nStatus),
                 SF('D_NextStatus', nNextStatus),
                 SF('D_PValue', FPData.FValue, sfVal),
                 SF('D_PDate', sField_SQLServer_Now, sfVal),
@@ -1943,7 +1950,7 @@ begin
                 SF('D_PValue', FPData.FValue, sfVal),
                 SF('D_PDate', FPData.FDate, sfDateTime),
                 SF('D_PMan', FPData.FOperator),        
-                SF('D_Status', sFlag_TruckBFM),
+                SF('D_Status', nStatus),
                 SF('D_NextStatus', nNextStatus),
                 SF('D_MValue', FMData.FValue, sfVal),
                 SF('D_MDate', sField_SQLServer_Now, sfVal),
@@ -1953,6 +1960,12 @@ begin
         FListA.Add(nSQL);
       end;
 
+      if FNeiDao=sFlag_Yes then
+      begin
+        nSQL := 'update %s set p_order=null where p_order=''%s''';
+        nSQL := format(nSQL,[sTable_PoundLog,FID]);
+        FListA.Add(nSQL);
+      end;
 //      nSQL := 'Update $OrderBase Set B_SentValue=B_SentValue+$Val, ' +
 //              'B_RestValue=B_Value-B_SentValue-$Val '+
 //              'Where B_RecID = ''$RID'' ';
@@ -2019,8 +2032,16 @@ begin
 
   if FIn.FExtParam = sFlag_TruckBFM then //称量毛重
   begin
-    if not ((nPound[0].FCtype=sFlag_CardGuDing) and nIsPreTruck) then
+    //长期卡+预置皮重，不自动出厂
+    if (nPound[0].FCtype=sFlag_CardGuDing) and nIsPreTruck then
     begin
+      //null;
+    end
+    //内倒车辆不自动出厂
+    else if (nPound[0].FNeiDao=sFlag_yes)then begin
+      //null;
+    end
+    else begin
       if Assigned(gHardShareData) then
       begin
         {$IFDEF GGJC}

@@ -352,6 +352,17 @@ begin
   for nIdx:=Low(nBills) to High(nBills) do
   with nBills[nIdx] do
   begin
+    if FNeiDao=sflag_yes then
+    begin
+      if ((FStatus=sFlag_TruckOut)
+          or ((FStatus = sFlag_TruckBFM) and (FNextStatus = sFlag_TruckBFP))) then
+      begin
+        FStatus := sFlag_TruckBFP;
+        FNextStatus := sFlag_TruckBFM;
+        FillChar(FPData, SizeOf(FPData), 0);
+        FillChar(FMData, SizeOf(FMData), 0);
+      end;
+    end;
     //³¤ÆÚ¿¨+Ô¤ÖÃÆ¤ÖØ
     if (FCtype=sFlag_CardGuDing) and nIsPreTruck then
     begin

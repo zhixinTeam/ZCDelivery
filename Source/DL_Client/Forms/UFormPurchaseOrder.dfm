@@ -2,27 +2,27 @@ inherited fFormPurchaseOrder: TfFormPurchaseOrder
   Left = 451
   Top = 243
   ClientHeight = 315
-  ClientWidth = 488
+  ClientWidth = 523
   OnClose = FormClose
   OnCreate = FormCreate
   PixelsPerInch = 96
   TextHeight = 12
   inherited dxLayout1: TdxLayoutControl
-    Width = 488
+    Width = 523
     Height = 315
     inherited BtnOK: TButton
-      Left = 342
+      Left = 377
       Top = 282
       Caption = #24320#21333
       TabOrder = 11
     end
     inherited BtnExit: TButton
-      Left = 412
+      Left = 447
       Top = 282
       TabOrder = 12
     end
     object EditValue: TcxTextEdit [2]
-      Left = 285
+      Left = 320
       Top = 171
       ParentFont = False
       Style.BorderColor = clWindowFrame
@@ -101,7 +101,7 @@ inherited fFormPurchaseOrder: TfFormPurchaseOrder
       Width = 121
     end
     object cxLabel1: TcxLabel [8]
-      Left = 227
+      Left = 262
       Top = 196
       Caption = #27880':'#20020#26102#21345#20986#21378#26102#22238#25910';'#22266#23450#21345#20986#21378#26102#19981#22238#25910
       ParentFont = False
@@ -110,11 +110,11 @@ inherited fFormPurchaseOrder: TfFormPurchaseOrder
       Left = 23
       Top = 246
       AutoSize = False
-      Caption = #20869#37096#20498#36816
+      Caption = #20869#37096#20498#36816'('#30382#37325#12289#27611#37325#12289#30382#37325#12289#27611#37325'...)'
       ParentFont = False
       TabOrder = 7
       Height = 21
-      Width = 66
+      Width = 234
     end
     object editMemo: TcxTextEdit [10]
       Left = 87
@@ -132,7 +132,7 @@ inherited fFormPurchaseOrder: TfFormPurchaseOrder
       Width = 121
     end
     object dtexpiretime: TcxDateEdit [12]
-      Left = 285
+      Left = 320
       Top = 217
       ParentFont = False
       TabOrder = 10
