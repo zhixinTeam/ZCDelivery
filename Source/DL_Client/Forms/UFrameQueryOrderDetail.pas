@@ -48,7 +48,6 @@ type
     procedure mniN1Click(Sender: TObject);
     procedure N2Click(Sender: TObject);
     procedure N3Click(Sender: TObject);
-    procedure N5Click(Sender: TObject);
   private
     { Private declarations }
   protected
@@ -205,23 +204,6 @@ begin
   end;
 
   N2.Click;
-end;
-
-procedure TfFrameOrderDetailQuery.N5Click(Sender: TObject);
-var nStr: string;
-begin
-  if cxView1.DataController.GetSelectedCount > 0 then
-  begin
-    nStr := SQLQuery.FieldByName('D_ID').AsString;
-    if not QueryDlg('确认同步该订单么?', sWarn) then Exit;
-
-    if not SyncHhOrderData(nStr) then
-    begin
-      ShowMsg('同步失败',sHint);
-      Exit;
-    end;
-    InitFormData('');
-  end;
 end;
 
 initialization

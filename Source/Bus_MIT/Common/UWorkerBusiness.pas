@@ -89,6 +89,12 @@ type
     //获取原材料进厂计划
     function SyncHhOrderPoundData(var nData: string): Boolean;
     //同步原材料磅单
+    function GetHhNeiDaoOrderPlan(var nData: string): Boolean;
+    //获取内倒原材料进厂计划
+    function GetUserName(const nLoginName: string) : string;
+    //获取用户姓名
+    function GetMoney(const nPrice, nValue: string) : string;
+    //计算金额
   public
     constructor Create; override;
     destructor destroy; override;
@@ -134,6 +140,9 @@ type
       const nOut: PWorkerBusinessCommand): Boolean;
     //local call
   end;
+
+const HhOrderDefDepotID     = '100000404';
+const HhOrderPoundAuditMenu = '原燃材料收料单审核';
 
 implementation
 
@@ -1949,7 +1958,7 @@ begin
         nSQL := MakeSQLByStr([
                 SF('D_PValue', FPData.FValue, sfVal),
                 SF('D_PDate', FPData.FDate, sfDateTime),
-                SF('D_PMan', FPData.FOperator),        
+                SF('D_PMan', FPData.FOperator),
                 SF('D_Status', nStatus),
                 SF('D_NextStatus', nNextStatus),
                 SF('D_MValue', FMData.FValue, sfVal),
@@ -1962,9 +1971,19 @@ begin
 
       if FNeiDao=sFlag_Yes then
       begin
-        nSQL := 'update %s set p_order=null where p_order=''%s''';
+        nSQL := 'update %s set p_orderBak=p_order, p_order=null where p_order=''%s''';
         nSQL := format(nSQL,[sTable_PoundLog,FID]);
         FListA.Add(nSQL);
+      end
+      else
+      begin
+        if not TWorkerBusinessCommander.CallMe(cBC_SyncHhOrderPoundData,
+                FID, '', @nOut) then
+        begin
+          nStr := '采购单号[ %s ]磅单上传失败.';
+          nStr := Format(nStr, [FID]);
+          WriteLog(nStr);
+        end;
       end;
 //      nSQL := 'Update $OrderBase Set B_SentValue=B_SentValue+$Val, ' +
 //              'B_RestValue=B_Value-B_SentValue-$Val '+
@@ -1973,7 +1992,7 @@ begin
 //              MI('$RID', FRecID), MI('$Val', FloatToStr(nVal))]);
 //      FListA.Add(nSQL);
       //调整已收货；
-      
+
       nSQL := 'Select P_ID From %s Where P_Order=''%s'' ';
       nSQL := Format(nSQL, [sTable_PoundLog, FID]);
       //未称毛重记录
@@ -2656,7 +2675,9 @@ var nStr:string;
     nDBWorker: PDBWorker;
 begin
   Result := False;
-  nSQL := 'select * From %s a, %s b, %s c where a.D_OID=b.O_ID and a.D_ID=c.P_Order and a.D_ID = ''%s'' ';
+  nSQL := 'select *,(D_MValue-D_PValue-D_KZValue) as D_NetWeight From %s a,'+
+  ' %s b, %s c where a.D_OID=b.O_ID and a.D_ID=c.P_Order and a.D_ID = ''%s'' ';
+
   nSQL := Format(nSQL,[sTable_OrderDtl,sTable_Order,sTable_PoundLog,FIn.FData]);
   with gDBConnManager.WorkerQuery(FDBConn, nSQL)  do
   begin
@@ -2672,31 +2693,42 @@ begin
     FListA.Values['FEntryPlanNumber']       := FieldByName('O_BID').AsString;
     FListA.Values['FBillID']                := FieldByName('D_ID').AsString;
     FListA.Values['FBillNumber']            := FieldByName('D_ID').AsString;
+    FListA.Values['FPoundID']               := FieldByName('P_ID').AsString;
     FListA.Values['FBillTypeID']            := '36';
 
     FListA.Values['FGrossWeightStatus']     := '1';
-    FListA.Values['FGrossWeightPersonnel']  := FieldByName('D_MMan').AsString;
+    FListA.Values['FGrossWeightPersonnel']  := GetUserName(
+                                               FieldByName('D_MMan').AsString);
     FListA.Values['FGrossWeightTime']       := FieldByName('D_MDate').AsString;
     FListA.Values['FReceiveGrossWeight']    := FieldByName('D_MValue').AsString;
 
-    FListA.Values['FReceivePersonnel']      := FieldByName('D_YMan').AsString;
+    FListA.Values['FReceivePersonnel']      := GetUserName(
+                                               FieldByName('D_YMan').AsString);;
     FListA.Values['FReceiveTime']           := FieldByName('D_YTime').AsString;
 
     FListA.Values['FTareStatus']            := '1';
-    FListA.Values['FTarePersonnel']         := FieldByName('D_PMan').AsString;
+    FListA.Values['FTarePersonnel']         := GetUserName(
+                                               FieldByName('D_PMan').AsString);;
     FListA.Values['FTareTime']              := FieldByName('D_PDate').AsString;
     FListA.Values['FReceiveTare']           := FieldByName('D_PValue').AsString;
 
-    FListA.Values['FReceiveNetWeight']      := FieldByName('D_Value').AsString;
+    FListA.Values['FReceiveNetWeight']      := FieldByName('D_NetWeight').AsString;
 
-    FListA.Values['FCreator']               := FieldByName('O_Man').AsString;
+    FListA.Values['FCreator']               := GetUserName(
+                                               FieldByName('O_Man').AsString);;
     FListA.Values['FCreateTime']            := FieldByName('O_Date').AsString;
 
     FListA.Values['FConveyanceNumber']      := FieldByName('D_Truck').AsString;
+    FListA.Values['FImpurity']              := FieldByName('D_KZValue').AsString;
 
     FListA.Values['FStatus']                := '1';
     FListA.Values['FCancelStatus']          := '0';
     FListA.Values['FDataStatus']            := '0';
+    FListA.Values['FMaterialStockInStatus'] := '0';
+    FListA.Values['FFreightStockInStatus']  := '0';
+    FListA.Values['FLabStatus']             := '0';
+    FListA.Values['FMaterialStockInStatus'] := '0';
+    FListA.Values['FMaterialStockInStatus'] := '0';
   end;
 
   nDBWorker := nil;
@@ -2717,49 +2749,124 @@ begin
 
       with FListA do
       begin
-        Values['FEntryPlanID']     := FieldByName('FEntryPlanID').AsString;
-        Values['FCompanyID']         := FieldByName('FCompanyID').AsString;
-        Values['FUseDepartmentID']       := FieldByName('FUseDepartmentID').AsString;
-        Values['FRequirementPlanID']         := FieldByName('FRequirementPlanID').AsString;
-        Values['FRequirementPlanDetailID']       := FieldByName('FRequirementPlanDetailID').AsString;
+        Values['FEntryPlanID']          := FieldByName('FEntryPlanID').AsString;
+        Values['FCompanyID']            := FieldByName('FCompanyID').AsString;
+        Values['FUseDepartmentID']      := FieldByName('FUseDepartmentID').AsString;
+        Values['FRequirementPlanID']    := FieldByName('FRequirementPlanID').AsString;
+        Values['FRequirementPlanDetailID'] := FieldByName('FRequirementPlanDetailID').AsString;
 
-        Values['FYearPeriod']       := FieldByName('FYearPeriod').AsString;
-        Values['FMaterielID']       := FieldByName('FMaterielID').AsString;
-        Values['FMaterialProviderID']       := FieldByName('FMaterialProviderID').AsString;
-        Values['FMaterialContractDetailID']       := FieldByName('FMaterialContractDetailID').AsString;
-        Values['FProducerID']       := FieldByName('FProducerID').AsString;
+        Values['FYearPeriod']           := FieldByName('FYearPeriod').AsString;
+        Values['FMaterielID']           := FieldByName('FMaterielID').AsString;
+        Values['FMaterialProviderID']   := FieldByName('FMaterialProviderID').AsString;
+        Values['FMaterialContractDetailID'] := FieldByName('FMaterialContractDetailID').AsString;
+        Values['FProducerID']           := FieldByName('FProducerID').AsString;
 
-        Values['FPlanAmount']       := FieldByName('FPlanAmount').AsString;
-        Values['FApproveAmount']       := FieldByName('FApproveAmount').AsString;
-        Values['FBillAmount']       := FieldByName('FBillAmount').AsString;
-        Values['FSurplusPlanAmount']       := FieldByName('FSurplusPlanAmount').AsString;
-        Values['FEntryAmount']       := FieldByName('FEntryAmount').AsString;
+        Values['FPlanAmount']           := FieldByName('FPlanAmount').AsString;
+        Values['FApproveAmount']        := FieldByName('FApproveAmount').AsString;
+        Values['FBillAmount']           := FieldByName('FBillAmount').AsString;
+        Values['FSurplusPlanAmount']    := FieldByName('FSurplusPlanAmount').AsString;
+        Values['FEntryAmount']          := FieldByName('FEntryAmount').AsString;
 
-        Values['FMaterialPriceTax']       := FieldByName('FMaterialPriceTax').AsString;
-        Values['FMaterialMoneyTax']       := FieldByName('FMaterialMoneyTax').AsString;
-        Values['FMaterialInvoiceTypeID']       := FieldByName('FMaterialInvoiceTypeID').AsString;
-        Values['FMaterialTaxRate']       := FieldByName('FMaterialTaxRate').AsString;
-        Values['FMaterialPrice']       := FieldByName('FMaterialPrice').AsString;
+        Values['FMaterialPriceTax']     := FieldByName('FMaterialPriceTax').AsString;
+        Values['FMaterialMoneyTax']     := GetMoney(
+        FieldByName('FMaterialPriceTax').AsString,Values['FReceiveNetWeight']);
 
-        Values['FMaterialMoney']       := FieldByName('FMaterialMoney').AsString;
-        Values['FFreightContractDetailID']       := FieldByName('FFreightContractDetailID').AsString;
-        Values['FFreightProviderID']       := FieldByName('FFreightProviderID').AsString;
-        Values['FFreightPriceTax']       := FieldByName('FFreightPriceTax').AsString;
-        Values['FFreightMoneyTax']       := FieldByName('FFreightMoneyTax').AsString;
+        Values['FMaterialInvoiceTypeID']:= FieldByName('FMaterialInvoiceTypeID').AsString;
+        Values['FMaterialTaxRate']      := FieldByName('FMaterialTaxRate').AsString;
+        Values['FMaterialPrice']        := FieldByName('FMaterialPrice').AsString;
 
-        Values['FFreightInvoiceTypeID']       := FieldByName('FFreightInvoiceTypeID').AsString;
+        Values['FMaterialMoney']        := GetMoney(
+        FieldByName('FMaterialPrice').AsString,Values['FReceiveNetWeight']);
+
+        Values['FFreightContractDetailID'] := FieldByName('FFreightContractDetailID').AsString;
+        Values['FFreightProviderID']    := FieldByName('FFreightProviderID').AsString;
+        Values['FFreightPriceTax']      := FieldByName('FFreightPriceTax').AsString;
+        Values['FFreightMoneyTax']      := GetMoney(
+        FieldByName('FFreightPriceTax').AsString,Values['FReceiveNetWeight']);
+
+        Values['FFreightInvoiceTypeID'] := FieldByName('FFreightInvoiceTypeID').AsString;
         Values['FFreightTaxRate']       := FieldByName('FFreightTaxRate').AsString;
-        Values['FFreightPrice']       := FieldByName('FFreightPrice').AsString;
-        Values['FFreightMoney']       := FieldByName('FFreightMoney').AsString;
-        Values['FMaterialSettlementFashion']       := FieldByName('FMaterialSettlementFashion').AsString;
+        Values['FFreightPrice']         := FieldByName('FFreightPrice').AsString;
+        Values['FFreightMoney']         := GetMoney(
+        FieldByName('FFreightPrice').AsString,Values['FReceiveNetWeight']);
+        Values['FMaterialSettlementFashion'] := FieldByName('FMaterialSettlementFashion').AsString;
 
-        Values['FFreightSettlementFashion']       := FieldByName('FFreightSettlementFashion').AsString;
-        Values['FStatus']       := FieldByName('FStatus').AsString;
-        Values['FMender']       := FieldByName('FMender').AsString;
-        Values['FVer']       := FieldByName('FVer').AsString;
+        Values['FFreightSettlementFashion']  := FieldByName('FFreightSettlementFashion').AsString;
+        Values['FMender']               := FieldByName('FMender').AsString;
+        Values['FVer']                  := FieldByName('FVer').AsString;
         Values['FMaterielNumber']       := FieldByName('FMaterielNumber').AsString;
-        Values['FMaterialSettlementRate']       := FieldByName('FMaterialSettlementRate').AsString;
-        Values['FFreightSettlementRate']       := FieldByName('FFreightSettlementRate').AsString;
+        Values['FMaterialSettlementRate'] := FieldByName('FMaterialSettlementRate').AsString;
+        Values['FFreightSettlementRate']  := FieldByName('FFreightSettlementRate').AsString;
+      end;
+    end;
+
+//    nStr := 'declare @p2 varchar(12) set @p2=''''' +
+//            ' exec %s @FKeyName=N''T_SupplyMaterialReceiveBill_Bill'','+
+//            '@BillNumber=@p2 output select @p2';
+//    nStr := Format(nStr, [sTable_HH_BILLNUMBER]);
+//    with gDBConnManager.SQLQuery(nStr, nDBWorker, sFlag_DB_HH) do
+//    begin
+//      if RecordCount > 0 then
+//        FListA.Values['FBillID'] := Fields[0].AsString;
+//    end;
+
+  finally
+    gDBConnManager.ReleaseConnection(nDBWorker);
+  end;
+
+  nDBWorker := nil;
+  try
+    nStr := 'Select FUserID From %s where (FLoginName = ''%s'' or FUserName = ''%s'')';
+    //xxxxx
+
+    nStr := Format(nStr, [sTable_HH_SysUser, FListA.Values['FGrossWeightPersonnel'],
+                          FListA.Values['FGrossWeightPersonnel']]);
+
+    with gDBConnManager.SQLQuery(nStr, nDBWorker, sFlag_DB_HH) do
+    begin
+      if RecordCount > 0 then
+        FListA.Values['FUserID'] := Fields[0].AsString;
+    end;
+  finally
+    gDBConnManager.ReleaseConnection(nDBWorker);
+  end;
+
+  if FListA.Values['FUserID'] <> '' then
+  begin
+    nDBWorker := nil;
+    try
+      nStr := 'execute %s @UserID = %s, @CompanyID = %s';
+      nStr := Format(nStr, [sTable_HH_SupplyMD, FListA.Values['FUserID'],
+                                               FListA.Values['FCompanyID']]);
+      with gDBConnManager.SQLQuery(nStr, nDBWorker, sFlag_DB_HH) do
+      begin
+        if RecordCount > 0 then
+          FListA.Values['FDepotID'] := Fields[0].AsString;
+      end;
+      //获取存货场地
+    finally
+      gDBConnManager.ReleaseConnection(nDBWorker);
+    end;
+  end
+  else
+    FListA.Values['FDepotID'] := HhOrderDefDepotID;//def
+
+  nDBWorker := nil;
+  try
+    nStr := 'Select a.FFlowID, a.FProcessID From %s a , %s b' +
+    ' where a.FFlowID = b.FFlowID and  b.FFLowName like ''%%%s%%'''+
+    ' and b.FCompanyID = ''%s''';
+    //xxxxx
+
+    nStr := Format(nStr, [sTable_HH_AuditPro, sTable_HH_AuditMenu,
+                          HhOrderPoundAuditMenu,FListA.Values['FCompanyID']]);
+
+    with gDBConnManager.SQLQuery(nStr, nDBWorker, sFlag_DB_HH) do
+    begin
+      if RecordCount > 0 then
+      begin
+        FListA.Values['FFlowID']    := Fields[0].AsString;
+        FListA.Values['FProcessID'] := Fields[1].AsString;
       end;
     end;
   finally
@@ -2789,10 +2896,11 @@ begin
       nSQL := MakeSQLByStr([
         SF('FBillID', FListA.Values['FBillID']),
         SF('FBillNumber', FListA.Values['FBillNumber']),
+        SF('FOldBillNumber', FListA.Values['FOldBillNumber']),
         SF('FBillTypeID', FListA.Values['FBillTypeID']),
         SF('FCompanyID', FListA.Values['FCompanyID']),
-        SF('FUseDepartmentID', FListA.Values['FUseDepartmentID']), //?
-        SF('FDepotID', FListA.Values['FDepotID']),//?
+        SF('FUseDepartmentID', FListA.Values['FUseDepartmentID']),
+        SF('FDepotID', FListA.Values['FDepotID']),
         SF('FYearPeriod', FListA.Values['FYearPeriod']),
         SF('FMaterielID', FListA.Values['FMaterielID']),
         SF('FEntryPlanID', FListA.Values['FEntryPlanID']),
@@ -2819,39 +2927,36 @@ begin
         SF('FReceiveGrossWeight', FListA.Values['FReceiveGrossWeight']),
         SF('FReceiveTare', FListA.Values['FReceiveTare']),
         SF('FImpurity', FListA.Values['FImpurity']),
-        SF('FDeductAmount', FListA.Values['FDeductAmount']),
+        SF('FDeductAmount', '0'),
         SF('FReceiveNetWeight', FListA.Values['FReceiveNetWeight']),
-        SF('FConsignmentGrossWeight', FListA.Values['FConsignmentGrossWeight']),
-        SF('FConsignmentTare', FListA.Values['FConsignmentTare']),
-        SF('FConsignmentNetWeight', FListA.Values['FConsignmentNetWeight']),
+        SF('FConsignmentGrossWeight', '0'),
+        SF('FConsignmentTare', '0'),
+        SF('FConsignmentNetWeight', '0'),
         SF('FConveyanceNumber', FListA.Values['FConveyanceNumber']),
         SF('FMaterialSettlementFashion', FListA.Values['FMaterialSettlementFashion']),
         SF('FFreightSettlementFashion', FListA.Values['FFreightSettlementFashion']),
         SF('FGrossWeightStatus', FListA.Values['FGrossWeightStatus']),
         SF('FGrossWeightPersonnel', FListA.Values['FGrossWeightPersonnel']),
         SF('FGrossWeightTime', FListA.Values['FGrossWeightTime']),
-        SF('FAgainWeightStatus', FListA.Values['FAgainWeightStatus']),
+        SF('FAgainWeightStatus', '0'),
         SF('FTareStatus', FListA.Values['FTareStatus']),
         SF('FTarePersonnel', FListA.Values['FTarePersonnel']),
         SF('FTareTime', FListA.Values['FTareTime']),
-        SF('FIsManpowerUnload', FListA.Values['FIsManpowerUnload']),
-        SF('FUnloadMoney', FListA.Values['FUnloadMoney']),
+        SF('FIsManpowerUnload', '0'),
+        SF('FUnloadMoney', '0'),
         SF('FReceivePersonnel', FListA.Values['FReceivePersonnel']),
         SF('FReceiveTime', FListA.Values['FReceiveTime']),
-        SF('FMaterialSettlementStatus', FListA.Values['FMaterialSettlementStatus']),
+        SF('FMaterialSettlementStatus', '0'),
         SF('FMaterialSettlementPersonnel', FListA.Values['FMaterialSettlementPersonnel']),
-        SF('FMaterialSettlementTime', FListA.Values['FMaterialSettlementTime']),
-        SF('FFreightSettlementStatus', FListA.Values['FFreightSettlementStatus']),
+        //SF('FMaterialSettlementTime', FListA.Values['FMaterialSettlementTime']),
+        SF('FFreightSettlementStatus', '0'),
         SF('FFreightSettlementPersonnel', FListA.Values['FFreightSettlementPersonnel']),
-        SF('FFreightSettlementTime', FListA.Values['FFreightSettlementTime']),
+        //SF('FFreightSettlementTime', FListA.Values['FFreightSettlementTime']),
         SF('FDataStatus', FListA.Values['FDataStatus']),
         SF('FMaterialStockInStatus', FListA.Values['FMaterialStockInStatus']),
         SF('FFreightStockInStatus', FListA.Values['FFreightStockInStatus']),
-        SF('FLabStatus', FListA.Values['FLabStatus']),
         SF('FStatus', FListA.Values['FStatus']),
         SF('FCancelStatus', FListA.Values['FCancelStatus']),
-        SF('FCancelPersonnel', FListA.Values['FCancelPersonnel']),
-        SF('FCancelTime', FListA.Values['FCancelTime']),
         SF('FCreator', FListA.Values['FCreator']),
         SF('FCreateTime', FListA.Values['FCreateTime']),
         SF('FRemark', FListA.Values['FRemark']),
@@ -2860,15 +2965,40 @@ begin
         SF('FFreightSettlementRate', FListA.Values['FFreightSettlementRate']),
         SF('FShipNumber', FListA.Values['FShipNumber'])
         ], sTable_HH_OrderPoundData, '', True);
-        
+
       gDBConnManager.WorkerExec(nDBWorker, nSQL);
+
+      nStr := 'Delete From %s where FBusinessID = ''%s'' ';
+      nStr := Format(nStr, [sTable_HH_AuditRecord, FListA.Values['FBillNumber']]);
+
+      gDBConnManager.WorkerExec(nDBWorker, nStr);
+      //xxxxx
+      nStr := MakeSQLByStr([
+        SF('FID', FListA.Values['FBillID']),
+        SF('FCompanyID', FListA.Values['FCompanyID']),
+        SF('FFlowID', FListA.Values['FFlowID']),
+        SF('FProcessID', FListA.Values['FProcessID']),
+        SF('FBusinessID', FListA.Values['FBillNumber']),
+        SF('FAuditingStatus', '1'),
+        SF('FVer', FListA.Values['FVer'])
+        ], sTable_HH_AuditRecord, '', True);
+
+      gDBConnManager.WorkerExec(nDBWorker, nStr);
 
       nDBWorker.FConn.CommitTrans;
     except
       nDBWorker.FConn.RollbackTrans;
-      nStr := '上传ERP磅单失败.';
-      raise Exception.Create(nStr);
+      nData := '采购单号[ %s ]磅单上传失败.';
+      nData := Format(nData, [FIn.FData]);
+      nStr := nData + nSQL;
+      WriteLog(nStr);
+      Exit;
     end;
+
+    nStr :='update %s set P_BDAX=''1'',P_BDNUM=P_BDNUM+1 where P_ID = ''%s'' ';
+    nStr := Format(nStr,[sTable_PoundLog,FListA.Values['FPoundID']]);
+    
+    gDBConnManager.WorkerExec(FDBConn,nStr);
 
     FOut.FData := sFlag_Yes;
     Result := True;
@@ -2876,6 +3006,127 @@ begin
     gDBConnManager.ReleaseConnection(nDBWorker);
   end;
 
+end;
+
+function TWorkerBusinessCommander.GetUserName(
+  const nLoginName: string): string;
+var nStr: string;
+    nDBWorker: PDBWorker;
+begin
+  Result := nLoginName;
+
+  nDBWorker := nil;
+  try
+    nStr := 'Select FUserName From %s where FLoginName = ''%s'' ';
+    //xxxxx
+
+    nStr := Format(nStr, [sTable_HH_SysUser, nLoginName]);
+
+    with gDBConnManager.SQLQuery(nStr, nDBWorker, sFlag_DB_HH) do
+    begin
+      if RecordCount > 0 then
+        Result := Fields[0].AsString;
+    end;
+  finally
+    gDBConnManager.ReleaseConnection(nDBWorker);
+  end;
+end;
+
+function TWorkerBusinessCommander.GetMoney(const nPrice,
+  nValue: string): string;
+var nMoney : Double;
+begin
+  Result := '0';
+  try
+    nMoney := StrToFloat(nPrice) * StrToFloat(nValue);
+    nMoney := Float2PInt(nMoney, cPrecision, False) / cPrecision;
+    Result := FloatToStr(nMoney);
+  except
+  end;
+end;
+
+function TWorkerBusinessCommander.GetHhNeiDaoOrderPlan(
+  var nData: string): Boolean;
+var nStr: string;
+    nValue: Double;
+    nDBWorker: PDBWorker;
+begin
+  Result := False;
+
+  FListA.Clear;
+  FListA.Text := PackerDecodeStr(FIn.FData);
+
+  nDBWorker := nil;
+  try
+    nStr := 'Select FMaterielName,' +
+            'FMaterielID,FMaterielNumber,FBillNumber,FApproveAmount,' +
+            'FExecuteAmount From %s where 1=1 ';
+    //xxxxx
+
+    nStr := Format(nStr, [sTable_HH_NdOrderPlan]);
+
+    if FListA.Values['Provider'] <> '' then
+    begin
+      nStr := nStr + 'And ((FMaterialProviderName like ''%%%s%%'') ' +
+            'or (FMaterialProviderID  like ''%%%s%%'')) ';
+      nStr := Format(nStr, [FListA.Values['Provider']]);
+    end;
+
+    if FListA.Values['Materiel'] <> '' then
+    begin
+      nStr := nStr + 'And ((FMaterielName like ''%%%s%%'') ' +
+            'or (FMaterielID  like ''%%%s%%'')) ';
+      nStr := Format(nStr, [FListA.Values['Materiel']]);
+    end;
+
+    if FListA.Values['YearPeriod'] <> '' then
+    begin
+      nStr := nStr + 'And (FYearPeriod like ''%%%s%%'') ';
+      nStr := Format(nStr, [FListA.Values['YearPeriod']]);
+    end;
+
+    with gDBConnManager.SQLQuery(nStr, nDBWorker, sFlag_DB_HH) do
+    begin
+      if RecordCount < 1 then
+      begin
+        nData := '未查询到相关数据.';
+        Exit;
+      end;
+
+      FListA.Clear;
+      FListB.Clear;
+
+      First;
+
+      while not Eof do
+      with FListB do
+      begin
+        Values['Order']         := FieldByName('FBillNumber').AsString;
+        Values['StockName']     := FieldByName('FMaterielName').AsString;
+        Values['StockID']       := FieldByName('FMaterielID').AsString;
+        Values['StockNo']       := FieldByName('FMaterielNumber').AsString;
+        try
+          nValue := FieldByName('FApproveAmount').AsFloat
+                    - FieldByName('FExecuteAmount').AsFloat;
+          nValue := Float2PInt(nValue, cPrecision, False) / cPrecision;
+        except
+          nValue := 0;
+        end;
+        Values['PlanValue']     := FieldByName('FApproveAmount').AsString;//审批量
+        Values['EntryValue']    := FieldByName('FExecuteAmount').AsString;//已进厂量
+        Values['Value']         := FloatToStr(nValue);//剩余量
+
+        FListA.Add(PackerEncodeStr(FListB.Text));
+
+        Next;
+      end;
+    end;
+
+    FOut.FData := PackerEncodeStr(FListA.Text);
+    Result := True;
+  finally
+    gDBConnManager.ReleaseConnection(nDBWorker);
+  end;
 end;
 
 initialization

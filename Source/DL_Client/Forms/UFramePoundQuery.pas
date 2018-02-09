@@ -44,6 +44,8 @@ type
     dxLayout1Item9: TdxLayoutItem;
     N7: TMenuItem;
     N8: TMenuItem;
+    N6: TMenuItem;
+    N9: TMenuItem;
     procedure EditDatePropertiesButtonClick(Sender: TObject;
       AButtonIndex: Integer);
     procedure EditTruckPropertiesButtonClick(Sender: TObject;
@@ -54,6 +56,7 @@ type
     procedure Check1Click(Sender: TObject);
     procedure BtnDelClick(Sender: TObject);
     procedure N4Click(Sender: TObject);
+    procedure N9Click(Sender: TObject);
   private
     { Private declarations }
   protected
@@ -344,6 +347,79 @@ begin
     nPic.Free;
     CloseWaitForm;
     FDM.SqlTemp.Close;
+  end;
+end;
+
+procedure TfFramePoundQuery.N9Click(Sender: TObject);
+var nPID, nStr: string;
+begin
+  if cxView1.DataController.GetSelectedCount > 0 then
+  begin
+    nPID := SQLQuery.FieldByName('P_ID').AsString;
+    nStr := Format('确认上传编号为[ %s ]的过磅单吗?', [nPID]);
+    if not QueryDlg(nStr, sHint) then Exit;
+
+    if SQLQuery.FieldByName('P_BDAX').AsString = '1' then
+    begin
+      nStr := Format('过磅单[ %s ]已经上传成功,禁止上传', [nPID]);
+      ShowMsg(nStr, sHint);
+      Exit;
+    end;
+
+    if SQLQuery.FieldByName('P_Type').AsString = sFlag_Sale then
+    begin
+      nStr := 'Select L_OutFact From %s Where L_ID=''%s''';
+      nStr := Format(nStr, [sTable_Bill, SQLQuery.FieldByName('P_Bill').AsString]);
+
+      with FDM.QueryTemp(nStr) do
+      begin
+        nStr := '';
+        if RecordCount > 0 then
+        begin
+          nStr := Fields[0].AsString;
+        end;
+        if nStr = '' then
+        begin
+          nStr := Format('过磅单[ %s ]对应的销售单据未出厂,禁止上传', [nPID]);
+          ShowMsg(nStr, sHint);
+          Exit;
+        end;
+        //xxxxx
+      end;
+    end
+    else
+    begin
+      nStr := 'Select O_IfNeiDao From %s a , %s b' +
+      ' where a.O_ID = b.D_OID and  b.D_ID = ''%s''';
+      //xxxxx
+
+      nStr := Format(nStr, [sTable_Order, sTable_OrderDtl,
+                            SQLQuery.FieldByName('P_OrderBak').AsString]);
+
+      with FDM.QueryTemp(nStr) do
+      begin
+        if RecordCount < 1 then
+        begin
+          nStr := Format('未过磅单[ %s ]对应的采购单据,无法上传', [nPID]);
+          ShowMsg(nStr, sHint);
+          Exit;
+        end;
+        if Fields[0].AsString = sFlag_Yes then
+        begin
+
+        end
+        else
+        begin
+          if not SyncHhOrderData(SQLQuery.FieldByName('P_OrderBak').AsString) then
+          begin
+            ShowMsg('上传失败',sHint);
+            Exit;
+          end;
+        end;
+      end;
+    end;
+    ShowMsg('上传成功',sHint);
+    InitFormData('');
   end;
 end;
 

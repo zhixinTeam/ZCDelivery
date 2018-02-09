@@ -299,7 +299,15 @@ const
   sTable_HH_CusInv       = 'T_SaleCustomerInvoiceInfo';//客户开票信息
   sTable_HH_Provider     = 'T_SupplyProvider';      //客户信息
   sTable_HH_OrderPlan    = 'V_SupplyMaterialEntryPlan_AllowExecute';//原材料进厂计划
-  sTable_HH_OrderPoundData = 'T_SupplyMaterialReceiveBill';//原材料磅单
+  sTable_HH_OrderPoundData = 'V_SupplyMaterialReceiveBill_GrossWeight';//原材料磅单
+  sTable_HH_OrderPDataAudit = 'V_SupplyMaterialReceiveBill_Auditing';//原材料磅单审核
+  sTable_HH_AuditRecord  = 'T_SupplyBusinessAuditingRecord';         //审核记录
+  sTable_HH_NdOrderPlan  = 'V_SupplyMaterialTransferPlan_AllowExecute';//内倒原材料进厂计划
+  sTable_HH_SysUser      = 'T_Sys_User';            //系统用户
+  sTable_HH_AuditMenu    = 'T_SupplyAuditingFlowSummary';            //审核菜单表
+  sTable_HH_AuditPro     = 'T_SupplyAuditingFlowProcess';            //审核流程表
+  sTable_HH_SupplyMD     = 'P_SupplyMaterialDepot'; //获取存货场地存储过程
+  sTable_HH_BILLNUMBER   = 'P_SYS_BILLNUMBER';      //获取流水号存储过程
   //----------------------------------------------------------------------------
 
   sFlag_OrderCardL     = 'L';                        //临时
@@ -696,7 +704,7 @@ const
    ---------------------------------------------------------------------------//
 
    有效平均皮重算法:
-   T_PValue = (T_PValue * T_PTime + 新皮重) / (T_PTime + 1) 
+   T_PValue = (T_PValue * T_PTime + 新皮重) / (T_PTime + 1)
   -----------------------------------------------------------------------------}
 
   sSQL_NewUploading = 'Create Table $Table(R_ID $Inc, U_Location varChar(500),' +
@@ -718,7 +726,8 @@ const
        'P_MValue $Float, P_MDate DateTime, P_MMan varChar(32), ' +
        'P_FactID varChar(32), P_PStation varChar(10), P_MStation varChar(10),' +
        'P_Direction varChar(10), P_PModel varChar(10), P_Status Char(1),' +
-       'P_Valid Char(1), P_PrintNum Integer Default 1,' +
+       'P_Valid Char(1), P_PrintNum Integer Default 1, P_OrderBak varChar(20),' +
+       'P_BDAX Char(1) not null default((0)),P_BDNUM int not null default((0)),'+
        'P_DelMan varChar(32), P_DelDate DateTime, P_KZValue $Float)';
   {-----------------------------------------------------------------------------
    过磅记录: Materails
@@ -744,6 +753,9 @@ const
    *.P_PrintNum: 打印次数
    *.P_DelMan,P_DelDate: 删除记录
    *.P_KZValue: 供应扣杂
+   *.P_OrderBak: 订单号(供应)备份
+   *.P_BDAX: 0上传失败1上传成功
+   *.p_BDNUM: 上传次数
   -----------------------------------------------------------------------------}
 
   sSQL_NewPicture = 'Create Table $Table(R_ID $Inc, P_ID varChar(15),' +
