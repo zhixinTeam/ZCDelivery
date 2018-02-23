@@ -230,6 +230,7 @@ ResourceString
   sReportDir          = 'Report\';                   //报表目录
   sBackupDir          = 'Backup\';                   //备份目录
   sBackupFile         = 'Bacup.idx';                 //备份索引
+  sCameraDir          = 'Camera\';                   //抓拍目录
 
   sConfigFile         = 'Config.Ini';                //主配置文件
   sConfigSec          = 'Config';                    //主配置小节

@@ -406,7 +406,11 @@ begin
         end;
         if Fields[0].AsString = sFlag_Yes then
         begin
-
+          if not SyncHhNdOrderData(nPID) then
+          begin
+            ShowMsg('ÉÏ´«Ê§°Ü',sHint);
+            Exit;
+          end;
         end
         else
         begin

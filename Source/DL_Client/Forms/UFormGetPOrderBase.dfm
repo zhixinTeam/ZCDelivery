@@ -17,16 +17,16 @@ inherited fFormGetPOrderBase: TfFormGetPOrderBase
       Left = 468
       Top = 313
       Caption = #30830#23450
-      TabOrder = 5
+      TabOrder = 6
     end
     inherited BtnExit: TButton
       Left = 538
       Top = 313
-      TabOrder = 6
+      TabOrder = 7
     end
     object EditProvider: TcxButtonEdit [2]
       Left = 81
-      Top = 36
+      Top = 86
       ParentFont = False
       Properties.Buttons = <
         item
@@ -37,13 +37,13 @@ inherited fFormGetPOrderBase: TfFormGetPOrderBase
       Style.BorderColor = clWindowFrame
       Style.BorderStyle = ebsSingle
       Style.ButtonStyle = btsHotFlat
-      TabOrder = 0
+      TabOrder = 2
       OnKeyPress = OnCtrlKeyPress
       Width = 121
     end
     object ListQuery: TcxListView [3]
       Left = 23
-      Top = 132
+      Top = 157
       Width = 417
       Height = 145
       Columns = <
@@ -79,21 +79,21 @@ inherited fFormGetPOrderBase: TfFormGetPOrderBase
       RowSelect = True
       SmallImages = FDM.ImageBar
       Style.Edges = [bLeft, bTop, bRight, bBottom]
-      TabOrder = 4
+      TabOrder = 5
       ViewStyle = vsReport
       OnDblClick = ListQueryDblClick
       OnKeyPress = ListQueryKeyPress
     end
     object cxLabel1: TcxLabel [4]
       Left = 23
-      Top = 111
+      Top = 136
       Caption = #26597#35810#32467#26524':'
       ParentFont = False
       Transparent = True
     end
     object EditMate: TcxButtonEdit [5]
       Left = 81
-      Top = 61
+      Top = 111
       ParentFont = False
       Properties.Buttons = <
         item
@@ -104,21 +104,48 @@ inherited fFormGetPOrderBase: TfFormGetPOrderBase
       Style.BorderColor = clWindowFrame
       Style.BorderStyle = ebsSingle
       Style.ButtonStyle = btsHotFlat
-      TabOrder = 1
+      TabOrder = 3
       Width = 121
     end
     object EditYear: TcxComboBox [6]
       Left = 81
-      Top = 86
+      Top = 61
       ParentFont = False
+      Properties.DropDownListStyle = lsFixedList
       Style.BorderStyle = ebsSingle
       Style.ButtonStyle = btsHotFlat
-      TabOrder = 2
+      TabOrder = 1
+      Width = 121
+    end
+    object EditOrderType: TcxComboBox [7]
+      Left = 81
+      Top = 36
+      ParentFont = False
+      Properties.DropDownListStyle = lsFixedList
+      Properties.Items.Strings = (
+        #26222#36890#21407#26448#26009
+        #20869#20498#21407#26448#26009)
+      Properties.ReadOnly = False
+      Properties.OnChange = orderange
+      Style.BorderStyle = ebsSingle
+      Style.ButtonStyle = btsHotFlat
+      TabOrder = 0
+      Text = #26222#36890#21407#26448#26009
       Width = 121
     end
     inherited dxLayout1Group_Root: TdxLayoutGroup
       inherited dxGroup1: TdxLayoutGroup
         Caption = #26597#35810#26465#20214
+        object dxLayout1Item8: TdxLayoutItem
+          Caption = #35746#21333#31867#22411':'
+          Control = EditOrderType
+          ControlOptions.ShowBorder = False
+        end
+        object dxLayout1Item4: TdxLayoutItem
+          Caption = #35760#36134#24180#26376':'
+          Control = EditYear
+          ControlOptions.ShowBorder = False
+        end
         object dxLayout1Item5: TdxLayoutItem
           Caption = #20379' '#24212' '#21830':'
           Control = EditProvider
@@ -127,11 +154,6 @@ inherited fFormGetPOrderBase: TfFormGetPOrderBase
         object dxLayout1Item3: TdxLayoutItem
           Caption = #21407' '#26448' '#26009':'
           Control = EditMate
-          ControlOptions.ShowBorder = False
-        end
-        object dxLayout1Item4: TdxLayoutItem
-          Caption = #35760#36134#24180#26376':'
-          Control = EditYear
           ControlOptions.ShowBorder = False
         end
         object dxLayout1Item7: TdxLayoutItem

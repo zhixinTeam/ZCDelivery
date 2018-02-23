@@ -84,6 +84,8 @@ const
   cBC_SyncHhProvider          = $0094;   //同步采购供应商
   cBC_GetHhOrderPlan          = $0095;   //获取采购进厂计划
   cBC_SyncHhOrderPoundData    = $0096;   //上传采购磅单
+  cBC_GetHhNeiDaoOrderPlan    = $0097;   //获取采购内倒进厂计划
+  cBC_SyncHhNdOrderPoundData  = $0098;   //上传采购内倒磅单
 
   cBC_WX_VerifPrintCode       = $0501;   //微信：验证喷码信息
   cBC_WX_WaitingForloading    = $0502;   //微信：工厂待装查询

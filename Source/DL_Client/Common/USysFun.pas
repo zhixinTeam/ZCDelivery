@@ -77,6 +77,9 @@ begin
 
       FIconFile := ReadString(FProgID, 'IconFile', gPath + 'Icons\Icon.ini');
       FIconFile := StringReplace(FIconFile, '$Path\', gPath, [rfIgnoreCase]);
+
+      FPicBase := 0;
+      FPicPath := gPath + sCameraDir;
     end;
   finally
     if not Assigned(nIni) then nTmp.Free;

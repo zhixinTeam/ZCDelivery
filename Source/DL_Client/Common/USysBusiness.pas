@@ -239,10 +239,13 @@ procedure LoadOrderItemToMC(const nItem: TLadingBillItem; const nMC: TStrings;
 function SyncPProvider(const nProID: string): Boolean;
 //同步ERP采购供应商
 function GetHhOrderPlan(const nStr: string): string;
-//获取ERP进厂计划
+//获取ERP采购进厂计划
 function SyncHhOrderData(const nDID: string): Boolean;
 //同步ERP采购磅单
-
+function GetHhNeiDaoOrderPlan(const nStr: string): string;
+//获取ERP采购内倒进厂计划
+function SyncHhNdOrderData(const nDID: string): Boolean;
+//同步ERP内倒采购磅单
 implementation
 
 //Desc: 记录日志
@@ -1995,11 +1998,22 @@ end;
 
 //Date: 2018-02-06
 //Parm: 供应商,物料,计划年月
-//Desc: 获取ERP进厂计划
+//Desc: 获取ERP采购进厂计划
 function GetHhOrderPlan(const nStr: string): string;
 var nOut: TWorkerBusinessCommand;
 begin
   if CallBusinessCommand(cBC_GetHhOrderPlan, nStr, '', @nOut) then
+    Result := nOut.FData
+  else Result := '';
+end;
+
+//Date: 2018-02-08
+//Parm: 物料,计划年月
+//Desc: 获取ERP采购内倒进厂计划
+function GetHhNeiDaoOrderPlan(const nStr: string): string;
+var nOut: TWorkerBusinessCommand;
+begin
+  if CallBusinessCommand(cBC_GetHhNeiDaoOrderPlan, nStr, '', @nOut) then
     Result := nOut.FData
   else Result := '';
 end;
@@ -2011,6 +2025,15 @@ function SyncHhOrderData(const nDID: string): Boolean;
 var nOut: TWorkerBusinessCommand;
 begin
   Result := CallBusinessCommand(cBC_SyncHhOrderPoundData, nDID, '', @nOut);
+end;
+
+//Date: 2018-02-08
+//Parm: 磅单ID
+//Desc: 同步ERP采购磅单
+function SyncHhNdOrderData(const nDID: string): Boolean;
+var nOut: TWorkerBusinessCommand;
+begin
+  Result := CallBusinessCommand(cBC_SyncHhNdOrderPoundData, nDID, '', @nOut);
 end;
 
 end.

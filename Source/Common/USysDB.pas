@@ -303,6 +303,7 @@ const
   sTable_HH_OrderPDataAudit = 'V_SupplyMaterialReceiveBill_Auditing';//原材料磅单审核
   sTable_HH_AuditRecord  = 'T_SupplyBusinessAuditingRecord';         //审核记录
   sTable_HH_NdOrderPlan  = 'V_SupplyMaterialTransferPlan_AllowExecute';//内倒原材料进厂计划
+  sTable_HH_NdOrderPoundData = 'V_SupplyMaterialInnerTransferBill';//内倒原材料磅单
   sTable_HH_SysUser      = 'T_Sys_User';            //系统用户
   sTable_HH_AuditMenu    = 'T_SupplyAuditingFlowSummary';            //审核菜单表
   sTable_HH_AuditPro     = 'T_SupplyAuditingFlowProcess';            //审核流程表

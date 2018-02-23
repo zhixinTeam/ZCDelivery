@@ -48,6 +48,8 @@ type
     dxLayout1Item3: TdxLayoutItem;
     EditYear: TcxComboBox;
     dxLayout1Item4: TdxLayoutItem;
+    EditOrderType: TcxComboBox;
+    dxLayout1Item8: TdxLayoutItem;
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure BtnOKClick(Sender: TObject);
@@ -55,6 +57,7 @@ type
     procedure EditCIDPropertiesButtonClick(Sender: TObject;
       AButtonIndex: Integer);
     procedure ListQueryDblClick(Sender: TObject);
+    procedure orderange(Sender: TObject);
   private
     { Private declarations }
     FResults: TStrings;
@@ -174,7 +177,12 @@ begin
 
     nStr := PackerEncodeStr(nListA.Text);
 
-    nData := GetHhOrderPlan(nStr);
+    case EditOrderType.ItemIndex of
+      0:
+        nData := GetHhOrderPlan(nStr);
+      1:
+        nData := GetHhNeiDaoOrderPlan(nStr);
+    end;
 
     if nData = '' then
     begin
@@ -278,8 +286,7 @@ begin
       GetResult;
       if (StrToFloat(FResults.Values['SQ_RestValue'])<=0) and (FResults.Values['SQ_PurchType']<>'0')  then
       begin
-        ShowMsg('订单剩余量不足',sHint);
-        Exit;
+        if not QueryDlg('订单剩余量不足,是否继续开单?', sHint) then Exit;
       end;
       ModalResult := mrOk;
     end;
@@ -293,8 +300,7 @@ begin
     GetResult;
     if (StrToFloat(FResults.Values['SQ_RestValue'])<=0) and (FResults.Values['SQ_PurchType']<>'0')  then
     begin
-      ShowMsg('订单剩余量不足',sHint);
-      Exit;
+      if not QueryDlg('订单剩余量不足,是否继续开单?', sHint) then Exit;
     end;
     ModalResult := mrOk;
   end;
@@ -307,11 +313,20 @@ begin
     GetResult;
     if (StrToFloat(FResults.Values['SQ_RestValue'])<=0) and (FResults.Values['SQ_PurchType']<>'0')  then
     begin
-      ShowMsg('订单剩余量不足',sHint);
-      Exit;
+      if not QueryDlg('订单剩余量不足,是否继续开单?', sHint) then Exit;
     end;
     ModalResult := mrOk;
   end else ShowMsg('请在查询结果中选择', sHint);
+end;
+
+procedure TfFormGetPOrderBase.orderange(
+  Sender: TObject);
+begin
+  if EditOrderType.ItemIndex = 1 then
+    dxLayout1Item5.Visible := False
+  else
+    dxLayout1Item5.Visible := True;
+  ListQuery.Items.Clear;
 end;
 
 initialization
