@@ -28,11 +28,12 @@ type
 
     FStockNO: string;
     FStockName: string;
-
+    FStockModel: string;
     FRestValue: string;
     FRecID: string;
     FMemo:string;
-
+    FKD:string;
+    FYear:string;
     FPurchType: string;
   end;
   TOrderBaseParams = array of TOrderBaseParam;
@@ -118,6 +119,7 @@ end;
 procedure TfFormGetPOrderBase.FormCreate(Sender: TObject);
 var nIni: TIniFile;
     nIdx, nInt: Integer;
+    nStr: string;
 begin
   nIni := TIniFile.Create(gPath + sFormConfig);
   try
@@ -129,9 +131,19 @@ begin
   EditYear.Properties.Items.Clear;
   for nIdx := 0 to 119 do
   begin
-    nInt := 0 - nIdx;
+    nInt := 1 - nIdx;
     EditYear.Properties.Items.Add(FormatDateTime('YYYY-MM',IncMonth(Now,nInt)));
   end;
+  nStr := FormatDateTime('DD',Now);
+  try
+    if StrToInt(nStr) > 25 then//26号更新记账年月
+      nInt := 0
+    else
+      nInt := 1;
+  except
+    nInt := 1;
+  end;
+  EditYear.ItemIndex := nInt;
   FResults := TStringList.Create;
 end;
 
@@ -172,7 +184,7 @@ begin
     end
     else if nQueryType = '2' then //原材料
     begin
-      nListA.Values['Materiel'] := Trim(EditProvider.Text);
+      nListA.Values['Materiel'] := Trim(EditMate.Text);
     end;
 
     nStr := PackerEncodeStr(nListA.Text);
@@ -204,21 +216,26 @@ begin
       FSaleName := '';
       FStockNO  := nListB.Values['StockNo'];
       FStockName:= nListB.Values['StockName'];
+      FStockModel:= nListB.Values['Model'];
+      FKD       := nListB.Values['KD'];
       FArea     := '';
       FProject  := '';
       FRecID    := nListB.Values['Order'];
-      FPurchType:= '';
+      FPurchType:= EditOrderType.Text;
       FMemo     := '';
       FRestValue := nListB.Values['Value'];
+      FYear     := EditYear.Text;
 
       with ListQuery.Items.Add do
       begin
         Caption := FID;
         SubItems.Add(FStockName);
+        SubItems.Add(FStockModel);
         SubItems.Add(FProvName);
+        SubItems.Add(FKD);
         SubItems.Add(FRestValue);
-        SubItems.Add(FRecID);
         SubItems.Add(FMemo);
+        SubItems.Add(FRecID);
         ImageIndex := cItemIconIndex;
       end;
     end;
@@ -252,7 +269,7 @@ begin
     with FOrderItems[nIdx], FResults do
     begin
       //if CompareText(FID, Caption)=0 then
-      if CompareText(FRecID, SubItems[3])=0 then
+      if CompareText(FRecID, SubItems[6])=0 then
       begin
         Values['SQ_ID']       := FID;
         Values['SQ_ProID']    := FProvID;
@@ -266,10 +283,13 @@ begin
         Values['SQ_RestValue']:= FRestValue;
         Values['SQ_RecID']    := FRecID;
         Values['SQ_PurchType']:= FPurchType;
-        Values['SQ_Memo']:= FMemo;
+        Values['SQ_Memo']     := FMemo;
+        Values['SQ_Model']    := FStockModel;
+        Values['SQ_KD']       := FKD;
+        Values['SQ_Year']     := FYear;
         Break;
-      end;  
-    end;  
+      end;
+    end;
   end;
 
   FOrderData := FResults.Text;

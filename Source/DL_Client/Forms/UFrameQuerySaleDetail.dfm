@@ -30,14 +30,14 @@ inherited fFrameSaleDetailQuery: TfFrameSaleDetailQuery
     Height = 138
     object cxtxtdt1: TcxTextEdit [0]
       Left = 627
-      Top = 93
+      Top = 94
       Hint = 'T.L_CusName'
       ParentFont = False
-      TabOrder = 7
+      TabOrder = 8
       Width = 105
     end
     object EditDate: TcxButtonEdit [1]
-      Left = 615
+      Left = 741
       Top = 36
       ParentFont = False
       Properties.Buttons = <
@@ -47,7 +47,7 @@ inherited fFrameSaleDetailQuery: TfFrameSaleDetailQuery
         end>
       Properties.ReadOnly = True
       Properties.OnButtonClick = EditDatePropertiesButtonClick
-      TabOrder = 3
+      TabOrder = 4
       Width = 185
     end
     object EditCustomer: TcxButtonEdit [2]
@@ -66,26 +66,26 @@ inherited fFrameSaleDetailQuery: TfFrameSaleDetailQuery
     end
     object cxtxtdt2: TcxTextEdit [3]
       Left = 449
-      Top = 93
+      Top = 94
       Hint = 'T.L_Value'
       ParentFont = False
-      TabOrder = 6
+      TabOrder = 7
       Width = 115
     end
     object cxtxtdt3: TcxTextEdit [4]
       Left = 81
-      Top = 93
+      Top = 94
       Hint = 'T.L_ID'
       ParentFont = False
-      TabOrder = 4
+      TabOrder = 5
       Width = 115
     end
     object cxtxtdt4: TcxTextEdit [5]
       Left = 259
-      Top = 93
+      Top = 94
       Hint = 'T.L_StockName'
       ParentFont = False
-      TabOrder = 5
+      TabOrder = 6
       Width = 115
     end
     object EditTruck: TcxButtonEdit [6]
@@ -116,6 +116,14 @@ inherited fFrameSaleDetailQuery: TfFrameSaleDetailQuery
       OnKeyPress = OnCtrlKeyPress
       Width = 115
     end
+    object chkAll: TcxCheckBox [8]
+      Left = 557
+      Top = 36
+      Caption = #26174#31034#20840#37096#26126#32454
+      ParentFont = False
+      TabOrder = 3
+      Width = 121
+    end
     inherited dxGroup1: TdxLayoutGroup
       inherited GroupSearch1: TdxLayoutGroup
         object dxLayout1Item7: TdxLayoutItem
@@ -131,6 +139,12 @@ inherited fFrameSaleDetailQuery: TfFrameSaleDetailQuery
         object dxLayout1Item8: TdxLayoutItem
           Caption = #23458#25143#21517#31216':'
           Control = EditCustomer
+          ControlOptions.ShowBorder = False
+        end
+        object dxLayout1Item9: TdxLayoutItem
+          Caption = 'cxCheckBox1'
+          ShowCaption = False
+          Control = chkAll
           ControlOptions.ShowBorder = False
         end
         object dxLayout1Item6: TdxLayoutItem
@@ -194,6 +208,10 @@ inherited fFrameSaleDetailQuery: TfFrameSaleDetailQuery
     object mniN1: TMenuItem
       Caption = #26102#38388#27573#26597#35810
       OnClick = mniN1Click
+    end
+    object N1: TMenuItem
+      Caption = #19978#20256#25552#36135#21333
+      OnClick = N1Click
     end
   end
 end

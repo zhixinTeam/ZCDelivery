@@ -14,7 +14,7 @@ uses
   cxCheckBox, cxMaskEdit, cxButtonEdit, cxTextEdit, ADODB, cxLabel,
   UBitmapPanel, cxSplitter, cxGridLevel, cxClasses, cxGridCustomView,
   cxGridCustomTableView, cxGridTableView, cxGridDBTableView, cxGrid,
-  ComCtrls, ToolWin;
+  ComCtrls, ToolWin, cxDropDownEdit;
 
 type
   TfFramePoundQuery = class(TfFrameNormal)
@@ -46,6 +46,11 @@ type
     N8: TMenuItem;
     N6: TMenuItem;
     N9: TMenuItem;
+    N10: TMenuItem;
+    N11: TMenuItem;
+    chkTime: TcxComboBox;
+    dxLayout1Item10: TdxLayoutItem;
+    N12: TMenuItem;
     procedure EditDatePropertiesButtonClick(Sender: TObject;
       AButtonIndex: Integer);
     procedure EditTruckPropertiesButtonClick(Sender: TObject;
@@ -57,6 +62,9 @@ type
     procedure BtnDelClick(Sender: TObject);
     procedure N4Click(Sender: TObject);
     procedure N9Click(Sender: TObject);
+    procedure N10Click(Sender: TObject);
+    procedure chkTimePropertiesChange(Sender: TObject);
+    procedure N12Click(Sender: TObject);
   private
     { Private declarations }
   protected
@@ -65,11 +73,13 @@ type
     //时间区间
     FJBWhere: string;
     //交班查询
+    FPreFix: string;
     procedure OnCreateFrame; override;
     procedure OnDestroyFrame; override;
     procedure AfterInitFormData; override;
     function InitFormDataSQL(const nWhere: string): string; override;
     {*查询SQL*}
+    function DeleteDirectory(nDir :String): boolean;
   public
     { Public declarations }
     class function FrameID: integer; override;
@@ -80,7 +90,7 @@ implementation
 {$R *.dfm}
 uses
   ShellAPI, ULibFun, UMgrControl, UDataModule, USysBusiness, UFormDateFilter,
-  UFormWait, USysConst, USysDB;
+  UFormWait, USysConst, USysDB, UFormBase;
 
 class function TfFramePoundQuery.FrameID: integer;
 begin
@@ -88,8 +98,19 @@ begin
 end;
 
 procedure TfFramePoundQuery.OnCreateFrame;
+var nStr: string;
 begin
   inherited;
+  FPreFix := 'WY';
+  nStr := 'Select B_Prefix From %s ' +
+          'Where B_Group=''%s'' And B_Object=''%s''';
+  nStr := Format(nStr, [sTable_SerialBase, sFlag_BusGroup, sFlag_SaleOrderOther]);
+
+  with FDM.QueryTemp(nStr) do
+  if RecordCount > 0 then
+  begin
+    FPreFix := Fields[0].AsString;
+  end;
   FTimeS := Str2DateTime(Date2Str(Now) + ' 00:00:00');
   FTimeE := Str2DateTime(Date2Str(Now) + ' 00:00:00');
 
@@ -110,22 +131,42 @@ begin
 
   EditDate.Text := Format('%s 至 %s', [Date2Str(FStart), Date2Str(FEnd)]);
 
-  Result := 'Select pl.*,(P_MValue-P_PValue) As P_NetWeight,' +
-            'ABS((P_MValue-P_PValue)-P_LimValue) As P_Wucha From $PL pl';
+//  Result := 'Select pl.*,(P_MValue-P_PValue) As P_NetWeight,' +
+//            'ABS((P_MValue-P_PValue)-P_LimValue) As P_Wucha From $PL pl';
+  Result := 'Select pl.*,bl.*,so.*,od.*,po.*,(P_MValue-P_PValue) As P_NetWeight,' +
+            'case when (pl.P_PDate IS not null) and (pl.P_PDate IS not null)'+
+            ' then (case when pl.P_PDate > pl.P_MDate then pl.P_PDate else'+
+            ' pl.P_MDate end) else null end as P_NetDate,'+
+            ' case when pl.P_Type = ''P'' then pl.P_BDAX else null end as P_BDAXView,'+
+            'ABS((P_MValue-P_PValue)-P_LimValue) As P_Wucha From $PL pl' +
+            ' Left Join $BL bl On ((bl.L_ID=pl.P_Bill) or (bl.L_ID=pl.P_OrderBak) )'+
+            ' Left Join $SO so On so.O_Order=bl.L_ZhiKa'+
+            ' Left Join $OD od On ((od.D_ID=pl.P_Order) or (od.D_ID=pl.P_OrderBak) )'+
+            ' Left Join $PO po On po.O_ID=od.D_OID';
   //xxxxx
 
   if FJBWhere = '' then
   begin
-    Result := Result + ' Where ((P_PDate >=''$S'' and P_PDate<''$E'') or ' +
-              '(P_MDate >=''$S'' and P_MDate<''$E'')) ';
+    if chkTime.ItemIndex = 0 then
+      Result := Result + ' Where (P_PDate >=''$S'' and P_PDate<''$E'') '
+    else
+      Result := Result + ' Where (P_MDate >=''$S'' and P_MDate<''$E'') ';
   end else
   begin
     Result := Result + ' Where (' + FJBWhere + ')';
   end;
 
   if Check1.Checked then
-       Result := MacroValue(Result, [MI('$PL', sTable_PoundBak)])
-  else Result := MacroValue(Result, [MI('$PL', sTable_PoundLog)]);
+       Result := MacroValue(Result, [MI('$PL', sTable_PoundBak),
+       MI('$BL', sTable_Bill),
+       MI('$SO', sTable_SalesOrder),
+       MI('$OD', sTable_OrderDtl),
+       MI('$PO', sTable_Order)])
+  else Result := MacroValue(Result, [MI('$PL', sTable_PoundLog),
+       MI('$BL', sTable_Bill),
+       MI('$SO', sTable_SalesOrder),
+       MI('$OD', sTable_OrderDtl),
+       MI('$PO', sTable_Order)]);
 
   Result := MacroValue(Result, [MI('$S', Date2Str(FStart)),
             MI('$E', Date2Str(FEnd+1))]);
@@ -215,7 +256,10 @@ begin
     end;
 
     nStr := SQLQuery.FieldByName('P_ID').AsString;
-    PrintPoundReport(nStr, False);
+    if SQLQuery.FieldByName('P_PoundIdx').AsInteger > 0 then
+      PrintPoundOtherReport(nStr, False)
+    else
+      PrintPoundReport(nStr, False);
   end
 end;
 
@@ -306,6 +350,7 @@ begin
   nID := SQLQuery.FieldByName('P_ID').AsString;
   nDir := gSysParam.FPicPath + nID + '\';
 
+  DeleteDirectory(gSysParam.FPicPath + nID);
   if DirectoryExists(nDir) then
   begin
     ShellExecute(GetDesktopWindow, 'open', PChar(nDir), nil, nil, SW_SHOWNORMAL);
@@ -368,56 +413,53 @@ begin
 
     if SQLQuery.FieldByName('P_Type').AsString = sFlag_Sale then
     begin
-      nStr := 'Select L_OutFact From %s Where L_ID=''%s''';
-      nStr := Format(nStr, [sTable_Bill, SQLQuery.FieldByName('P_Bill').AsString]);
-
-      with FDM.QueryTemp(nStr) do
-      begin
-        nStr := '';
-        if RecordCount > 0 then
-        begin
-          nStr := Fields[0].AsString;
-        end;
-        if nStr = '' then
-        begin
-          nStr := Format('过磅单[ %s ]对应的销售单据未出厂,禁止上传', [nPID]);
-          ShowMsg(nStr, sHint);
-          Exit;
-        end;
-        //xxxxx
-      end;
+      nStr := '销售单据请在发货明细进行上传';
+      ShowMsg(nStr, sHint);
+      Exit;
+    //xxxxx
     end
     else
     begin
-      nStr := 'Select O_IfNeiDao From %s a , %s b' +
-      ' where a.O_ID = b.D_OID and  b.D_ID = ''%s''';
-      //xxxxx
-
-      nStr := Format(nStr, [sTable_Order, sTable_OrderDtl,
-                            SQLQuery.FieldByName('P_OrderBak').AsString]);
-
-      with FDM.QueryTemp(nStr) do
+      if SQLQuery.FieldByName('P_PoundIdx').AsInteger > 0  then//备品备件
       begin
-        if RecordCount < 1 then
+        if not SyncHhOtherOrderData(nPID) then
         begin
-          nStr := Format('未过磅单[ %s ]对应的采购单据,无法上传', [nPID]);
-          ShowMsg(nStr, sHint);
+          ShowMsg('上传失败',sHint);
           Exit;
         end;
-        if Fields[0].AsString = sFlag_Yes then
+      end
+      else
+      begin
+        nStr := 'Select O_IfNeiDao From %s a , %s b' +
+        ' where a.O_ID = b.D_OID and  b.D_ID = ''%s''';
+        //xxxxx
+
+        nStr := Format(nStr, [sTable_Order, sTable_OrderDtl,
+                              SQLQuery.FieldByName('P_OrderBak').AsString]);
+
+        with FDM.QueryTemp(nStr) do
         begin
-          if not SyncHhNdOrderData(nPID) then
+          if RecordCount < 1 then
           begin
-            ShowMsg('上传失败',sHint);
+            nStr := Format('未找到磅单[ %s ]对应的采购单据,无法上传', [nPID]);
+            ShowMsg(nStr, sHint);
             Exit;
           end;
-        end
-        else
-        begin
-          if not SyncHhOrderData(SQLQuery.FieldByName('P_OrderBak').AsString) then
+          if Fields[0].AsString = sFlag_Yes then
           begin
-            ShowMsg('上传失败',sHint);
-            Exit;
+            if not SyncHhNdOrderData(nPID) then
+            begin
+              ShowMsg('上传失败',sHint);
+              Exit;
+            end;
+          end
+          else
+          begin
+            if not SyncHhOrderData(nPID) then
+            begin
+              ShowMsg('上传失败',sHint);
+              Exit;
+            end;
           end;
         end;
       end;
@@ -425,6 +467,131 @@ begin
     ShowMsg('上传成功',sHint);
     InitFormData('');
   end;
+end;
+
+function TfFramePoundQuery.DeleteDirectory(nDir :String): boolean;
+var
+f: TSHFILEOPSTRUCT;
+begin
+  FillChar(f, SizeOf(f), 0);
+  with f do
+  begin
+    Wnd := 0;
+    wFunc := FO_DELETE;
+    pFrom := PChar(nDir+#0);
+    pTo := PChar(nDir+#0);
+    fFlags := FOF_ALLOWUNDO+FOF_NOCONFIRMATION+FOF_NOERRORUI;
+  end;
+  Result := (SHFileOperation(f) = 0);
+end;
+
+procedure TfFramePoundQuery.N10Click(Sender: TObject);
+var nStr,nID: string;
+    nList: TStrings;
+    nP: TFormCommandParam;
+begin
+  if cxView1.DataController.GetSelectedCount < 1 then
+  begin
+    ShowMsg('请选择要勘误的记录', sHint);
+    Exit;
+  end;
+
+  if SQLQuery.FieldByName('P_Type').AsString = sFlag_Sale then
+  begin
+    nStr := '销售单据请在提货查询进行勘误';
+    ShowMsg(nStr, sHint);
+    Exit;
+  //xxxxx
+  end;
+
+  nID := SQLQuery.FieldByName('P_ID').AsString;
+
+  nList := TStringList.Create;
+  try
+    nList.Add(nID);
+
+    nP.FCommand := cCmd_EditData;
+    nP.FParamA := nList.Text;
+    if SQLQuery.FieldByName('P_PoundIdx').AsInteger > 0 then
+      CreateBaseFormItem(cFI_FormPoundKwOther, '', @nP)
+    else
+      CreateBaseFormItem(cFI_FormPoundKw, '', @nP);
+
+    if (nP.FCommand = cCmd_ModalResult) and (nP.FParamA = mrOK) then
+    begin
+      InitFormData(FWhere);
+    end;
+
+  finally
+    nList.Free;
+  end;
+
+end;
+
+procedure TfFramePoundQuery.chkTimePropertiesChange(Sender: TObject);
+begin
+  InitFormData('');
+end;
+
+procedure TfFramePoundQuery.N12Click(Sender: TObject);
+var nStr,nID,nPreFix,nOrder: string;
+    nList: TStrings;
+    nP: TFormCommandParam;
+begin
+  if cxView1.DataController.GetSelectedCount < 1 then
+  begin
+    ShowMsg('请选择要勘误的记录', sHint);
+    Exit;
+  end;
+
+  nPreFix := 'WY';
+  nStr := 'Select B_Prefix From %s ' +
+          'Where B_Group=''%s'' And B_Object=''%s''';
+  nStr := Format(nStr, [sTable_SerialBase, sFlag_BusGroup, sFlag_SaleOrderOther]);
+
+  with FDM.QueryTemp(nStr) do
+  if RecordCount > 0 then
+  begin
+    nPreFix := Fields[0].AsString;
+  end;
+
+  nOrder := '';
+  nStr := 'Select L_ZhiKa From %s ' +
+          'Where L_ID=''%s''';
+  nStr := Format(nStr, [sTable_Bill, SQLQuery.FieldByName('P_OrderBak').AsString]);
+
+  with FDM.QueryTemp(nStr) do
+  if RecordCount > 0 then
+  begin
+    nOrder := Fields[0].AsString;
+  end;
+
+  if Pos(nPreFix,nOrder) <= 0 then
+  begin
+    ShowMsg('所选记录非矿山外运磅单', sHint);
+    Exit;
+  end;
+
+  nID := SQLQuery.FieldByName('P_ID').AsString;
+
+  nList := TStringList.Create;
+  try
+    nList.Add(nID);
+
+    nP.FCommand := cCmd_EditData;
+    nP.FParamA := nList.Text;
+
+    CreateBaseFormItem(cFI_FormSaleKwOther, '', @nP);
+
+    if (nP.FCommand = cCmd_ModalResult) and (nP.FParamA = mrOK) then
+    begin
+      InitFormData(FWhere);
+    end;
+
+  finally
+    nList.Free;
+  end;
+
 end;
 
 initialization

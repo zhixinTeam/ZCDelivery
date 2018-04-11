@@ -160,7 +160,7 @@ inherited fFrameTrucks: TfFrameTrucks
       Caption = '-'
     end
     object N10: TMenuItem
-      Caption = #28165#38500#25152#26377#39044#32622#30382#37325
+      Caption = #26597#30475#39044#21046#30382#37325#25235#25293
       OnClick = N10Click
     end
   end

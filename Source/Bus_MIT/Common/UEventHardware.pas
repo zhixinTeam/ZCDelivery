@@ -179,7 +179,8 @@ begin
   gMultiJSManager.GetTruckProc := GetJSTruck;
   gMultiJSManager.StartJS;
   //counter
-  gERelayManager.ControlStart;
+  if FileExists(gPlugRunParam.FAppPath + 'Hardware\' + 'ERelay.xml') then
+    gERelayManager.ControlStart;
   //erelay
 
   gRemotePrinter.StartPrinter;
@@ -217,9 +218,10 @@ begin
   //printer
   if Assigned(gNetVoiceHelper) then
     gNetVoiceHelper.StopVoice;
-  //NetVoice  
+  //NetVoice
 
-  gERelayManager.ControlStop;
+  if FileExists(gPlugRunParam.FAppPath + 'Hardware\' + 'ERelay.xml') then
+    gERelayManager.ControlStop;
   //erelay
   gMultiJSManager.StopJS;
   //counter

@@ -41,6 +41,16 @@ type
     dxLayout1Item11: TdxLayoutItem;
     dtexpiretime: TcxDateEdit;
     dxLayout1Item7: TdxLayoutItem;
+    EditShip: TcxTextEdit;
+    dxLayout1Item12: TdxLayoutItem;
+    chkIfPrint: TcxCheckBox;
+    dxLayout1Item13: TdxLayoutItem;
+    EditModel: TcxTextEdit;
+    dxLayout1Item14: TdxLayoutItem;
+    EditKD: TcxTextEdit;
+    dxLayout1Item15: TdxLayoutItem;
+    EditYear: TcxTextEdit;
+    dxLayout1Item16: TdxLayoutItem;
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure BtnOKClick(Sender: TObject);
@@ -193,8 +203,23 @@ begin
 //    EditValue.Text    := Values['SQ_RestValue'];
     EditValue.Text    := '50.00';
     editMemo.Text     := Values['SQ_Memo'];
+    chkNeiDao.Checked := Pos('内倒',Values['SQ_PurchType']) > 0;
+    chkNeiDao.Visible := False;
+    EditModel.Text    := Values['SQ_Model'];
+    EditKD.Text       := Values['SQ_KD'];
+    EditYear.Text     := Values['SQ_Year'];
   end;
-  dtexpiretime.Date := IncSecond(date+1, -1);
+  if GetCardGInvalid then
+  begin
+    dtexpiretime.Date := IncSecond(date+1, -1);
+    dxLayout1Item7.Visible := True;
+  end
+  else
+  begin
+    dtexpiretime.Date := IncYear(Now, 50);
+    dxLayout1Item7.Visible := False;
+  end;
+  EditShip.Text := GetShipName(EditMate.Text);
 end;
 
 function TfFormPurchaseOrder.OnVerifyCtrl(Sender: TObject; var nHint: string): Boolean;
@@ -215,12 +240,12 @@ begin
     nHint := '请填写有效的办理量';
     if not Result then Exit;
 
-    nVal := StrToFloat(EditValue.Text);
-    Result := FloatRelation(nVal, StrToFloat(FCardData.Values['SQ_RestValue']),
-              rtLE);
-    nHint := '已超出剩余交货量';
+//    nVal := StrToFloat(EditValue.Text);
+//    Result := FloatRelation(nVal, StrToFloat(FCardData.Values['SQ_RestValue']),
+//              rtLE);
+//    nHint := '已超出剩余交货量';
   end;
-  
+
 //  if Sender = comboxYSTD then
 //  begin
 //    Result := comboxYSTD.ItemIndex >= 0;
@@ -286,6 +311,15 @@ begin
     begin
       Values['expiretime'] := floatToStr(dtexpiretime.Date);
     end;
+    Values['ShipName'] := EditShip.Text;
+    Values['Model'] := EditModel.Text;
+    Values['KD'] := EditKD.Text;
+    Values['Year'] := EditYear.Text;
+    Values['Memo'] := editMemo.Text;
+    if chkIfPrint.Checked then
+      Values['PrintBD'] := sFlag_Yes
+    else
+      Values['PrintBD'] := sFlag_No;
   end;
 
   nOrder := SaveOrder(PackerEncodeStr(FListA.Text));

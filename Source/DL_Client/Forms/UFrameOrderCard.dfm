@@ -242,6 +242,14 @@ inherited fFrameOrderCard: TfFrameOrderCard
       Caption = #35299#38500#20923#32467
       OnClick = N15Click
     end
+    object N18: TMenuItem
+      Caption = #20840#37096#20923#32467
+      OnClick = N18Click
+    end
+    object N19: TMenuItem
+      Caption = #20840#37096#35299#20923
+      OnClick = N19Click
+    end
     object N16: TMenuItem
       Caption = '-'
     end

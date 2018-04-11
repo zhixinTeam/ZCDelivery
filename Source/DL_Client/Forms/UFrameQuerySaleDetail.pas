@@ -14,7 +14,7 @@ uses
   cxMaskEdit, cxButtonEdit, cxTextEdit, ADODB, cxLabel, UBitmapPanel,
   cxSplitter, cxGridLevel, cxClasses, cxGridCustomView,
   cxGridCustomTableView, cxGridTableView, cxGridDBTableView, cxGrid,
-  ComCtrls, ToolWin;
+  ComCtrls, ToolWin, cxCheckBox;
 
 type
   TfFrameSaleDetailQuery = class(TfFrameNormal)
@@ -36,11 +36,15 @@ type
     dxLayout1Item4: TdxLayoutItem;
     EditBill: TcxButtonEdit;
     dxLayout1Item7: TdxLayoutItem;
+    N1: TMenuItem;
+    chkAll: TcxCheckBox;
+    dxLayout1Item9: TdxLayoutItem;
     procedure EditDatePropertiesButtonClick(Sender: TObject;
       AButtonIndex: Integer);
     procedure EditTruckPropertiesButtonClick(Sender: TObject;
       AButtonIndex: Integer);
     procedure mniN1Click(Sender: TObject);
+    procedure N1Click(Sender: TObject);
   private
     { Private declarations }
   protected
@@ -70,7 +74,7 @@ implementation
 {$R *.dfm}
 uses
   ULibFun, UMgrControl, UFormDateFilter, USysPopedom, USysBusiness,
-  UBusinessConst, USysConst, USysDB;
+  UBusinessConst, USysConst, USysDB, UDataModule;
 
 class function TfFrameSaleDetailQuery.FrameID: integer;
 begin
@@ -118,7 +122,7 @@ begin
   EditDate.Text := Format('%s 至 %s', [Date2Str(FStart), Date2Str(FEnd)]);
 
   Result := 'Select * From $Bill b' +
-            ' Left Join $ZK on VBELN=L_ZhiKa ';
+            ' Left Join $ZK on O_Order=L_ZhiKa ';
   //提货单
 
   if FJBWhere = '' then
@@ -132,6 +136,9 @@ begin
   begin
     Result := Result + ' Where (' + FJBWhere + ')';
   end;
+
+  if not chkAll.Checked then
+    Result := Result + ' And (L_TruckEmpty <>''Y'' or L_TruckEmpty is null)';
 
   Result := MacroValue(Result, [MI('$Bill', sTable_Bill),
             MI('$ZK', sTable_SalesOrder),
@@ -225,6 +232,67 @@ begin
   end;
 end;
 
+procedure TfFrameSaleDetailQuery.N1Click(Sender: TObject);
+var nPID, nStr,nPreFix: string;
+begin
+  if cxView1.DataController.GetSelectedCount > 0 then
+  begin
+    nPID := SQLQuery.FieldByName('L_ID').AsString;
+    
+    nPreFix := 'WY';
+    nStr := 'Select B_Prefix From %s ' +
+            'Where B_Group=''%s'' And B_Object=''%s''';
+    nStr := Format(nStr, [sTable_SerialBase, sFlag_BusGroup, sFlag_SaleOrderOther]);
+
+    with FDM.QueryTemp(nStr) do
+    if RecordCount > 0 then
+    begin
+      nPreFix := Fields[0].AsString;
+    end;
+
+    if Pos(nPreFix,SQLQuery.FieldByName('L_ZhiKa').AsString) > 0 then
+    begin
+      nStr := Format('提货单[ %s ]非ERP订单,无法上传', [nPID]);
+      ShowMsg(nStr, sHint);
+      Exit;
+    end;
+
+    if SQLQuery.FieldByName('L_TruckEmpty').AsString = sFlag_Yes then
+    begin
+      nStr := Format('提货单[ %s ]已经办理空车出厂,禁止上传', [nPID]);
+      ShowMsg(nStr, sHint);
+      Exit;
+    end;
+
+    nStr := Format('确认上传提货单[ %s ]吗?', [nPID]);
+    if not QueryDlg(nStr, sHint) then Exit;
+
+    if SQLQuery.FieldByName('L_BDAX').AsString = '1' then
+    begin
+      nStr := Format('提货单[ %s ]已经上传成功,禁止再次上传', [nPID]);
+      ShowMsg(nStr, sHint);
+      Exit;
+    end;
+
+    if SQLQuery.FieldByName('L_OutFact').AsString = '' then
+    begin
+      nStr := Format('提货单[ %s ]未出厂,无法上传', [nPID]);
+      ShowMsg(nStr, sHint);
+      Exit;
+    end;
+
+    if not SyncHhSaleDetail(nPID) then
+    begin
+      ShowMsg('上传失败',sHint);
+      Exit;
+    end;
+
+    ShowMsg('上传成功',sHint);
+    InitFormData('');
+  end;
+end;
+
 initialization
   gControlManager.RegCtrl(TfFrameSaleDetailQuery, TfFrameSaleDetailQuery.FrameID);
 end.
+

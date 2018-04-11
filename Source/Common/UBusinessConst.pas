@@ -75,8 +75,10 @@ const
   cBC_TunnelOC                = $0076;   //车检:通道开合
   cBC_PlayVoice               = $0077;   //语音:播发语音
   cBC_OpenDoorByReader        = $0078;   //道闸:抬杆
+  cBC_ShowTxt                 = $0079;   //车检:发送小屏
 
   cBC_VerifySnapTruck         = $0081;   //车牌比对
+  cBC_TruckTimeOut            = $0082;   //散装车辆出厂超时
 
   cBC_SyncHhSaleMateriel      = $0091;   //同步销售物料
   cBC_SyncHhProvideMateriel   = $0092;   //同步采购物料
@@ -86,6 +88,10 @@ const
   cBC_SyncHhOrderPoundData    = $0096;   //上传采购磅单
   cBC_GetHhNeiDaoOrderPlan    = $0097;   //获取采购内倒进厂计划
   cBC_SyncHhNdOrderPoundData  = $0098;   //上传采购内倒磅单
+  cBC_SyncHhOtOrderPoundData  = $0099;   //上传采购临时磅单
+  cBC_GetHhSalePlan           = $0100;   //获取销售计划
+  cBC_SyncHhSaleDetai         = $0101;   //上传销售发货明细
+  cBC_SyncHhSaleWTTruck       = $0102;   //获取销售委托车辆
 
   cBC_WX_VerifPrintCode       = $0501;   //微信：验证喷码信息
   cBC_WX_WaitingForloading    = $0502;   //微信：工厂待装查询
@@ -105,6 +111,12 @@ const
   cBC_WX_get_shopPurchasebyNO = $0515;   //微信：根据订单号获取订单信息
   cBC_WX_ModifyWebOrderStatus = $0516;   //微信：修改网上订单状态
   cBC_WX_CreatLadingOrder     = $0517;   //微信：创建交货单
+  cBC_WX_GetCusMoney          = $0518;   //微信：获取客户资金
+  cBC_WX_GetInOutFactoryTotal = $0519;   //微信：获取进出厂统计
+  cBC_WX_GetAuditTruck        = $0520;   //微信：获取审核车辆
+  cBC_WX_UpLoadAuditTruck     = $0521;   //微信：审核车辆结果上传
+  cBC_WX_DownLoadPic          = $0522;   //微信：下载图片
+  cBC_WX_get_shoporderbyTruck = $0523;   //微信：根据车牌号获取订单信息
 
 type
   PWorkerQueryFieldData = ^TWorkerQueryFieldData;
@@ -178,6 +190,9 @@ type
     FNeiDao     : string;          //内倒
     Fexpiretime : string;
     FCtype      : string;          //卡类型；'L'：临时；'G'：固定
+    FPoundIdx   : Integer;          //多物料称重顺序
+    FPoundMax   : Integer;          //多物料称重总次数
+    FPrintBD    : Boolean;         //打印磅单
   end;
 
   TLadingBillItems = array of TLadingBillItem;
@@ -200,7 +215,7 @@ function CombineBillItmes(const nItems: TLadingBillItems): string;
 var
   gSapURLs: TTWorkerSapURLs;       //业务列表
   gSapURLInited: Integer = 0;      //是否初始化
-  
+
 resourcestring
   {*common function*}
   sSys_SweetHeart             = 'Sys_SweetHeart';       //心跳指令
@@ -231,7 +246,7 @@ resourcestring
   {*business mit function name*}
   sBus_ServiceStatus          = 'Bus_ServiceStatus';    //服务状态
   sBus_GetQueryField          = 'Bus_GetQueryField';    //查询的字段
-  
+
   sBus_ReadXSSaleOrder        = 'Bus_Read_XSSaleOrder'; //销售订单
   sBus_CreateSaleBill         = 'Bus_Create_SaleBill';  //创建交货单
   sBus_ModifySaleBill         = 'Bus_Modify_SaleBill';  //修改交货单
@@ -250,7 +265,7 @@ resourcestring
   {*client function name*}
   sCLI_ServiceStatus          = 'CLI_ServiceStatus';    //服务状态
   sCLI_GetQueryField          = 'CLI_GetQueryField';    //查询的字段
-  
+
   sCLI_BusinessSaleBill       = 'CLI_BusinessSaleBill'; //交货单业务
   sCLI_BusinessCommand        = 'CLI_BusinessCommand';  //业务指令
   sCLI_HardwareCommand        = 'CLI_HardwareCommand';  //硬件指令
@@ -351,6 +366,9 @@ begin
         FNeiDao  := Values['NeiDao'];
         Fexpiretime := Values['expiretime'];
         FCtype := Values['ctype'];
+        FPoundIdx := StrToInt(Values['PoundIdx']);
+        FPoundMax := StrToInt(Values['PoundMax']);
+        FPrintBD := Values['PrintBD'] = sFlag_Yes;
       end;
 
       Inc(nInt);
@@ -358,7 +376,7 @@ begin
   finally
     nListB.Free;
     nListA.Free;
-  end;   
+  end;
 end;
 
 //Date: 2017-09-18
@@ -437,6 +455,11 @@ begin
         Values['NeiDao']   := FNeiDao;
         Values['expiretime'] := Fexpiretime;
         Values['ctype'] := FCtype;
+        Values['PoundIdx'] := IntToStr(FPoundIdx);
+        Values['PoundMax'] := IntToStr(FPoundMax);
+        if FPrintBD then
+             Values['PrintBD'] := sFlag_Yes
+        else Values['PrintBD'] := sFlag_No;
       end;
 
       nListA.Add(PackerEncodeStr(nListB.Text));

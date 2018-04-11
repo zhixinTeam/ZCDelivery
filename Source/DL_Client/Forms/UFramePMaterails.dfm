@@ -121,5 +121,12 @@ inherited fFrameMaterails: TfFrameMaterails
       Tag = 1
       Caption = #24378#21046#29616#22330
     end
+    object N1: TMenuItem
+      Caption = '-'
+    end
+    object N7: TMenuItem
+      Caption = #21516#27493'ERP'#29289#26009
+      OnClick = N7Click
+    end
   end
 end

@@ -31,6 +31,8 @@ type
     N4: TMenuItem;
     N5: TMenuItem;
     N6: TMenuItem;
+    N1: TMenuItem;
+    N7: TMenuItem;
     procedure EditNamePropertiesButtonClick(Sender: TObject;
       AButtonIndex: Integer);
     procedure BtnAddClick(Sender: TObject);
@@ -40,6 +42,7 @@ type
     procedure N2Click(Sender: TObject);
     procedure N3Click(Sender: TObject);
     procedure N5Click(Sender: TObject);
+    procedure N7Click(Sender: TObject);
   private
     { Private declarations }
   protected
@@ -252,6 +255,17 @@ begin
   end;
 
   InitFormData(FWhere);
+end;
+
+procedure TfFrameMaterails.N7Click(Sender: TObject);
+begin
+  if not SyncPMaterail('') then
+  begin
+    ShowMsg('同步失败',sHint);
+    Exit;
+  end;
+  ShowMsg('同步完成',sHint);
+  InitFormData('');
 end;
 
 initialization

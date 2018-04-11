@@ -25,11 +25,18 @@ uses
   UFrameQuerySaleDetail, UFrameQuerySaleTotal,
   UFramePMaterails, UFormPMaterails,
   UFramePProvider, UFormPProvider,
-  UFrameQueryOrderDetail,
-
+  UFrameQueryOrderDetail,UFormModifyStock,
+  UFormPoundKw, UFormTruckEmpty, UFormPoundKwOther, UFormSaleKw, UFormGetWTTruck,
+  UFormSaleOrderOther, UFrameSaleOrderOther, UFormModifySaleStock, UFormSaleKwOther,
+  UFormGetWechartAccount,UFramePoundQueryOther, uFormSaleBuDanOther,
+  UFrameHYData, UFormHYData, UFrameBatcodeJ, UFormBatcodeJ, UFormGetStockNo,
+  UFrameHYRecord, UFormHYRecord, UFrameHYStock, UFormHYStock,
+  UFrameBatcodeRecord,
+  //for huayan
   UFrameOrderCard,UFramePurchaseOrder,UFrameOrderDetail,UFrameOtherCard,
   UFormCardOther,UFormPurchaseOrder,UFormGetPOrderBase,UFormPurchasing;
   //for sale
+
 
 procedure InitSystemObject;
 procedure RunSystemObject;
@@ -119,6 +126,7 @@ begin
     FPoundDaiF := 0;
     FPoundSanF := 0;
     FTruckPWuCha := 0;
+    FEmpTruckWc := 100;
     FDaiWCStop := False;
     FDaiPercent := False;
   end;
@@ -156,6 +164,9 @@ begin
 
       if nStr = sFlag_PTruckPWuCha then
         gSysParam.FTruckPWuCha := Fields[0].AsFloat;
+
+      if nStr = sFlag_PEmpTWuCha then
+        gSysParam.FEmpTruckWc := Fields[0].AsFloat;
       Next;
     end;
 

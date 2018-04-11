@@ -12,7 +12,7 @@ uses
   CPort, CPortTypes, UFormNormal, UFormBase, cxControls, cxLookAndFeels,
   cxLookAndFeelPainters, cxContainer, cxEdit, cxLabel, cxTextEdit,
   dxLayoutControl, StdCtrls, cxGraphics, cxMemo, cxMaskEdit, cxDropDownEdit,
-  cxCheckBox;
+  cxCheckBox, ComCtrls, cxListView;
 
 type
   TfFormCardOther = class(TfFormNormal)
@@ -23,20 +23,14 @@ type
     EditCard: TcxTextEdit;
     dxLayout1Item6: TdxLayoutItem;
     ComPort1: TComPort;
-    dxLayout1Item3: TdxLayoutItem;
-    EditMID: TcxComboBox;
     dxLayout1Item7: TdxLayoutItem;
     EditMName: TcxComboBox;
     dxLayout1Item8: TdxLayoutItem;
-    EditCID: TcxComboBox;
+    EditRName: TcxComboBox;
     dxLayout1Item9: TdxLayoutItem;
     EditCName: TcxComboBox;
-    dxLayout1Item10: TdxLayoutItem;
-    EditType: TcxComboBox;
     dxLayout1Item12: TdxLayoutItem;
     cxLabel2: TcxLabel;
-    dxLayout1Item13: TdxLayoutItem;
-    EditVal: TcxTextEdit;
     Check1: TcxCheckBox;
     dxLayout1Item11: TdxLayoutItem;
     CheckOnePValue: TcxCheckBox;
@@ -46,15 +40,23 @@ type
     dxLayout1Group2: TdxLayoutGroup;
     cbbystd: TcxComboBox;
     dxLayout1Item16: TdxLayoutItem;
+    BtnAdd: TButton;
+    dxLayout1Item13: TdxLayoutItem;
+    BtnDel: TButton;
+    dxLayout1Item17: TdxLayoutItem;
+    dxLayout1Item3: TdxLayoutItem;
+    ListQuery: TcxListView;
+    dxLayout1Group6: TdxLayoutGroup;
+    dxLayout1Group4: TdxLayoutGroup;
     procedure BtnOKClick(Sender: TObject);
     procedure ComPort1RxChar(Sender: TObject; Count: Integer);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure EditCardKeyPress(Sender: TObject; var Key: Char);
-    procedure EditMIDPropertiesEditValueChanged(Sender: TObject);
-    procedure EditMNamePropertiesEditValueChanged(Sender: TObject);
-    procedure EditCIDPropertiesEditValueChanged(Sender: TObject);
-    procedure EditCNamePropertiesEditValueChanged(Sender: TObject);
     procedure EditTruckKeyPress(Sender: TObject; var Key: Char);
+    procedure BtnAddClick(Sender: TObject);
+    procedure BtnDelClick(Sender: TObject);
+    procedure EditCNamePropertiesChange(Sender: TObject);
+    procedure EditMNamePropertiesChange(Sender: TObject);
   private
     { Private declarations }
     FBuffer: string;
@@ -76,7 +78,7 @@ implementation
 {$R *.dfm}
 uses
   IniFiles, ULibFun, UMgrControl, USysBusiness, USmallFunc, USysConst,USysDB,
-  UDataModule, UFormCtrl;
+  UDataModule, UFormCtrl, UBusinessPacker;
 
 type
   TReaderType = (ptT800, pt8142);
@@ -109,6 +111,7 @@ begin
   try
     dxLayout1Group2.Visible := False;
     dxLayout1Item16.Visible := False;
+    dxLayout1Item11.Visible := False;
     FYSTDList := TStringList.Create;
     FParam := nParam;
     InitFormData;
@@ -130,61 +133,85 @@ end;
 procedure TfFormCardOther.InitFormData;
 var nStr: string;
   nIndex:Integer;
-  nYstdno:string;          
+  nYstdno:string;
 begin
 //  InitComboxYSTD;
-  ActiveControl := EditMID;
-  with EditType.Properties do
+  ActiveControl := EditMName;
+
+  nStr := 'Select P_Name From %s Where P_Name is not null ';
+  nStr := Format(nStr, [sTable_Provider]);
+
+  EditCName.Properties.Items.Clear;
+
+  with FDM.QueryTemp(nStr) do
   begin
-    Items.Add(sFlag_San + '.散装');
-    Items.Add(sFlag_Dai + '.包装');
-    EditType.ItemIndex := 0;
+    if RecordCount > 0 then
+    begin
+      try
+        EditCName.Properties.BeginUpdate;
+
+        First;
+
+        while not Eof do
+        begin
+          EditCName.Properties.Items.Add(Fields[0].AsString);
+          Next;
+        end;
+      finally
+        EditCName.Properties.EndUpdate;
+      end;
+    end;
   end;
 
-  if FParam.FCommand = cCmd_AddData then
-  begin
-//    PoundLoadMaterails(EditMID.Properties.Items, EditMName.Properties.Items);
-//    PoundLoadCustomer(EditCID.Properties.Items, EditCName.Properties.Items);
-  end else
-  begin
-    nStr := 'Select * From %s Where R_ID=%s';
-    nStr := Format(nStr, [sTable_CardOther, FParam.FParamA]);
+  nStr := 'Select M_Name From %s Where M_Name is not null ';
+  nStr := Format(nStr, [sTable_Materails]);
 
-    with FDM.QueryTemp(nStr) do
+  EditMName.Properties.Items.Clear;
+
+  with FDM.QueryTemp(nStr) do
+  begin
+    if RecordCount > 0 then
     begin
-      if RecordCount < 1 then
-      begin
-        ShowMsg('数据丢失', sHint);
-        BtnOK.Enabled := False;
-        Exit;
+      try
+        EditMName.Properties.BeginUpdate;
+
+        First;
+
+        while not Eof do
+        begin
+          EditMName.Properties.Items.Add(Fields[0].AsString);
+          Next;
+        end;
+      finally
+        EditMName.Properties.EndUpdate;
       end;
+    end;
+  end;
 
-      EditCID.Text := FieldByName('O_CusID').AsString;
-      EditCID.Properties.ReadOnly := True;
-      EditCName.Text := FieldByName('O_CusName').AsString;
-      EditCName.Properties.ReadOnly := True;
+  nStr := 'Select D_Value,D_Memo From %s Where D_Name=''%s''';
+  nStr := Format(nStr, [sTable_SysDict, sFlag_SysParam]);
 
-      EditMID.Text := FieldByName('O_MID').AsString;
-      EditMID.Properties.ReadOnly := True;
-      EditMName.Text := FieldByName('O_MName').AsString;
-      EditMName.Properties.ReadOnly := True;
+  EditRName.Properties.Items.Clear;
 
-      if FieldByName('O_MType').AsString = sFlag_San then
-           EditType.ItemIndex := 0
-      else EditType.ItemIndex := 1;
+  with FDM.QueryTemp(nStr) do
+  begin
+    if RecordCount > 0 then
+    begin
+      try
+        EditRName.Properties.BeginUpdate;
 
-      EditType.Properties.ReadOnly := True;
-      EditTruck.Text := FieldByName('O_Truck').AsString;
-      EditTruck.Properties.ReadOnly := True;
-      nYstdno := FieldByName('O_YSTDno').AsString;
-      if nYstdno<>'' then
-      begin
-        nIndex := FYSTDList.IndexOf(nYstdno);
-        cbbystd.ItemIndex := nIndex;
+        First;
+
+        while not Eof do
+        begin
+          if Fields[1].AsString = sFlag_FactoryName then
+            EditRName.Properties.Items.Add(Fields[0].AsString);
+          Next;
+        end;
+      finally
+        EditRName.Properties.EndUpdate;
       end;
-
-      CheckOnePValue.Checked := FieldByName('O_UsePValue').AsString = sFlag_Yes;
-      CheckOneDoor.Checked := FieldByName('O_OneDoor').AsString = sFlag_Yes;
+      EditRName.ItemIndex := 0;
     end;
   end;
 end;
@@ -270,43 +297,6 @@ begin
   end;
 end;
 
-//------------------------------------------------------------------------------
-procedure TfFormCardOther.EditMIDPropertiesEditValueChanged(
-  Sender: TObject);
-begin
-  if EditMID.Focused and (not EditMID.Properties.ReadOnly) then
-  begin
-    EditMName.ItemIndex := EditMID.ItemIndex;
-  end;
-end;
-
-procedure TfFormCardOther.EditMNamePropertiesEditValueChanged(
-  Sender: TObject);
-begin
-  if EditMName.Focused and (not EditMName.Properties.ReadOnly) then
-  begin
-    EditMID.ItemIndex := EditMName.ItemIndex;
-  end;
-end;
-
-procedure TfFormCardOther.EditCIDPropertiesEditValueChanged(
-  Sender: TObject);
-begin
-  if EditCID.Focused and (not EditCID.Properties.ReadOnly) then
-  begin
-    EditCName.ItemIndex := EditCID.ItemIndex;
-  end;
-end;
-
-procedure TfFormCardOther.EditCNamePropertiesEditValueChanged(
-  Sender: TObject);
-begin
-  if EditCName.Focused and (not EditCName.Properties.ReadOnly) then
-  begin
-    EditCID.ItemIndex := EditCName.ItemIndex;
-  end;
-end;
-
 procedure TfFormCardOther.EditTruckKeyPress(Sender: TObject;
   var Key: Char);
 var nP: TFormCommandParam;
@@ -335,10 +325,12 @@ end;
 //Desc: 保存磁卡
 procedure TfFormCardOther.BtnOKClick(Sender: TObject);
 var nStr,nMType,nCType,nOneP,nOneDoor: string;
-  nYstdno:string;
+  nYstdno,nPName,nMName,nPNameUse,nMNameUse:string;
+  nPNameList, nMNameList: TStrings;
+  nIdx: Integer;
 begin
   nYstdno := '';
-  
+
   EditCard.Text := Trim(EditCard.Text);
   if EditCard.Text = '' then
   begin
@@ -359,22 +351,48 @@ begin
     Exit;
   end;
 
-  if not IsNumber(EditVal.Text, True) then
+  EditRName.Text := Trim(EditRName.Text);
+  if EditRName.Text = '' then
   begin
-    ActiveControl := EditVal;
-    EditVal.SelectAll;
+    ActiveControl := EditRName;
 
-    ShowMsg('请输入数值', sHint);
+    ShowMsg('请输入或选择收货单位', sHint);
     Exit;
   end;
 
+  if ListQuery.Items.Count <= 0  then
+  begin
+    ActiveControl := EditCName;
+
+    ShowMsg('请添加过磅物料', sHint);
+    Exit;
+  end;
+
+  try
+    nPNameList := TStringList.Create;
+    nMNameList := TStringList.Create;
+    nPName := '';
+    nMName := '';
+    for nIdx := 0 to ListQuery.Items.Count - 1 do
+    begin
+      nPNameList.Add(ListQuery.Items[nIdx].Caption);
+      nMNameList.Add(ListQuery.Items[nIdx].SubItems[0]);
+      nPName := nPName + ListQuery.Items[nIdx].Caption + ',';
+      nMName := nMName + ListQuery.Items[nIdx].SubItems[0] + ',';
+    end;
+    nPNameUse := nPNameList.Text;
+    nMNameUse := nMNameList.Text;
+  finally
+    nPNameList.Free;
+    nMNameList.Free
+  end;
   FDM.ADOConn.BeginTrans;
   try
     nStr := 'O_Card=''%s''';
     if FParam.FCommand = cCmd_EditData then
       nStr := nStr + ' And R_ID<>%s';
     nStr := Format(nStr, [EditCard.Text, FParam.FParamA]);
-    
+
     nStr := MakeSQLByStr([SF('O_Card', ''),
             SF('O_OutTime', sField_SQLServer_Now, sfVal),
             SF('O_OutMan', gSysParam.FUserID)
@@ -399,21 +417,17 @@ begin
     end;
     if FParam.FCommand = cCmd_AddData then
     begin
-      if EditType.ItemIndex = 0 then
-           nMType := sFlag_San
-      else nMType := sFlag_Dai;
 
       nStr := MakeSQLByStr([
               SF('O_Status', sFlag_TruckNone),
               SF('O_NextStatus', sFlag_TruckIn),
               SF('O_Card', EditCard.Text),
               SF('O_Truck', EditTruck.Text),
-              SF('O_CusID', EditCID.Text),
-              SF('O_CusName', EditCName.Text),
-              SF('O_MID', EditMID.Text),
-              SF('O_MName', EditMName.Text),
-              SF('O_MType', nMType),
-              SF('O_LimVal', EditVal.Text, sfVal),
+              SF('O_CusName', nPName),
+              SF('O_RevName', EditRName.Text),
+              SF('O_MName', nMName),
+              SF('O_CusNameUse', nPNameUse),
+              SF('O_MNameUse', nMNameUse),
               SF('O_KeepCard', nCType),
               SF('O_UsePValue', nOneP),
               SF('O_OneDoor', nOneDoor),
@@ -421,28 +435,6 @@ begin
               SF('O_Date', sField_SQLServer_Now, sfVal),
               SF('O_YSTDno', nYstdno)
               ], sTable_CardOther, '', True);
-      {$IFDEF QHSN}
-      {$IFDEF GGJC}
-      nStr := MakeSQLByStr([
-              SF('O_Status', sFlag_TruckIn),
-              SF('O_NextStatus', sFlag_TruckBFP),
-              SF('O_Card', EditCard.Text),
-              SF('O_Truck', EditTruck.Text),
-              SF('O_CusID', EditCID.Text),
-              SF('O_CusName', EditCName.Text),
-              SF('O_MID', EditMID.Text),
-              SF('O_MName', EditMName.Text),
-              SF('O_MType', nMType),
-              SF('O_LimVal', EditVal.Text, sfVal),
-              SF('O_KeepCard', nCType),
-              SF('O_UsePValue', nOneP),
-              SF('O_OneDoor', nOneDoor),
-              SF('O_Man', gSysParam.FUserID),
-              SF('O_Date', sField_SQLServer_Now, sfVal),
-              SF('O_YSTDno', nYstdno)
-              ], sTable_CardOther, '', True);
-      {$ENDIF}
-      {$ENDIF}
       FDM.ExecuteSQL(nStr);
     end else
     begin
@@ -453,7 +445,7 @@ begin
       FDM.ExecuteSQL(nStr);
     end;
 
-    nStr := MakeSQLByStr([SF('C_Used', sFlag_Other),
+    nStr := MakeSQLByStr([SF('C_Used', sFlag_Mul),
             SF('C_Status', sFlag_CardUsed)
             ], sTable_Card, SF('C_Card', EditCard.Text), False);
     FDM.ExecuteSQL(nStr);
@@ -469,7 +461,7 @@ begin
               GetPinYinOfStr(EditTruck.Text)]);
       FDM.ExecuteSQL(nStr);
     end;
-    
+
     FDM.ADOConn.CommitTrans;
     ModalResult := mrOk;
     //done
@@ -497,6 +489,82 @@ begin
       FYSTDList.Add(nid);
       cbbystd.Properties.Items.Add(nName);
       Next;
+    end;
+  end;
+end;
+
+procedure TfFormCardOther.BtnAddClick(Sender: TObject);
+var nIdx: Integer;
+    nStr: string;
+begin
+  if EditCName.Text = '' then
+  begin
+    ActiveControl := EditCName;
+
+    ShowMsg('请输入或选择发货单位', sHint);
+    Exit;
+  end;
+  if EditMName.Text = '' then
+  begin
+    ActiveControl := EditMName;
+
+    ShowMsg('请输入或选择物料', sHint);
+    Exit;
+  end;
+
+  for nIdx := 0 to ListQuery.Items.Count - 1 do
+  begin
+    nStr:= ListQuery.Items[nIdx].SubItems[0];
+    if CompareText(Trim(EditMName.Text),nStr) = 0 then
+    begin
+      ShowMsg('物料重复,请重新选择', sHint);
+      Exit;
+    end;
+  end;
+  with ListQuery.Items.Add do
+  begin
+    Caption := EditCName.Text;
+    SubItems.Add(EditMName.Text);
+    ImageIndex := cItemIconIndex;
+  end;
+  if ListQuery.Items.Count > 0 then
+    ListQuery.ItemIndex := ListQuery.Items.Count - 1;
+end;
+
+procedure TfFormCardOther.BtnDelClick(Sender: TObject);
+begin
+  if ListQuery.ItemIndex < 0 then
+  begin
+    ShowMsg('请选择需要删除的项目',sHint);
+    Exit;
+  end;
+  ListQuery.Items.Delete(ListQuery.ItemIndex);
+  if ListQuery.Items.Count > 0 then
+    ListQuery.ItemIndex := ListQuery.Items.Count - 1;
+end;
+
+procedure TfFormCardOther.EditCNamePropertiesChange(Sender: TObject);
+var nIdx : Integer;
+begin
+  for nIdx := 0 to EditCName.Properties.Items.Count - 1 do
+  begin;
+    if Pos(EditCName.Text,EditCName.Properties.Items.Strings[nIdx]) > 0 then
+    begin
+      EditCName.SelectedItem := nIdx;
+      Break;
+    end;
+  end;
+end;
+
+procedure TfFormCardOther.EditMNamePropertiesChange(Sender: TObject);
+var nIdx : Integer;
+begin
+  for nIdx := 0 to EditMName.Properties.Items.Count - 1 do
+  begin;
+    if Pos(EditMName.Text,EditMName.Properties.Items.Strings[nIdx]) > 0 then
+    begin
+      EditMName.SelectedItem := nIdx;
+      Break;
     end;
   end;
 end;

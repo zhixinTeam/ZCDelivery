@@ -80,8 +80,13 @@ begin
   try
     Caption := '销售订单';
     FBillItem := nP.FParamE;
+    if not GetHhSalePlan('') then
+    begin
+      ShowMsg('获取销售计划失败',sHint);
+      Exit;
+    end;
     InitFormData('');
-    
+
     nP.FCommand := cCmd_ModalResult;
     nP.FParamA := ShowModal;
   finally
@@ -163,23 +168,23 @@ begin
   nWhere := '';
   if FListA.Count > 0 then
   begin
-    nStr := 'KUNNRDESC Like ''%%%s%%'' Or O_CusPY Like ''%%%s%%''';
+    nStr := 'O_CusName Like ''%%%s%%'' Or O_CusPY Like ''%%%s%%''';
     nWhere := Format(nStr, [FListA[0], FListA[0]]);
   end; //客户名
 
   if FListA.Count > 1 then
   begin
-    nStr := ' And ARKTX Like ''%%%s%%''';
+    nStr := ' And O_StockName Like ''%%%s%%''';
     nWhere := nWhere + Format(nStr, [FListA[1]]);
   end; //品种名
 
   if FListA.Count > 2 then
   begin
     if CompareText(FListA[2], 'D') = 0 then
-         nStr := '31'
-    else nStr := '32';
+         nStr := '袋装'
+    else nStr := '散装';
 
-    nStr := Format(' And VTEXT=''%s''', [nStr]);
+    nStr := Format(' And O_StockType=''%s''', [nStr]);
     nWhere := nWhere + nStr;
   end; //包装类型
 
@@ -196,20 +201,21 @@ begin
 
   with ADOQuery1,FBillItem^ do
   begin
-    FZhiKa       := FieldByName('VBELN').AsString;
-    FStockNo     := FieldByName('MATNR').AsString;
-    FStockName   := FieldByName('ARKTX').AsString;
-    FCusID       := FieldByName('KUNNR').AsString;
-    FCusName     := FieldByName('KUNNRDESC').AsString;
-
-    FValue       := FieldByName('ZAVA').AsFloat;
-    FStatus      := FieldByName('WERKS').AsString;
-    FNextStatus  := FieldByName('WERKSDESC').AsString;
-
-    FType := FieldByName('VTEXT').AsString;
-    if FType = '31' then
+    FZhiKa       := FieldByName('O_Order').AsString;
+    FType        := FieldByName('O_StockType').AsString;
+    if Pos('袋' , FType) > 0 then
          FType := sFlag_Dai
     else FType := sFlag_San;
+    FStockNo     := GetStockNo(FieldByName('O_StockName').AsString,
+                               FType);
+    FStockName   := FieldByName('O_StockName').AsString;
+    FCusID       := '';
+    FCusName     := FieldByName('O_CusName').AsString;
+
+    FValue       := FieldByName('O_PlanRemain').AsFloat -
+                    FieldByName('O_Freeze').AsFloat;
+    FStatus      := '';
+    FNextStatus  := FieldByName('O_Company').AsString;
   end;
 
   ModalResult := mrOk;

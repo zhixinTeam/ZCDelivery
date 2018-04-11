@@ -70,11 +70,11 @@ begin
   begin
     if not ShowInputBox('请输入提货磁卡号:', '进厂', nStr) then Exit;
     nStr := Trim(nStr);
-    
+
     if nStr = '' then Continue;
 
     gCardUsed := GetCardUsed(nStr);
-    if gCardUsed = sFlag_Provide then
+    if (gCardUsed = sFlag_Provide) or (gCardUsed = sFlag_Mul) then
          nRet := GetPurchaseOrders(nStr, sFlag_TruckIn, gBills)
     else nRet := GetLadingBills(nStr, sFlag_TruckIn, gBills);
 
@@ -150,7 +150,7 @@ begin
   for nIdx:=Low(gBills) to High(gBills) do
   with ListBill.Items.Add,gBills[nIdx] do
   begin
-    if gCardUsed = sFlag_Provide then
+    if (gCardUsed = sFlag_Provide) then
          Caption := FZhiKa
     else Caption := FID;
     SubItems.Add(Format('%.3f', [FValue]));
@@ -174,7 +174,7 @@ begin
 
     with gBills[nIdx] do
     begin
-      if gCardUsed = sFlag_Provide then
+      if (gCardUsed = sFlag_Provide) then
       begin
         LayItem1.Caption := '采购单号:';
         EditBill.Text := FZhiKa;
@@ -182,12 +182,20 @@ begin
         //LoadOrderItemToMC(gBills[nIdx], ListInfo.Items, ListInfo.Delimiter);
       end
       else
+      if (gCardUsed = sFlag_Mul) then
+      begin
+        LayItem1.Caption := '采购单号:';
+        EditBill.Text := FID;
+
+        LoadOrderItemToMC(gBills[nIdx], ListInfo.Items, ListInfo.Delimiter);
+      end
+      else
       begin
         LayItem1.Caption := '交货单号:';
         EditBill.Text := FID;
 
         LoadBillItemToMC(gBills[nIdx], ListInfo.Items, ListInfo.Delimiter);
-      end;    
+      end;
 
       EditCus.Text := FCusName;
     end;
@@ -215,7 +223,7 @@ end;
 procedure TfFormTruckIn.BtnOKClick(Sender: TObject);
 var nRet: Boolean;
 begin
-  if (gCardUsed = sFlag_Provide) then
+  if (gCardUsed = sFlag_Provide) or (gCardUsed = sFlag_Mul) then
        nRet := SavePurchaseOrders(sFlag_TruckIn, gBills)
   else nRet := SaveLadingBills(sFlag_TruckIn, gBills);
 

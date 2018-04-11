@@ -163,7 +163,7 @@ inherited fFrameCustomer: TfFrameCustomer
       Caption = '-'
     end
     object N4: TMenuItem
-      Caption = #21516#27493#36828#31243#23458#25143
+      Caption = #21516#27493'ERP'#23458#25143
       OnClick = N4Click
     end
     object N5: TMenuItem

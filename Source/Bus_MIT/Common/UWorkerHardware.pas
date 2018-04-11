@@ -69,6 +69,7 @@ type
     //计数器业务
     function TruckProbe_IsTunnelOK(var nData: string): Boolean;
     function TruckProbe_TunnelOC(var nData: string): Boolean;
+    function TruckProbe_ShowTxt(var nData: string): Boolean;
     //车辆检测控制器业务
     function OpenDoorByReader(var nData: string): Boolean;
     //通过读卡器打开道闸
@@ -246,6 +247,7 @@ begin
 
    cBC_IsTunnelOK           : Result := TruckProbe_IsTunnelOK(nData);
    cBC_TunnelOC             : Result := TruckProbe_TunnelOC(nData);
+   cBC_ShowTxt              : Result := TruckProbe_ShowTxt(nData);
 
    cBC_OpenDoorByReader     : Result := OpenDoorByReader(nData);
    //xxxxxx
@@ -434,7 +436,7 @@ begin
     {$ENDIF}
 
     nStr := 'Select %s,L_ID,BZIRK,L_CusID,L_Truck From %s b ' +
-            ' Left Join %s o On o.VBELN=b.L_ZhiKa ' +
+            ' Left Join %s o On o.O_Order=b.L_ZhiKa ' +
             'Where L_ID=''%s''';
     nStr := Format(nStr, [nPrint, sTable_Bill, sTable_SalesOrder, FIn.FData]);
 
@@ -701,6 +703,20 @@ begin
 
   if Trim(nReader) <> '' then
     gHYReaderManager.OpenDoor(Trim(nReader));
+end;
+
+//Date: 2018-02-27
+//Parm: 通道号[FIn.FData] 发送内容[FIn.FExt]
+//Desc: 向指定通道的显示屏发送内容
+function THardwareCommander.TruckProbe_ShowTxt(var nData: string): Boolean;
+begin
+  Result := True;
+  if not Assigned(gProberManager) then Exit;
+
+  gProberManager.ShowTxt(FIn.FData,FIn.FExtParam);
+
+  nData := Format('ShowTxt -> %s:%s', [FIn.FData, FIn.FExtParam]);
+  WriteLog(nData);
 end;
 
 initialization

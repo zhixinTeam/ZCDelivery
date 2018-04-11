@@ -293,7 +293,7 @@ begin
          nStr := '销售并单'
     else nStr := '销售';
 
-    if FCardUsed=sFlag_Provide then nStr := '供应';
+    if (FCardUsed = sFlag_Provide) or (FCardUsed = sFlag_Mul) then nStr := '供应';
 
     if FUIData.FNextStatus = sFlag_TruckBFP then
     begin
@@ -336,15 +336,26 @@ begin
   end;
 
   FCardUsed := GetCardUsed(nCard);
-  if ((FCardUsed=sFlag_Provide) and (not GetPurchaseOrders(nCard, sFlag_TruckBFP, nBills)))
-    or
-    ((FCardUsed <> sFlag_Provide) and (not GetLadingBills(nCard, sFlag_TruckBFP, nBills)))
-  then
+  if FCardUsed=sFlag_Mul then
   begin
-    SetUIData(True);
-    Exit;
+    if not GetPurchaseOrders(nCard, sFlag_TruckBFP, nBills) then
+    begin
+      SetUIData(True);
+      Exit;
+    end;
+  end
+  else
+  begin
+    if ((FCardUsed=sFlag_Provide) and (not GetPurchaseOrders(nCard, sFlag_TruckBFP, nBills)))
+      or
+      ((FCardUsed <> sFlag_Provide) and (not GetLadingBills(nCard, sFlag_TruckBFP, nBills)))
+    then
+    begin
+      SetUIData(True);
+      Exit;
+    end;
   end;
-  
+
   nIsPreTruck := getPrePInfo(nBills[0].FTruck,nPrePValue,nPrePMan,nPrePTime);
   nHint := '';
   nInt := 0;
@@ -352,22 +363,53 @@ begin
   for nIdx:=Low(nBills) to High(nBills) do
   with nBills[nIdx] do
   begin
+    if (FNextStatus=sFlag_TruckNone) and (FCardUsed=sFlag_Sale) then
+    begin
+      if SaveLadingBills(sFlag_TruckIn, nBills) then
+      begin
+        ShowMsg('车辆进厂成功', sHint);
+        LoadBillItems(nCard);
+        Exit;
+      end else
+      begin
+        ShowMsg('车辆进厂失败', sHint);
+        SetUIData(True);
+        Exit;
+      end;
+    end;
     if FNeiDao=sflag_yes then
     begin
       if ((FStatus=sFlag_TruckOut)
+          or ((FStatus = sFlag_TruckBFM) and (FNextStatus = sFlag_TruckOut))
           or ((FStatus = sFlag_TruckBFM) and (FNextStatus = sFlag_TruckBFP))) then
       begin
-        FStatus := sFlag_TruckBFP;
-        FNextStatus := sFlag_TruckBFM;
+        FStatus := sFlag_TruckIn;
+        FNextStatus := sFlag_TruckBFP;
         FillChar(FPData, SizeOf(FPData), 0);
         FillChar(FMData, SizeOf(FMData), 0);
+      end;
+    end;
+    if (FStatus = sFlag_TruckOut) and (FCardUsed = sFlag_Sale) then
+    begin
+      if IsTruckCanPound(nBills[nIdx]) then
+      begin
+        FStatus := sFlag_TruckIn;
+        FNextStatus := sFlag_TruckBFP;
+        FillChar(FPData, SizeOf(FPData), 0);
+        FillChar(FMData, SizeOf(FMData), 0);
+      end
+      else
+      begin
+        ShowMsg('订单余量不足',sHint);
+        SetUIData(True);
+        Exit;
       end;
     end;
     //长期卡+预置皮重
     if (FCtype=sFlag_CardGuDing) and nIsPreTruck then
     begin
       //皮重过期或皮重为0，则重新保存皮重
-      if (DateToStr(nPrePTime)<>DateToStr(Date)) or (nPrePValue<0.00001) then
+      if nPrePValue<0.00001 then
       begin
         FStatus := sFlag_TruckIn;
         FNextStatus := sFlag_TruckBFP;
@@ -383,6 +425,16 @@ begin
           FPData.FOperator := nPrePMan;
           FPData.FDate := nPrePTime;
         end;
+      end;
+    end
+    else  if (FCardUsed=sFlag_Mul) and (FPoundIdx > 1) then
+    begin
+      getLastPInfo(nBills[0].FID,nPrePValue,nPrePMan,nPrePTime);
+      with nBills[0] do
+      begin
+        FPData.FValue := nPrePValue;
+        FPData.FOperator := nPrePMan;
+        FPData.FDate := nPrePTime;
       end;
     end
     else begin
@@ -627,7 +679,7 @@ begin
   if not IsNumber(EditValue.Text, True) then Exit;
   nVal := StrToFloat(EditValue.Text);
 
-  if (Length(FBillItems) > 0) and (FCardUsed <> sFlag_Provide) then
+  if (Length(FBillItems) > 0) and (FCardUsed <> sFlag_Provide) and (FCardUsed <> sFlag_Mul) then
   begin
     if FBillItems[0].FNextStatus = sFlag_TruckBFP then
          FUIData.FPData.FValue := nVal
@@ -715,7 +767,7 @@ var nVal: Double;
     nEdit: TcxTextEdit;
 begin
   nEdit := Sender as TcxTextEdit;
-  if not IsNumber(nEdit.Text, True) then Exit; 
+  if not IsNumber(nEdit.Text, True) then Exit;
   nVal := StrToFloat(nEdit.Text);
 
   if Sender = EditPValue then
@@ -768,6 +820,10 @@ end;
 //Desc: 原材料或临时
 function TfFrameManualPoundItem.SavePoundData: Boolean;
 var nNextStatus: string;
+    nIsPreTruck:Boolean;
+    nPrePValue: Double;
+    nPrePMan: string;
+    nPrePTime: TDateTime;
 begin
   Result := False;
   //init
@@ -787,24 +843,36 @@ begin
     end;
   end;
 
-  if (Length(FBillItems)>0) and (FCardUsed = sFlag_Provide) then
+  if (Length(FBillItems)>0) and ((FCardUsed = sFlag_Provide) or (FCardUsed = sFlag_Mul)) then
     nNextStatus := FBillItems[0].FNextStatus;
 
   SetLength(FBillItems, 1);
   FBillItems[0] := FUIData;
   //复制用户界面数据
-  
+
   with FBillItems[0] do
   begin
     FFactory := gSysParam.FFactNum;
     //xxxxx
-    
+    nIsPreTruck := getPrePInfo(FTruck,nPrePValue,nPrePMan,nPrePTime);
+    //长期卡+预置皮重
+    if (FCtype=sFlag_CardGuDing) and nIsPreTruck then
+    begin
+      //皮重为0，则重新保存皮重
+      if (StrToFloatDef(EditValue.Text,0) < GetPrePValueSet) then
+      begin
+        SaveTruckPrePValue(FTruck,EditValue.Text);
+        UpdateTruckStatus(FUIData.FID);
+        Exit;
+      end;
+    end;
+
     if FNextStatus = sFlag_TruckBFP then
          FPData.FStation := FPoundTunnel.FID
     else FMData.FStation := FPoundTunnel.FID;
   end;
 
-  if FCardUsed = sFlag_Provide then
+  if (FCardUsed = sFlag_Provide) or (FCardUsed = sFlag_Mul) then
        Result := SavePurchaseOrders(nNextStatus, FBillItems,FPoundTunnel)
   else Result := SaveTruckPoundItem(FPoundTunnel, FBillItems);
   //保存称重
@@ -849,7 +917,8 @@ begin
     end;
   end;
 
-  if (FUIData.FPData.FValue > 0) and (FUIData.FMData.FValue > 0) then
+  if (FUIData.FPData.FValue > 0) and (FUIData.FMData.FValue > 0) and
+       (FUIData.FPModel <> sFlag_PoundCC) then //有净重,非出厂模式
   begin
     if FUIData.FPData.FValue > FUIData.FMData.FValue then
     begin
@@ -896,7 +965,7 @@ begin
           nStr := nStr + #13#10#13#10 + '是否继续保存?';
           nStr := Format(nStr, [FTruck, FInnerData.FValue, nNet, nVal]);
           if not QueryDlg(nStr, sAsk) then Exit;
-        end;  
+        end;
       end;
 
       if (FType = sFlag_San) and IsStrictSanValue and
@@ -905,12 +974,44 @@ begin
         nStr := '车辆[n1]%s[p500]净重[n2]%.2f吨[p500]开票量[n2]%.2f吨,请卸货';
         nStr := Format(nStr, [FTruck, Float2Float(nNet, cPrecision, True),
                 Float2Float(FValue, cPrecision, True)]);
-                
+
         ShowDlg(nStr, sHint);
-        Exit;        
+        Exit;
       end;
     end;
   end;
+
+    {$IFNDEF AutoPoundInManual}
+  if (FUIData.FPModel = sFlag_PoundCC) and
+     (FUIData.FNextStatus = sFlag_TruckBFM) then //出厂模式,过重车
+  with FUIData do
+  begin
+    nNet := FUIData.FMData.FValue - FUIData.FPData.FValue;
+    nNet := Trunc(nNet * 1000);
+    //净重
+
+    if nNet > 0 then
+    if nNet > gSysParam.FEmpTruckWc then
+    begin
+      nVal := nNet - gSysParam.FEmpTruckWc;
+      nStr := '车辆[n1]%s[p500]空车出厂超差[n2]%.2f公斤,请司机联系司磅管理员检查车厢';
+      nStr := Format(nStr, [FBillItems[0].FTruck, Float2Float(nVal, cPrecision, True)]);
+      PlayVoice(nStr);
+      Exit;
+    end;
+
+    nStr := '车辆[ %s ]正在空车出厂,详情如下:' + #13#10 +
+            '※.单据号: %s' + #13#10 +
+            '※.开单量: %.2f吨' + #13#10 +
+            '※.净  重: %.2f公斤' + #13#10 +
+            '请确认净重无误后,执行删单操作.';
+    nStr := Format(nStr, [FTruck, FID, FValue, nNet]);
+
+    AddManualEventRecord(FID + sFlag_ManualD, FTruck, nStr,
+      sFlag_DepBangFang , sFlag_Solution_OK, sFlag_DepDaTing, True);
+    //xxxxx
+  end;
+  {$ENDIF}
 
   with FBillItems[0] do
   begin
@@ -958,7 +1059,7 @@ begin
   try
     BtnSave.Enabled := False;
     ShowWaitForm(ParentForm, '正在保存称重', True);
-    
+
     if (Length(FBillItems) > 0) and (FCardUsed=sFlag_Sale) then
          nBool := SavePoundSale
     else nBool := SavePoundData;
@@ -967,7 +1068,7 @@ begin
     begin
       PlayVoice(#9 + FUIData.FTruck);
       //播放语音
-      
+
       Timer2.Enabled := True;
 
       {$IFNDEF DEBUG}

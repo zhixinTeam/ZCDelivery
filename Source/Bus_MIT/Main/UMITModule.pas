@@ -17,7 +17,7 @@ uses
   USysLoger, UBaseObject, UMemDataPool,
   //系统对象
   {$IFDEF HardMon}UEventHardware, UWorkerHardware,{$ENDIF}
-  UWorkerBusiness;
+  UWorkerBusiness, UWorkerBusinessBill;
   //业务对象
 
 procedure InitSystemObject(const nMainForm: THandle);

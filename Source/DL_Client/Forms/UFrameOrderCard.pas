@@ -55,6 +55,8 @@ type
     dxLayout1Item7: TdxLayoutItem;
     cxTextEdit2: TcxTextEdit;
     dxLayout1Item4: TdxLayoutItem;
+    N18: TMenuItem;
+    N19: TMenuItem;
     procedure EditDatePropertiesButtonClick(Sender: TObject;
       AButtonIndex: Integer);
     procedure EditTruckPropertiesButtonClick(Sender: TObject;
@@ -78,6 +80,8 @@ type
     procedure BtnDelClick(Sender: TObject);
     procedure N17Click(Sender: TObject);
     procedure cxView2DblClick(Sender: TObject);
+    procedure N18Click(Sender: TObject);
+    procedure N19Click(Sender: TObject);
   private
     { Private declarations }
   protected
@@ -94,6 +98,8 @@ type
     procedure OnInitFormData(var nDefault: Boolean; const nWhere: string = '';
      const nQuery: TADOQuery = nil); override;
     {*查询SQL*}
+    function GetVal(const nRow: Integer; const nField: string): string;
+    //获取指定字段
   public
     { Public declarations }
     class function FrameID: integer; override;
@@ -162,8 +168,8 @@ begin
 
   if FQueryHas then
   begin
-    nStr := 'Select bc.*,O_ID,O_ProID,O_ProName,O_Truck,O_CType,o_ifneidao From $BC bc ' +
-            ' Left Join $Order o On o.O_Card=bc.C_Card ';
+    nStr := 'Select bc.*,O_ID,O_ProID,O_ProName,O_Truck,O_CType,o_ifneidao,' +
+            'O_StockName,O_Model From $BC bc  Left Join $Order o On o.O_Card=bc.C_Card ';
     //xxxxx
 
     if FWhere = '' then
@@ -424,8 +430,10 @@ begin
   for i:=0 to nCount do
     PMenu1.Items[i].Enabled := False;
   //xxxxx
-  
+
   N1.Enabled := True;
+  N18.Enabled := True;
+  N19.Enabled := True;
   N17.Enabled := cxView1.DataController.GetSelectedCount > 0;
   //备注信息
 
@@ -578,6 +586,76 @@ begin
     nP.FParamA := SQLQuery.FieldByName('C_Memo').AsString;
     CreateBaseFormItem(cFI_FormMemo, '', @nP);
   end;;
+end;
+
+procedure TfFrameOrderCard.N18Click(Sender: TObject);
+var nStr,nSQL: string;
+    nIdx: Integer;
+begin
+  if cxView1.DataController.GetSelectedCount < 1 then
+  begin
+    ShowMsg('请选择要编辑的记录', sHint); Exit;
+  end;
+
+  nStr := '确定要对所有选中记录执行冻结操作吗?';
+
+  if not QueryDlg(nStr, sAsk) then Exit;
+
+  for nIdx := 0 to cxView1.DataController.RowCount - 1  do
+  begin
+    nStr := GetVal(nIdx,'C_Card');
+    if nStr = '' then
+      Continue;
+
+    nSQL := 'Update %s Set C_Freeze=''%s'' Where C_Card=''%s''';
+    nSQL := Format(nSQL, [sTable_Card, sFlag_Yes, nStr]);
+    FDM.ExecuteSQL(nSQL);
+
+  end;
+  InitFormData(FWhere);
+  ShowMsg('冻结操作成功', sHint);
+end;
+
+//Desc: 获取nRow行nField字段的内容
+function TfFrameOrderCard.GetVal(const nRow: Integer;
+ const nField: string): string;
+var nVal: Variant;
+begin
+  nVal := cxView1.ViewData.Rows[nRow].Values[
+            cxView1.GetColumnByFieldName(nField).Index];
+  //xxxxx
+
+  if VarIsNull(nVal) then
+       Result := ''
+  else Result := nVal;
+end;
+
+procedure TfFrameOrderCard.N19Click(Sender: TObject);
+var nStr,nSQL: string;
+    nIdx: Integer;
+begin
+  if cxView1.DataController.GetSelectedCount < 1 then
+  begin
+    ShowMsg('请选择要编辑的记录', sHint); Exit;
+  end;
+
+  nStr := '确定要对所有选中记录执行解除冻结操作吗?';
+
+  if not QueryDlg(nStr, sAsk) then Exit;
+
+  for nIdx := 0 to cxView1.DataController.RowCount - 1  do
+  begin
+    nStr := GetVal(nIdx,'C_Card');
+    if nStr = '' then
+      Continue;
+
+    nSQL := 'Update %s Set C_Freeze=''%s'' Where C_Card=''%s''';
+    nSQL := Format(nSQL, [sTable_Card, sFlag_No, nStr]);
+    FDM.ExecuteSQL(nSQL);
+
+  end;
+  InitFormData(FWhere);
+  ShowMsg('解除冻结操作成功', sHint);
 end;
 
 initialization

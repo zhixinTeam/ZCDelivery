@@ -23,7 +23,7 @@
 {.$DEFINE ClientMon}
 //进程守护客户端
 
-{.$DEFINE HardMon}
+{$DEFINE HardMon}
 //编译硬件守护
 
 {.$DEFINE GenRODL}
@@ -61,13 +61,13 @@
   //华益读头
   {$DEFINE AppAtTaskBar}
   //状态栏显示
-  {$DEFINE MITTruckProber}
+  {.$DEFINE MITTruckProber}
   //车检由中间件控制
   {$DEFINE MultiReplay}
   //计数器应答模式
   {$DEFINE DaiStepWuCha}
   //包装阶梯误差
-  {$DEFINE DaiOpenBackWhenError}
+  {.$DEFINE DaiOpenBackWhenError}
   //包装错误抬后杆
   {$DEFINE BatchInHYOfBill}
   //批次保存在化验单字段
@@ -79,5 +79,11 @@
   //使用简单合格证数据(无检验结果)
   {$DEFINE JSTruck}
   //格式化计数器车牌
+  {$DEFINE SyncRemote}
+  //远程同步
+  {$DEFINE MicroMsg}
+  //微信
+  {$DEFINE GetTruckNoFromERP}
+  //从ERP委托单获取车号
 {$ENDIF}
 

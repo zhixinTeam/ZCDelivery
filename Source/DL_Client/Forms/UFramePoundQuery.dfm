@@ -1,8 +1,8 @@
 inherited fFramePoundQuery: TfFramePoundQuery
-  Width = 976
-  Height = 582
+  Width = 1063
+  Height = 581
   inherited ToolBar1: TToolBar
-    Width = 976
+    Width = 1063
     inherited BtnAdd: TToolButton
       Visible = False
     end
@@ -18,21 +18,21 @@ inherited fFramePoundQuery: TfFramePoundQuery
   end
   inherited cxGrid1: TcxGrid
     Top = 205
-    Width = 976
-    Height = 377
+    Width = 1063
+    Height = 376
     inherited cxView1: TcxGridDBTableView
       PopupMenu = PMenu1
     end
   end
   inherited dxLayout1: TdxLayoutControl
-    Width = 976
+    Width = 1063
     Height = 138
     object cxTextEdit1: TcxTextEdit [0]
       Left = 269
       Top = 94
       Hint = 'T.P_Truck'
       ParentFont = False
-      TabOrder = 6
+      TabOrder = 7
       Width = 125
     end
     object EditTruck: TcxButtonEdit [1]
@@ -68,7 +68,7 @@ inherited fFramePoundQuery: TfFramePoundQuery
       Top = 94
       Hint = 'T.P_ID'
       ParentFont = False
-      TabOrder = 5
+      TabOrder = 6
       Width = 125
     end
     object cxTextEdit3: TcxTextEdit [4]
@@ -76,11 +76,11 @@ inherited fFramePoundQuery: TfFramePoundQuery
       Top = 94
       Hint = 'T.P_PDate'
       ParentFont = False
-      TabOrder = 7
+      TabOrder = 8
       Width = 125
     end
     object EditDate: TcxButtonEdit [5]
-      Left = 645
+      Left = 735
       Top = 36
       ParentFont = False
       Properties.Buttons = <
@@ -90,7 +90,7 @@ inherited fFramePoundQuery: TfFramePoundQuery
         end>
       Properties.ReadOnly = True
       Properties.OnButtonClick = EditDatePropertiesButtonClick
-      TabOrder = 3
+      TabOrder = 4
       Width = 185
     end
     object cxTextEdit4: TcxTextEdit [6]
@@ -98,15 +98,15 @@ inherited fFramePoundQuery: TfFramePoundQuery
       Top = 94
       Hint = 'T.P_MDate'
       ParentFont = False
-      TabOrder = 8
+      TabOrder = 9
       Width = 125
     end
     object Check1: TcxCheckBox [7]
-      Left = 835
+      Left = 925
       Top = 36
       Caption = #26597#35810#24050#21024#38500
       ParentFont = False
-      TabOrder = 4
+      TabOrder = 5
       Transparent = True
       OnClick = Check1Click
       Width = 110
@@ -125,6 +125,19 @@ inherited fFramePoundQuery: TfFramePoundQuery
       OnKeyPress = OnCtrlKeyPress
       Width = 125
     end
+    object chkTime: TcxComboBox [9]
+      Left = 587
+      Top = 36
+      ParentFont = False
+      Properties.DropDownListStyle = lsFixedList
+      Properties.Items.Strings = (
+        #20197#30382#37325#26102#38388
+        #20197#27611#37325#26102#38388)
+      Properties.OnChange = chkTimePropertiesChange
+      TabOrder = 3
+      Text = #20197#30382#37325#26102#38388
+      Width = 85
+    end
     inherited dxGroup1: TdxLayoutGroup
       inherited GroupSearch1: TdxLayoutGroup
         object dxLayout1Item9: TdxLayoutItem
@@ -140,6 +153,10 @@ inherited fFramePoundQuery: TfFramePoundQuery
         object dxLayout1Item3: TdxLayoutItem
           Caption = #23458#25143#21517#31216':'
           Control = EditCus
+          ControlOptions.ShowBorder = False
+        end
+        object dxLayout1Item10: TdxLayoutItem
+          Control = chkTime
           ControlOptions.ShowBorder = False
         end
         object dxLayout1Item6: TdxLayoutItem
@@ -180,15 +197,15 @@ inherited fFramePoundQuery: TfFramePoundQuery
   end
   inherited cxSplitter1: TcxSplitter
     Top = 197
-    Width = 976
+    Width = 1063
   end
   inherited TitlePanel1: TZnBitmapPanel
-    Width = 976
+    Width = 1063
     inherited TitleBar: TcxLabel
       Caption = #30917#25151#31216#37327#26597#35810
       Style.IsFontAssigned = True
-      Width = 976
-      AnchorX = 488
+      Width = 1063
+      AnchorX = 532
       AnchorY = 11
     end
   end
@@ -239,8 +256,20 @@ inherited fFramePoundQuery: TfFramePoundQuery
       Caption = '-'
     end
     object N9: TMenuItem
-      Caption = #19978#20256#30917#21333
+      Caption = #21407#26448#26009#30917#21333#19978#20256
       OnClick = N9Click
+    end
+    object N11: TMenuItem
+      Caption = '-'
+    end
+    object N10: TMenuItem
+      Caption = #21407#26448#26009#30917#21333#21208#35823
+      OnClick = N10Click
+    end
+    object N12: TMenuItem
+      Caption = #22806#36816#30917#21333#21208#35823
+      Visible = False
+      OnClick = N12Click
     end
   end
 end

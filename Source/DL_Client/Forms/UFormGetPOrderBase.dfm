@@ -1,8 +1,8 @@
 inherited fFormGetPOrderBase: TfFormGetPOrderBase
   Left = 401
   Top = 134
-  Width = 630
-  Height = 384
+  Width = 848
+  Height = 542
   BorderStyle = bsSizeable
   Constraints.MinHeight = 300
   Constraints.MinWidth = 445
@@ -11,17 +11,17 @@ inherited fFormGetPOrderBase: TfFormGetPOrderBase
   PixelsPerInch = 96
   TextHeight = 12
   inherited dxLayout1: TdxLayoutControl
-    Width = 614
-    Height = 346
+    Width = 832
+    Height = 504
     inherited BtnOK: TButton
-      Left = 468
-      Top = 313
+      Left = 686
+      Top = 471
       Caption = #30830#23450
       TabOrder = 6
     end
     inherited BtnExit: TButton
-      Left = 538
-      Top = 313
+      Left = 756
+      Top = 471
       TabOrder = 7
     end
     object EditProvider: TcxButtonEdit [2]
@@ -49,28 +49,36 @@ inherited fFormGetPOrderBase: TfFormGetPOrderBase
       Columns = <
         item
           Caption = #30003#35831#21333#32534#21495
-          Width = 70
+          Width = 100
         end
         item
           Caption = #21407#26448#26009
-          Width = 90
+          Width = 70
+        end
+        item
+          Caption = #22411#21495
+          Width = 40
         end
         item
           AutoSize = True
           Caption = #20379#24212#21830
           WidthType = (
-            -37)
+            -197)
+        end
+        item
+          Caption = #30719#28857
+          Width = 140
         end
         item
           Caption = #35746#21333#21097#20313
-          Width = 90
-        end
-        item
-          Caption = #35746#21333#34892
-          Width = 100
+          Width = 80
         end
         item
           Caption = #22791#27880
+          Width = 80
+        end
+        item
+          Caption = #35746#21333#34892
           Width = 100
         end>
       HideSelection = False

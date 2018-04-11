@@ -116,18 +116,19 @@ procedure LoadBillItemToMC(const nItem: TLadingBillItem; const nMC: TStrings;
  const nDelimiter: string);
 //载入单据信息到列表
 function SaveLadingBills(const nPost: string; const nData: TLadingBillItems;
- const nTunnel: PPTTunnelItem = nil): Boolean;
+ const nTunnel: PPTTunnelItem = nil;const nLogin: Integer = -1): Boolean;
 //保存指定岗位的交货单
 
 function GetTruckPoundItem(const nTruck: string;
  var nPoundData: TLadingBillItems): Boolean;
 //获取指定车辆的已称皮重信息
 function SaveTruckPoundItem(const nTunnel: PPTTunnelItem;
- const nData: TLadingBillItems): Boolean;
+ const nData: TLadingBillItems;const nLogin: Integer = -1): Boolean;
 //保存车辆过磅记录
 function ReadPoundCard(const nTunnel: string; var nReader: string): string;
 //读取指定磅站读头上的卡号
-procedure CapturePicture(const nTunnel: PPTTunnelItem; const nList: TStrings);
+procedure CapturePicture(const nTunnel: PPTTunnelItem;
+                         const nLogin: Integer; nList: TStrings);
 //抓拍指定通道
 function GetTruckNO(const nTruck: WideString; const nLong: Integer=12): string;
 function GetValue(const nValue: Double): string;
@@ -157,6 +158,8 @@ function IsTunnelOK(const nTunnel: string): Boolean;
 //查询通道光栅是否正常
 procedure TunnelOC(const nTunnel: string; const nOpen: Boolean);
 //控制通道红绿灯开合
+procedure ProberShowTxt(const nTunnel, nText: string);
+//车检发送小屏
 function PlayNetVoice(const nText,nCard,nContent: string): Boolean;
 //经中间件播发语音
 
@@ -194,8 +197,12 @@ procedure SaveWebOrderMsg(const nLID, nWebOrderID: string);
 //------------------------------------------------------------------------------
 function PrintBillReport(nBill: string; const nAsk: Boolean): Boolean;
 //打印提货单
+function PrintCNSReport(nBill: string; const nAsk: Boolean): Boolean;
+//打印质量承诺书
 function PrintPoundReport(const nPound: string; nAsk: Boolean): Boolean;
 //打印榜单
+function PrintPoundOtherReport(const nPound: string; nAsk: Boolean): Boolean;
+//打印临时称重过磅单
 function PrintHuaYanReport(const nHID: string; const nAsk: Boolean): Boolean;
 function PrintHeGeReport(const nHID: string; const nAsk: Boolean): Boolean;
 //化验单,合格证
@@ -225,12 +232,14 @@ function SaveOrderCard(const nOrder, nCard: string): Boolean;
 //获取预置皮重车辆预置信息
 function getPrePInfo(const nTruck:string;var nPrePValue: Double; var nPrePMan: string;
   var nPrePTime: TDateTime):Boolean;
+function GetLastPInfo(const nID:string;var nPValue: Double; var nPMan: string;
+  var nPTime: TDateTime):Boolean;
 
 function GetPurchaseOrders(const nCard,nPost: string;
  var nBills: TLadingBillItems): Boolean;
 //获取指定岗位的采购单列表
 function SavePurchaseOrders(const nPost: string; const nData: TLadingBillItems;
- const nTunnel: PPTTunnelItem = nil): Boolean;
+ const nTunnel: PPTTunnelItem = nil;const nLogin: Integer = -1): Boolean;
 //保存指定岗位的采购单
 
 procedure LoadOrderItemToMC(const nItem: TLadingBillItem; const nMC: TStrings;
@@ -238,14 +247,65 @@ procedure LoadOrderItemToMC(const nItem: TLadingBillItem; const nMC: TStrings;
 
 function SyncPProvider(const nProID: string): Boolean;
 //同步ERP采购供应商
+function SyncPMaterail(const nMID: string): Boolean;
+//同步ERP采购物料
 function GetHhOrderPlan(const nStr: string): string;
 //获取ERP采购进厂计划
+function GetHhSaleWTTruck(const nStr: string): string;
+//获取ERP委托车辆
 function SyncHhOrderData(const nDID: string): Boolean;
 //同步ERP采购磅单
 function GetHhNeiDaoOrderPlan(const nStr: string): string;
 //获取ERP采购内倒进厂计划
 function SyncHhNdOrderData(const nDID: string): Boolean;
 //同步ERP内倒采购磅单
+function SyncHhOtherOrderData(const nDID: string): Boolean;
+//同步ERP备品备件采购磅单
+function GetCardGInvalid: Boolean;
+//长期卡是否失效
+function GetShipName(const nStockName :string): string;
+//Desc: 获取码头船号(上次同品种)
+function GetLastPID(const nOID :string): string;
+//Desc: 获取最新磅单号
+function GetHhSalePlan(const nFactoryName: string): Boolean;
+//获取ERP销售计划
+function SyncSMaterail(const nMID: string): Boolean;
+//获取ERP销售物料
+function SyncSCustomer(const nCusID: string): Boolean;
+//Desc: 同步ERP销售客户
+function SyncHhSaleDetail(const nDID: string): Boolean;
+//Desc: 同步ERP销售明细
+procedure SaveTruckPrePValue(const nTruck, nValue: string);
+//保存预制皮重
+function GetPrePValueSet: Double;
+//获取系统设定皮重
+function GetMinNetValue: Double;
+//获取销售净重限值
+function SaveTruckPrePicture(const nTruck: string;const nTunnel: PPTTunnelItem;
+                             const nLogin: Integer = -1): Boolean;
+//保存nTruck的预制皮重照片
+function InitCapture(const nTunnel: PPTTunnelItem; var nLogin: Integer): Boolean;
+//初始化抓拍(因中材安徽抓拍出现客户端崩溃,改为打开称重界面进行初始化)
+function FreeCapture(nLogin: Integer): Boolean;
+//释放抓拍
+procedure UpdateTruckStatus(const nID: string);
+//修改车辆状态
+function GetMaxMValue(const nID: string): Double;
+//获取毛重限值
+function GetSaleOrderRestValue(const nID: string): Double;
+//获取订单余量
+function IsTruckCanPound(const nItem: TLadingBillItem): Boolean;
+//临时销售订单业务车辆是否可以上磅
+function GetBatchCode(const nStockNo,nCusName: string; nValue: Double): string;
+//获取批次号
+function GetStockNo(const nStockName,nStockType: string): string;
+//获取物料编号
+procedure SaveWebOrderDelMsg(const nLID, nBillType: string);
+//插入推送消息
+function GetSaleOrderDoneValue(const nOID: string): string;
+//查询外运业务完成量
+function GetSaleOrderFreezeValue(const nOID: string): string;
+//查询外运业务冻结量
 implementation
 
 //Desc: 记录日志
@@ -644,20 +704,23 @@ end;
 //Date: 2017-09-27
 //Parm: 通道;列表
 //Desc: 抓拍nTunnel的图像
-procedure CapturePicture(const nTunnel: PPTTunnelItem; const nList: TStrings);
+procedure CapturePicture(const nTunnel: PPTTunnelItem;
+                         const nLogin: Integer; nList: TStrings);
 const
   cRetry = 2;
   //重试次数
 var nStr: string;
     nIdx,nInt: Integer;
-    nLogin,nErr: Integer;
+    nErr: Integer;
     nPic: NET_DVR_JPEGPARA;
     nInfo: TNET_DVR_DEVICEINFO;
 begin
   nList.Clear;
   if not Assigned(nTunnel.FCamera) then Exit;
   //not camera
+  if nLogin <= -1 then Exit;
 
+  WriteLog(nTunneL.FID + '开始抓拍');
   if not DirectoryExists(gSysParam.FPicPath) then
     ForceDirectories(gSysParam.FPicPath);
   //new dir
@@ -666,33 +729,7 @@ begin
     gSysParam.FPicBase := 0;
   //clear buffer
 
-  nLogin := -1;
-  gCameraNetSDKMgr.NET_DVR_SetDevType(nTunnel.FCamera.FType);
-  //xxxxx
-
-  gCameraNetSDKMgr.NET_DVR_Init;
-  //xxxxx
-
   try
-    for nIdx:=1 to cRetry do
-    begin
-      nLogin := gCameraNetSDKMgr.NET_DVR_Login(nTunnel.FCamera.FHost,
-                   nTunnel.FCamera.FPort,
-                   nTunnel.FCamera.FUser,
-                   nTunnel.FCamera.FPwd, nInfo);
-      //to login
-
-      nErr := gCameraNetSDKMgr.NET_DVR_GetLastError;
-      if nErr = 0 then break;
-
-      if nIdx = cRetry then
-      begin
-        nStr := '登录摄像机[ %s.%d ]失败,错误码: %d';
-        nStr := Format(nStr, [nTunnel.FCamera.FHost, nTunnel.FCamera.FPort, nErr]);
-        WriteLog(nStr);
-        Exit;
-      end;
-    end;
 
     nPic.wPicSize := nTunnel.FCamera.FPicSize;
     nPic.wPicQuality := nTunnel.FCamera.FPicQuality;
@@ -716,6 +753,7 @@ begin
 
         if nErr = 0 then
         begin
+          WriteLog('通道'+IntToStr(nTunnel.FCameraTunnels[nIdx])+'抓拍成功');
           nList.Add(nStr);
           Break;
         end;
@@ -729,10 +767,7 @@ begin
         end;
       end;
     end;
-  finally
-    if nLogin > -1 then
-     gCameraNetSDKMgr.NET_DVR_Logout(nLogin);
-    gCameraNetSDKMgr.NET_DVR_Cleanup();
+  except
   end;
 end;
 
@@ -905,6 +940,12 @@ begin
   CallBusinessHardware(cBC_TunnelOC, nTunnel, nStr, @nOut);
 end;
 
+procedure ProberShowTxt(const nTunnel, nText: string);
+var nOut: TWorkerBusinessCommand;
+begin
+  CallBusinessHardware(cBC_ShowTxt, nTunnel, nText, @nOut);
+end;
+
 //Date: 2017-09-27
 //Parm: 文本;语音卡;内容
 //Desc: 用nCard播发nContent模式的nText文本.
@@ -939,7 +980,7 @@ end;
 //Parm: 称重数据
 //Desc: 保存nData称重数据
 function SaveTruckPoundItem(const nTunnel: PPTTunnelItem;
- const nData: TLadingBillItems): Boolean;
+ const nData: TLadingBillItems; const nLogin: Integer): Boolean;
 var nStr: string;
     nIdx: Integer;
     nList: TStrings;
@@ -951,8 +992,15 @@ begin
 
   nList := TStringList.Create;
   try
-    CapturePicture(nTunnel, nList);
-    //capture file
+    try
+      CapturePicture(nTunnel, nLogin, nList);
+      //capture file
+    except
+      on e: Exception do
+      begin
+        WriteLog('抓拍失败:'+e.Message);
+      end;
+    end;
 
     for nIdx:=0 to nList.Count - 1 do
       SavePicture(nOut.FData, nData[0].FTruck,
@@ -1219,7 +1267,7 @@ end;
 //Parm: 岗位;交货单列表;磅站通道
 //Desc: 保存nPost岗位上的交货单数据
 function SaveLadingBills(const nPost: string; const nData: TLadingBillItems;
- const nTunnel: PPTTunnelItem): Boolean;
+ const nTunnel: PPTTunnelItem;const nLogin: Integer): Boolean;
 var nStr: string;
     nIdx: Integer;
     nList: TStrings;
@@ -1233,7 +1281,7 @@ begin
   begin
     nList := TStringList.Create;
     try
-      CapturePicture(nTunnel, nList);
+      CapturePicture(nTunnel, nLogin, nList);
       //capture file
 
       for nIdx:=0 to nList.Count - 1 do
@@ -1490,8 +1538,61 @@ begin
     nStr := Format(nStr, [nBill]);
     ShowMsg(nStr, sHint); Exit;
   end;
+  if Length(FDM.QueryTemp(nStr).FieldByName('L_OutFact').AsString) > 0 then
+    nStr := gPath + sReportDir + 'LadingBill.fr3'
+  else
+    nStr := gPath + sReportDir + 'LadingPlanBill.fr3';
+  if not FDR.LoadReportFile(nStr) then
+  begin
+    nStr := '无法正确加载报表文件';
+    ShowMsg(nStr, sHint); Exit;
+  end;
 
-  nStr := gPath + sReportDir + 'LadingBill.fr3';
+  if gSysParam.FPrinterBill = '' then
+       FDR.Report1.PrintOptions.Printer := 'My_Default_HYPrinter'
+  else FDR.Report1.PrintOptions.Printer := gSysParam.FPrinterBill;
+
+  nParam.FName := 'UserName';
+  nParam.FValue := gSysParam.FUserID;
+  FDR.AddParamItem(nParam);
+
+  nParam.FName := 'Company';
+  nParam.FValue := gSysParam.FHintText;
+  FDR.AddParamItem(nParam);
+
+  FDR.Dataset1.DataSet := FDM.SqlTemp;
+  FDR.ShowReport;
+  Result := FDR.PrintSuccess;
+end;
+
+//Desc: 打印质量承诺书
+function PrintCNSReport(nBill: string; const nAsk: Boolean): Boolean;
+var nStr: string;
+    nParam: TReportParamItem;
+begin
+  Result := False;
+
+  if nAsk then
+  begin
+    nStr := '是否要打印提货单?';
+    if not QueryDlg(nStr, sAsk) then Exit;
+  end;
+
+  nBill := AdjustListStrFormat(nBill, '''', True, ',', False);
+  //添加引号
+
+  nStr := 'Select * From %s b Where L_ID In(%s)';
+  nStr := Format(nStr, [sTable_Bill, nBill]);
+  //xxxxx
+
+  if FDM.QueryTemp(nStr).RecordCount < 1 then
+  begin
+    nStr := '编号为[ %s ] 的记录已无效!!';
+    nStr := Format(nStr, [nBill]);
+    ShowMsg(nStr, sHint); Exit;
+  end;
+
+  nStr := gPath + sReportDir + 'HeGeZheng.fr3';
   if not FDR.LoadReportFile(nStr) then
   begin
     nStr := '无法正确加载报表文件';
@@ -1541,6 +1642,60 @@ begin
   end;
 
   nStr := gPath + sReportDir + 'Pound.fr3';
+  if not FDR.LoadReportFile(nStr) then
+  begin
+    nStr := '无法正确加载报表文件';
+    ShowMsg(nStr, sHint); Exit;
+  end;
+
+  nParam.FName := 'UserName';
+  nParam.FValue := gSysParam.FUserID;
+  FDR.AddParamItem(nParam);
+
+  nParam.FName := 'Company';
+  nParam.FValue := gSysParam.FHintText;
+  FDR.AddParamItem(nParam);
+
+  FDR.Dataset1.DataSet := FDM.SqlTemp;
+  FDR.ShowReport;
+  Result := FDR.PrintSuccess;
+
+  if Result  then
+  begin
+    nStr := 'Update %s Set P_PrintNum=P_PrintNum+1 Where P_ID=''%s''';
+    nStr := Format(nStr, [sTable_PoundLog, nPound]);
+    FDM.ExecuteSQL(nStr);
+  end;
+end;
+
+//Date: 2017-09-27
+//Parm: 过磅单号;是否询问
+//Desc: 打印nPound过磅记录
+function PrintPoundOtherReport(const nPound: string; nAsk: Boolean): Boolean;
+var nStr: string;
+    nParam: TReportParamItem;
+begin
+  Result := False;
+
+  if nAsk then
+  begin
+    nStr := '是否要打印过磅单?';
+    if not QueryDlg(nStr, sAsk) then Exit;
+  end;
+
+  nStr := 'Select top 1 * From %s pl '+
+  'Left Join %s oo On oo.R_ID=pl.P_OrderBak'+
+  ' Where pl.P_ID=''%s'' order by pl.R_ID desc';
+  nStr := Format(nStr, [sTable_PoundLog, sTable_CardOther, nPound]);
+
+  if FDM.QueryTemp(nStr).RecordCount < 1 then
+  begin
+    nStr := '称重记录[ %s ] 已无效!!';
+    nStr := Format(nStr, [nPound]);
+    ShowMsg(nStr, sHint); Exit;
+  end;
+
+  nStr := gPath + sReportDir + 'PoundOther.fr3';
   if not FDR.LoadReportFile(nStr) then
   begin
     nStr := '无法正确加载报表文件';
@@ -1931,6 +2086,31 @@ begin
   end;
 end;
 
+function GetLastPInfo(const nID:string;var nPValue: Double; var nPMan: string;
+  var nPTime: TDateTime):Boolean;
+var
+  nStr:string;
+begin
+  Result := False;
+  nPValue := 0;
+  nPMan := '';
+  nPTime := 0;
+
+  nStr := 'select top 1 P_PValue,P_PMan,P_PDate from %s' +
+          ' where P_OrderBak=''%s'' order by R_ID desc';
+  nStr := format(nStr,[sTable_PoundLog,nID]);
+  with FDM.QueryTemp(nStr) do
+  begin
+    if RecordCount>0 then
+    begin
+      nPTime := FieldByName('P_PDate').asDateTime;
+      nPValue := FieldByName('P_PValue').asFloat;;
+      nPMan := FieldByName('P_PMan').asString;
+      Result := True;
+    end;
+  end;
+end;
+
 //Date: 2014-09-17
 //Parm: 磁卡号;岗位;交货单列表
 //Desc: 获取nPost岗位上磁卡为nCard的交货单列表
@@ -1948,15 +2128,48 @@ end;
 //Parm: 岗位;交货单列表;磅站通道
 //Desc: 保存nPost岗位上的交货单数据
 function SavePurchaseOrders(const nPost: string; const nData: TLadingBillItems;
- const nTunnel: PPTTunnelItem): Boolean;
+ const nTunnel: PPTTunnelItem;const nLogin: Integer): Boolean;
 var nStr: string;
     nIdx: Integer;
     nList: TStrings;
     nOut: TWorkerBusinessCommand;
+    nIsPreTruck:Boolean;
+    nPrePValue: Double;
+    nPrePMan: string;
+    nPrePTime: TDateTime;
 begin
   nStr := CombineBillItmes(nData);
   Result := CallBusinessPurchaseOrder(cBC_SavePostOrders, nStr, nPost, @nOut);
   if (not Result) or (nOut.FData = '') then Exit;
+
+  if Assigned(nTunnel) then //过磅称重
+  begin
+    nList := TStringList.Create;
+    try
+      CapturePicture(nTunnel, nLogin, nList);
+      //capture file
+
+      //采购长期卡矿山有多条称重记录
+      nStr := '';
+      if nPost = sFlag_TruckBFM then
+      begin
+        nIsPreTruck := getPrePInfo(nData[0].FTruck,nPrePValue,nPrePMan,nPrePTime);
+        if (nData[0].FCtype=sFlag_CardGuDing) and nIsPreTruck then
+        begin
+          nStr := GetLastPID(nData[0].FID);
+        end;
+      end;
+      if nStr = '' then
+        nStr := nOut.FData;
+
+      for nIdx:=0 to nList.Count - 1 do
+        SavePicture(nStr, nData[0].FTruck,
+                                nData[0].FStockName, nList[nIdx]);
+      //save file
+    finally
+      nList.Free;
+    end;
+  end;
 end;
 
 //Date: 2014-09-17
@@ -1997,12 +2210,32 @@ begin
 end;
 
 //Date: 2018-02-06
+//Parm: 物料ID
+//Desc: 同步ERP采购物料
+function SyncPMaterail(const nMID: string): Boolean;
+var nOut: TWorkerBusinessCommand;
+begin
+  Result := CallBusinessCommand(cBC_SyncHhProvideMateriel, nMID, '', @nOut);
+end;
+
+//Date: 2018-02-06
 //Parm: 供应商,物料,计划年月
 //Desc: 获取ERP采购进厂计划
 function GetHhOrderPlan(const nStr: string): string;
 var nOut: TWorkerBusinessCommand;
 begin
   if CallBusinessCommand(cBC_GetHhOrderPlan, nStr, '', @nOut) then
+    Result := nOut.FData
+  else Result := '';
+end;
+
+//Date: 2018-03-23
+//Parm: 客户ID,公司ID,物料ID,包装类型ID
+//Desc: 获取ERP委托车辆
+function GetHhSaleWTTruck(const nStr: string): string;
+var nOut: TWorkerBusinessCommand;
+begin
+  if CallBusinessCommand(cBC_SyncHhSaleWTTruck, nStr, '', @nOut) then
     Result := nOut.FData
   else Result := '';
 end;
@@ -2029,11 +2262,481 @@ end;
 
 //Date: 2018-02-08
 //Parm: 磅单ID
-//Desc: 同步ERP采购磅单
+//Desc: 同步ERP内倒采购磅单
 function SyncHhNdOrderData(const nDID: string): Boolean;
 var nOut: TWorkerBusinessCommand;
 begin
   Result := CallBusinessCommand(cBC_SyncHhNdOrderPoundData, nDID, '', @nOut);
+end;
+
+//Date: 2018-03-06
+//Parm: 磅单ID
+//Desc: 同步ERP备品备件采购磅单
+function SyncHhOtherOrderData(const nDID: string): Boolean;
+var nOut: TWorkerBusinessCommand;
+begin
+  Result := CallBusinessCommand(cBC_SyncHhOtOrderPoundData, nDID, '', @nOut);
+end;
+
+//Desc: 长期卡是否失效
+function GetCardGInvalid: Boolean;
+var nStr: string;
+begin
+  Result := False;
+  nStr := 'Select D_Value From %s Where D_Name=''%s'' and D_Memo=''%s''';
+  nStr := Format(nStr, [sTable_SysDict, sFlag_SysParam, sFlag_CardGInvalid]);
+
+  with FDM.QueryTemp(nStr) do
+  if RecordCount > 0 then
+    Result := Fields[0].AsString = sFlag_Yes;
+  //xxxxx
+end;
+
+//Param: StockName
+//Desc: 获取码头船号(上次同品种)
+function GetShipName(const nStockName :string): string;
+var nStr: string;
+begin
+  Result := '';
+  nStr := 'Select top 1 O_Ship From %s Where O_StockName=''%s'' order by R_ID desc ';
+  nStr := Format(nStr, [sTable_Order, nStockName]);
+
+  with FDM.QueryTemp(nStr) do
+  if RecordCount > 0 then
+    Result := Fields[0].AsString;
+  //xxxxx
+end;
+
+//Param: 采购单号
+//Desc: 获取最新磅单号
+function GetLastPID(const nOID :string): string;
+var nStr: string;
+begin
+  Result := '';
+  nStr := 'Select top 1 P_ID From %s Where P_OrderBak =''%s'' order by R_ID desc ';
+  nStr := Format(nStr, [sTable_PoundLog, nOID]);
+
+  with FDM.QueryTemp(nStr) do
+  if RecordCount > 0 then
+    Result := Fields[0].AsString;
+  //xxxxx
+end;
+
+//Date: 2018-03-07
+//Parm: 生产厂名称
+//Desc: 获取ERP销售计划
+function GetHhSalePlan(const nFactoryName: string): Boolean;
+var nOut: TWorkerBusinessCommand;
+begin
+  Result := CallBusinessCommand(cBC_GetHhSalePlan, nFactoryName, '', @nOut);
+end;
+
+//Date: 2018-03-07
+//Desc: 获取ERP销售物料
+function SyncSMaterail(const nMID: string): Boolean;
+var nOut: TWorkerBusinessCommand;
+begin
+  Result := CallBusinessCommand(cBC_SyncHhSaleMateriel, nMID, '', @nOut);
+end;
+
+//Date: 2018-03-08
+//Parm: 客户ID
+//Desc: 同步ERP销售客户
+function SyncSCustomer(const nCusID: string): Boolean;
+var nOut: TWorkerBusinessCommand;
+begin
+  Result := CallBusinessCommand(cBC_SyncHhCustomer, nCusID, '', @nOut);
+end;
+
+procedure SaveTruckPrePValue(const nTruck, nValue: string);
+var nStr: string;
+begin
+  nStr := 'update %s set T_PrePValue=%s,T_PrePMan=''%s'',T_PrePTime=%s '
+          + ' where t_truck=''%s'' and T_PrePUse=''%s''';
+  nStr := format(nStr,[sTable_Truck,nValue,gSysParam.FUserName
+                      ,sField_SQLServer_Now,nTruck,sflag_yes]);
+  FDM.ExecuteSQL(nStr);
+end;
+
+function GetPrePValueSet: Double;
+var nStr: string;
+begin
+  Result := 30;//init
+
+  nStr := 'Select D_Value From $Table ' +
+          'Where D_Name=''$Name'' and D_Memo=''$Memo''';
+  nStr := MacroValue(nStr, [MI('$Table', sTable_SysDict),
+                            MI('$Name', sFlag_SysParam),
+                            MI('$Memo', sFlag_SetPValue)]);
+  //xxxxx
+
+  with FDM.QueryTemp(nStr) do
+  begin
+    if RecordCount > 0 then
+      nStr := Fields[0].AsString;
+    if IsNumber(nStr,True) then
+      Result := StrToFloatDef(nStr,30);
+  end;
+end;
+
+//Date: 2014-09-18
+//Parm: 车牌号;磅站通道
+//Desc: 保存nTruck的预制皮重照片
+function SaveTruckPrePicture(const nTruck: string;const nTunnel: PPTTunnelItem;
+                            const nLogin: Integer): Boolean;
+var nStr,nRID: string;
+    nIdx: Integer;
+    nList: TStrings;
+begin
+  Result := False;
+  nRID := '';
+  nStr := 'Select R_ID From %s Where T_Truck =''%s'' order by R_ID desc ';
+  nStr := Format(nStr, [sTable_Truck, nTruck]);
+
+  with FDM.QueryTemp(nStr) do
+  begin
+    if RecordCount <= 0 then
+      Exit;
+    nRID := Fields[0].AsString;
+  end;
+
+  nStr := 'Delete from %s where P_ID=''%s'' ';
+  nStr := format(nStr,[sTable_Picture, nRID]);
+  FDM.ExecuteSQL(nStr);
+
+  if Assigned(nTunnel) then //过磅称重
+  begin
+    nList := TStringList.Create;
+    try
+      CapturePicture(nTunnel, nLogin, nList);
+      //capture file
+
+      for nIdx:=0 to nList.Count - 1 do
+        SavePicture(nRID, nTruck, '', nList[nIdx]);
+      //save file
+    finally
+      nList.Free;
+    end;
+  end;
+end;
+
+function InitCapture(const nTunnel: PPTTunnelItem; var nLogin: Integer): Boolean;
+const
+  cRetry = 2;
+  //重试次数
+var nStr: string;
+    nIdx,nInt: Integer;
+    nErr: Integer;
+    nInfo: TNET_DVR_DEVICEINFO;
+begin
+  Result := False;
+  if not Assigned(nTunnel.FCamera) then Exit;
+  //not camera
+
+  try
+    nLogin := -1;
+    gCameraNetSDKMgr.NET_DVR_SetDevType(nTunnel.FCamera.FType);
+    //xxxxx
+
+    gCameraNetSDKMgr.NET_DVR_Init;
+    //xxxxx
+
+    for nIdx:=1 to cRetry do
+    begin
+      nLogin := gCameraNetSDKMgr.NET_DVR_Login(nTunnel.FCamera.FHost,
+                   nTunnel.FCamera.FPort,
+                   nTunnel.FCamera.FUser,
+                   nTunnel.FCamera.FPwd, nInfo);
+      //to login
+
+      nErr := gCameraNetSDKMgr.NET_DVR_GetLastError;
+      if nErr = 0 then break;
+
+      if nIdx = cRetry then
+      begin
+        nStr := '登录摄像机[ %s.%d ]失败,错误码: %d';
+        nStr := Format(nStr, [nTunnel.FCamera.FHost, nTunnel.FCamera.FPort, nErr]);
+        WriteLog(nStr);
+        if nLogin > -1 then
+         gCameraNetSDKMgr.NET_DVR_Logout(nLogin);
+        gCameraNetSDKMgr.NET_DVR_Cleanup();
+        Exit;
+      end;
+    end;
+    Result := True;
+  except
+
+  end;
+end;
+
+function FreeCapture(nLogin: Integer): Boolean;
+begin
+  Result := False;
+  try
+    if nLogin > -1 then
+     gCameraNetSDKMgr.NET_DVR_Logout(nLogin);
+    gCameraNetSDKMgr.NET_DVR_Cleanup();
+
+    Result := True;
+  except
+
+  end;
+end;
+
+procedure UpdateTruckStatus(const nID: string);
+var nStr: string;
+begin
+  nStr := 'update %s set D_Status=''%s'',D_NextStatus=''%s'''
+          + ' where D_ID=''%s''';
+  nStr := format(nStr,[sTable_OrderDtl,sFlag_TruckBFM,
+                       sFlag_TruckBFM,nID]);
+  FDM.ExecuteSQL(nStr);
+end;
+
+//Date: 2018-03-13
+//Parm: 提货ID
+//Desc: 同步ERP销售明细
+function SyncHhSaleDetail(const nDID: string): Boolean;
+var nOut: TWorkerBusinessCommand;
+begin
+  Result := CallBusinessCommand(cBC_SyncHhSaleDetai, nDID, '', @nOut);
+end;
+
+//Desc: 获取毛重限值
+function GetMaxMValue(const nID: string): Double;
+var nStr: string;
+begin
+  Result := 0;
+
+  nStr := 'Select L_MValueMax From %s Where L_ID=''%s''';
+  nStr := Format(nStr, [sTable_Bill, nID]);
+
+  with FDM.QueryTemp(nStr) do
+  if RecordCount > 0 then
+    Result := Fields[0].AsFloat;
+  //xxxxx
+end;
+
+//Desc: 获取订单余量
+function GetSaleOrderRestValue(const nID: string): Double;
+var nStr: string;
+begin
+  Result := 0;
+
+  nStr := 'Select (O_PlanRemain - O_Freeze) As O_RestValue From %s Where O_Order=''%s''';
+  nStr := Format(nStr, [sTable_SalesOrder, nID]);
+
+  with FDM.QueryTemp(nStr) do
+  if RecordCount > 0 then
+    Result := FieldByName('O_RestValue').AsFloat;
+  //xxxxx
+end;
+
+//Desc: 临时订单业务车辆是否可以上磅
+function IsTruckCanPound(const nItem: TLadingBillItem): Boolean;
+var nStr,nPreFix: string;
+begin
+  Result := False;
+
+  nPreFix := 'WY';
+  nStr := 'Select B_Prefix From %s ' +
+          'Where B_Group=''%s'' And B_Object=''%s''';
+  nStr := Format(nStr, [sTable_SerialBase, sFlag_BusGroup, sFlag_SaleOrderOther]);
+
+  with FDM.QueryTemp(nStr) do
+  if RecordCount > 0 then
+  begin
+    nPreFix := Fields[0].AsString;
+  end;
+
+  if Pos(nPreFix,nItem.FZhiKa) <= 0 then
+    Exit;
+
+  nStr := 'Select *, (O_PlanAmount - O_Freeze - O_HasDone - O_StopAmount) '+
+          ' As O_RestValue From %s Where O_Order=''%s''';
+  nStr := Format(nStr, [sTable_SalesOrder, nItem.FZhiKa]);
+
+  with FDM.QueryTemp(nStr) do
+  if RecordCount > 0 then
+  begin
+    WriteLog('订单'+nItem.FZhiKa+'余量:'+FieldByName('O_RestValue').AsString);
+    if FieldByName('O_RestValue').AsFloat > nItem.FValue then
+      Result := True;
+  end;
+
+  if Result then
+  begin
+    nStr := 'Update %s Set O_Freeze=O_Freeze+(%.2f) Where O_Order=''%s''';
+    nStr := Format(nStr, [sTable_SalesOrder, nItem.FValue,
+            nItem.FZhiKa]);
+    FDM.ExecuteSQL(nStr);
+  end;
+
+end;
+
+//Date: 2018-03-22
+//Parm: 物料编号;客户名称;开单量
+//Desc: 获取批次号
+function GetBatchCode(const nStockNo,nCusName: string; nValue: Double): string;
+var nStr: string;
+    nList: TStrings;
+    nOut: TWorkerBusinessCommand;
+begin
+  Result := '';
+  nList := nil;
+  try
+    nList := TStringList.Create;
+    nList.Values['StockNo'] := nStockNo;
+    nList.Values['CusName'] := nCusName;
+
+    nStr := FloatToStr(nValue);
+
+    if CallBusinessCommand(cBC_GetStockBatcode, nList.Text, nStr, @nOut) then
+      Result := nOut.FData;
+    //xxxxx
+  finally
+    nList.Free;
+  end;
+end;
+
+//Date: 2018-03-22
+//Parm: 物料名称;物料种类
+//Desc: 获取物料编号
+function GetStockNo(const nStockName,nStockType: string): string;
+var nStr: string;
+begin
+  Result := '';
+
+  nStr := 'Select D_ParamB From %s Where D_Name = ''%s'' ' +
+          'And D_Memo=''%s'' and D_Value like ''%%%s%%''';
+  nStr := Format(nStr, [sTable_SysDict, sFlag_StockItem,
+                        nStockType,
+                        Trim(nStockName)]);
+
+  with FDM.QueryTemp(nStr) do
+  begin
+    if RecordCount > 0 then
+      Result := Fields[0].AsString;
+  end;
+end;
+
+//Date: 2017-11-22
+//Parm: 交货单号,商城申请单
+//Desc: 插入删除推送消息
+procedure SaveWebOrderDelMsg(const nLID, nBillType: string);
+var nStr, nWebOrderID: string;
+    nBool: Boolean;
+begin
+  nStr := 'Select WOM_WebOrderID From %s Where WOM_LID=''%s'' ';
+  nStr := Format(nStr, [sTable_WebOrderMatch, nLID]);
+
+  with FDM.QueryTemp(nStr) do
+  begin
+    if RecordCount <= 0 then
+      Exit;
+    //手工单
+    nWebOrderID := Fields[0].AsString;
+  end;
+
+  nBool := FDM.ADOConn.InTransaction;
+  if not nBool then FDM.ADOConn.BeginTrans;
+  try
+    nStr := 'Insert Into %s(WOM_WebOrderID,WOM_LID,WOM_StatusType,' +
+            'WOM_MsgType,WOM_BillType) Values(''%s'',''%s'',%d,' +
+            '%d,''%s'')';
+    nStr := Format(nStr, [sTable_WebOrderMatch, nWebOrderID, nLID, c_WeChatStatusDeleted,
+            cSendWeChatMsgType_DelBill, nBillType]);
+    FDM.ExecuteSQL(nStr);
+
+    if not nBool then
+      FDM.ADOConn.CommitTrans;
+  except
+    if not nBool then FDM.ADOConn.RollbackTrans;
+  end;
+end;
+
+function GetMinNetValue: Double;
+var nStr: string;
+begin
+  Result := 2000;//init
+
+  nStr := 'Select D_Value From $Table ' +
+          'Where D_Name=''$Name'' and D_Memo=''$Memo''';
+  nStr := MacroValue(nStr, [MI('$Table', sTable_SysDict),
+                            MI('$Name', sFlag_SysParam),
+                            MI('$Memo', sFlag_MinNetValue)]);
+  //xxxxx
+
+  with FDM.QueryTemp(nStr) do
+  begin
+    if RecordCount > 0 then
+      nStr := Fields[0].AsString;
+    if IsNumber(nStr,True) then
+      Result := StrToFloatDef(nStr,2000);
+  end;
+end;
+
+//Desc: 查询外运业务完成量
+function GetSaleOrderDoneValue(const nOID: string): string;
+var nStr,nPreFix: string;
+begin
+  Result := '';
+
+  nPreFix := 'WY';
+  nStr := 'Select B_Prefix From %s ' +
+          'Where B_Group=''%s'' And B_Object=''%s''';
+  nStr := Format(nStr, [sTable_SerialBase, sFlag_BusGroup, sFlag_SaleOrderOther]);
+
+  with FDM.QueryTemp(nStr) do
+  if RecordCount > 0 then
+  begin
+    nPreFix := Fields[0].AsString;
+  end;
+
+  if Pos(nPreFix,nOID) <= 0 then
+    Exit;
+
+  nStr := 'Select Sum(P_MValue-P_PValue)'+
+          ' From %s a,%s b Where (a.P_OrderBak = b.L_ID or a.P_Bill = b.L_ID)' +
+          ' And b.L_Zhika=''%s''';
+  nStr := Format(nStr, [sTable_PoundLog, sTable_Bill, nOID]);
+
+  with FDM.QueryTemp(nStr) do
+  if RecordCount > 0 then
+  begin
+    Result := Fields[0].AsString;
+  end;
+end;
+
+//Desc: 查询外运业务冻结量
+function GetSaleOrderFreezeValue(const nOID: string): string;
+var nStr,nPreFix: string;
+begin
+  Result := '';
+
+  nPreFix := 'WY';
+  nStr := 'Select B_Prefix From %s ' +
+          'Where B_Group=''%s'' And B_Object=''%s''';
+  nStr := Format(nStr, [sTable_SerialBase, sFlag_BusGroup, sFlag_SaleOrderOther]);
+
+  with FDM.QueryTemp(nStr) do
+  if RecordCount > 0 then
+  begin
+    nPreFix := Fields[0].AsString;
+  end;
+
+  if Pos(nPreFix,nOID) <= 0 then
+    Exit;
+
+  nStr := 'Select Sum(L_Value) From %s Where L_Status <> ''%s''' +
+          ' And L_Zhika=''%s''';
+  nStr := Format(nStr, [sTable_Bill, sFlag_TruckOut, nOID]);
+
+  with FDM.QueryTemp(nStr) do
+  if RecordCount > 0 then
+  begin
+    Result := Fields[0].AsString;
+  end;
 end;
 
 end.

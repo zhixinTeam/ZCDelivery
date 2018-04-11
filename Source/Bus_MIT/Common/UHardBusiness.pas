@@ -294,6 +294,16 @@ begin
   end;
 end;
 
+//Date: 2018-04-03
+//Parm: 毛重时间
+//Desc: 获取磁卡使用类型
+function IsTruckTimeOut(const nMDate: string): Boolean;
+var nOut: TWorkerBusinessCommand;
+begin
+  Result := CallBusinessCommand(cBC_TruckTimeOut, nMDate, '', @nOut);
+  //xxxxx
+end;
+
 
 //Date: 2012-4-22
 //Parm: 卡号
@@ -316,7 +326,7 @@ begin
   nCardType := '';
   if not GetCardUsed(nCard, nCardType) then Exit;
 
-  if nCardType = sFlag_Provide then
+  if (nCardType = sFlag_Provide) or (nCardType = sFlag_Mul) then
         nRet := GetLadingOrders(nCard, sFlag_TruckIn, nTrucks)
   else  nRet := GetLadingBills(nCard, sFlag_TruckIn, nTrucks);
 
@@ -358,6 +368,7 @@ begin
     Exit;
   end;
 
+  {$IFDEF RemoteSnap}
   if nCardType = sFlag_Sale then
   begin
     if not VerifySnapTruck(nTrucks[0].FTruck,nTrucks[0].FID,sPost_In,nSnapStr) then
@@ -366,6 +377,7 @@ begin
       Exit;
     end;
   end;
+  {$ENDIF}
 
   if nTrucks[0].FStatus = sFlag_TruckIn then
   begin
@@ -392,7 +404,7 @@ begin
     Exit;
   end;
 
-  if nCardType = sFlag_Provide then
+  if (nCardType = sFlag_Provide) or (nCardType = sFlag_Mul) then
   begin
     if not SaveLadingOrders(sFlag_TruckIn, nTrucks) then
     begin
@@ -519,7 +531,7 @@ begin
     nCardType := sFlag_Sale;
   //xxxxx
 
-  if nCardType = sFlag_Provide then
+  if (nCardType = sFlag_Provide) or (nCardType = sFlag_Mul) then
         nRet := GetLadingOrders(nCard, sFlag_TruckOut, nTrucks)
   else  nRet := GetLadingBills(nCard, sFlag_TruckOut, nTrucks);
 
@@ -548,6 +560,19 @@ begin
   for nIdx:=Low(nTrucks) to High(nTrucks) do
   with nTrucks[nIdx] do
   begin
+    if (FType = sFlag_San) and (nCardType = sFlag_Sale) and
+       (FStatus = sFlag_TruckFH) then //散装多次过磅
+    begin
+      if IsTruckTimeOut(FID) then
+      begin
+        nStr := '车辆[ %s ]出厂超时,请重新过磅.';
+        nStr := Format(nStr, [FTruck]);
+        WriteHardHelperLog(nStr, sPost_Out);
+        Exit;
+      end;
+       Continue;
+    end;
+
     if FNextStatus = sFlag_TruckOut then Continue;
 	//xxxxx
 
@@ -561,7 +586,7 @@ begin
     Exit;
   end;
 
-  if nCardType = sFlag_Provide then
+  if (nCardType = sFlag_Provide) or (nCardType = sFlag_Mul) then
         nRet := SaveLadingOrders(sFlag_TruckOut, nTrucks)
   else  nRet := SaveLadingBills(sFlag_TruckOut, nTrucks);
 
@@ -584,11 +609,29 @@ begin
 
   for nIdx:=Low(nTrucks) to High(nTrucks) do
   begin
+    if (nCardType = sFlag_Provide) or (nCardType = sFlag_Mul) then
+    begin
+      if not nTrucks[nIdx].FPrintBD then
+        Continue;
+    end;
+
+    if nCardType = sFlag_Sale then
+    begin
+      if nTrucks[nIdx].FYSValid = sFlag_Yes then//空车出厂不打印
+        Continue;
+    end;
+
     nStr := #7 + nCardType;
     //磁卡类型
-    if nHYPrinter <> '' then
-      nStr := nStr + #6 + nHYPrinter;
-    //化验单打印机
+    if nCardType = sFlag_Sale then
+    begin
+      if nTrucks[nIdx].FPrintHY then
+      begin
+        if nHYPrinter <> '' then
+          nStr := nStr + #6 + nHYPrinter;
+        //化验单打印机
+      end;
+    end;
 
     if nPrinter = '' then
          gRemotePrinter.PrintBill(nTrucks[nIdx].FID + nStr)
@@ -748,8 +791,11 @@ end;
 //Parm: 三合一读卡器
 //Desc: 处理三合一读卡器信息
 procedure WhenTTCE_M100_ReadCard(const nItem: PM100ReaderItem);
-var {$IFDEF DEBUG}nStr: string;{$ENDIF}
+var nStr: string;
     nRetain: Boolean;
+    nCType: string;
+    nDBConn: PDBWorker;
+    nErrNum: Integer;
 begin
   nRetain := False;
   //init
@@ -762,10 +808,47 @@ begin
   try
     if not nItem.FVirtual then Exit;
     case nItem.FVType of
-    rtOutM100 :
-      nRetain := MakeTruckOut(nItem.FCard, nItem.FVReader, nItem.FVPrinter,
-                              nItem.FVHYPrinter);
-    else gHardwareHelper.SetReaderCard(nItem.FVReader, nItem.FCard, False);
+      rtOutM100 :
+      begin
+        nRetain := MakeTruckOut(nItem.FCard, nItem.FVReader, nItem.FVPrinter,
+                                nItem.FVHYPrinter);
+
+        if not GetCardUsed(nItem.FCard, nCType) then
+          nCType := '';
+
+        if nCType = sFlag_Provide then
+        begin
+          nDBConn := nil;
+          with gParamManager.ActiveParam^ do
+          Try
+            nDBConn := gDBConnManager.GetConnection(FDB.FID, nErrNum);
+            if not Assigned(nDBConn) then
+            begin
+              WriteHardHelperLog('连接HM数据库失败(DBConn Is Null).');
+              Exit;
+            end;
+
+            if not nDBConn.FConn.Connected then
+              nDBConn.FConn.Connected := True;
+            //conn db
+            nStr := 'select O_CType from %s Where O_Card=''%s'' ';
+            nStr := Format(nStr, [sTable_Order, nItem.FCard]);
+            with gDBConnManager.WorkerQuery(nDBConn,nStr) do
+            if RecordCount > 0 then
+            begin
+              if FieldByName('O_CType').AsString = sFlag_OrderCardG then
+                nRetain := False;
+            end;
+          finally
+            gDBConnManager.ReleaseConnection(nDBConn);
+          end;
+        end;
+        if nRetain then
+          WriteHardHelperLog('吞卡机执行状态:'+'卡类型:'+nCType+'动作:吞卡')
+        else
+          WriteHardHelperLog('吞卡机执行状态:'+'卡类型:'+nCType+'动作:吞卡后吐卡');
+      end
+      else gHardwareHelper.SetReaderCard(nItem.FVReader, nItem.FCard, False);
     end;
   finally
     gM100ReaderManager.DealtWithCard(nItem, nRetain)

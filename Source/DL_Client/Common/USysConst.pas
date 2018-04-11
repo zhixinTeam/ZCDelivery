@@ -27,6 +27,7 @@ const
   cFI_FrameMakeCard     = $0012;                     //办理磁卡
   cFI_FrameBill         = $0013;                     //开提货单
   cFI_FrameBillPost     = $0015;                     //手动过账
+  cFI_FrameSaleOrderOther = $0016;                   //临时销售订单
 
   cFI_FrameLadingDai    = $0030;                     //袋装提货
   cFI_FramePoundQuery   = $0031;                     //磅房查询
@@ -64,6 +65,7 @@ const
   cFI_FrameTodo         = $0072;                     //待处理事件
   cFI_FrameWXAccount    = $0073;                     //微信账户
   cFI_FrameWXSendLog    = $0074;                     //发送日志
+  cFI_FramePoundQueryOther=$0075;                    //矿山外运磅单查询
 
   cFI_FormMemo          = $1000;                     //备注窗口
   cFI_FormBackup        = $1001;                     //数据备份
@@ -87,6 +89,7 @@ const
   cFI_FormJiShuQi       = $1029;                     //计数管理
   cFI_FormBFWuCha       = $1030;                     //净重误差
   cFI_FormBuDan         = $1032;                     //销售补单
+  cFI_FormSaleOrderOther= $1033;                     //临时销售订单
 
   cFI_FormMakeCard      = $1040;                     //办理磁卡
   cFI_FormMakeRFIDCard  = $1041;                     //办理电子标签
@@ -105,6 +108,7 @@ const
   cFI_FormProvider      = $1056;                     //供应商
   cFI_FormMaterails     = $1057;                     //原材料
   cFI_FormGetWXAccount  = $1058;                     //获取商城注册信息
+  cFI_FormGetWTTruck    = $1059;                     //获取委托车辆
 
   cFI_FormBatch         = $1060;                     //批次管理
   cFI_FormStockParam    = $1061;                     //品种管理
@@ -119,6 +123,13 @@ const
   cFI_FormTodoSend      = $1075;                     //推送事件
 
   cFI_FormOrder         = $1083;                     //采购订单
+  cFI_FormModifyStock   = $1084;                     //修改物料
+  cFI_FormPoundKw       = $1085;                     //磅单勘误
+  cFI_FormPoundKwOther  = $1086;                     //磅单勘误(临时称重)
+  cFI_FormSaleKw        = $1087;                     //销售勘误
+  cFI_FormSaleModifyStock = $1088;                   //销售修改物料
+  cFI_FormSaleKwOther   = $1089;                     //销售勘误(外运业务)
+  cFI_FormSaleBuDanOther= $1090;                     //销售补单(外运业务)
 
   {*Command*}
   cCmd_RefreshData      = $0002;                     //刷新数据
@@ -184,6 +195,7 @@ type
     FPicPath    : string;                            //图片目录
     FVoiceUser  : Integer;                           //语音计数
     FProberUser : Integer;                           //检测器技术
+    FEmpTruckWc : Double;                            //空车出厂误差
 
     FPrinterBill: string;                            //小票打印机
     FPrinterHYDan : string;                          //化验单打印机 
@@ -291,6 +303,7 @@ begin
   AddMenuModuleItem('MAIN_D06', cFI_FrameBill);
   AddMenuModuleItem('MAIN_D08', cFI_FormTruckEmpty, mtForm);
   AddMenuModuleItem('MAIN_D10', cFI_FrameBillPost);
+  AddMenuModuleItem('MAIN_D11', cFI_FrameSaleOrderOther);
 
   AddMenuModuleItem('MAIN_E01', cFI_FramePoundManual);
   AddMenuModuleItem('MAIN_E02', cFI_FramePoundAuto);
@@ -317,6 +330,7 @@ begin
   AddMenuModuleItem('MAIN_L06', cFI_FrameSaleDetailQuery);
   AddMenuModuleItem('MAIN_L07', cFI_FrameSaleTotalQuery);
   AddMenuModuleItem('MAIN_L10', cFI_FrameOrderDetailQuery);
+  AddMenuModuleItem('MAIN_L11', cFI_FramePoundQueryOther);
 
   AddMenuModuleItem('MAIN_H01', cFI_FormTruckIn, mtForm);
   AddMenuModuleItem('MAIN_H02', cFI_FormTruckOut, mtForm);

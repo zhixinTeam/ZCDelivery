@@ -254,7 +254,13 @@ procedure TfFrameCustomer.N4Click(Sender: TObject);
 begin
   ShowWaitForm(ParentForm, '正在同步,请稍后');
   try
-    //if SyncRemoteCustomer then InitFormData(FWhere);
+    if not SyncSCustomer('') then
+    begin
+      ShowMsg('同步失败',sHint);
+      Exit;
+    end;
+    ShowMsg('同步完成',sHint);
+    InitFormData('');
   finally
     CloseWaitForm;
   end;   

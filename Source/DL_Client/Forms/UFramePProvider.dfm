@@ -102,11 +102,20 @@ inherited fFrameProvider: TfFrameProvider
     Top = 234
   end
   object PMenu1: TPopupMenu
+    OnPopup = PMenu1Popup
     Left = 232
     Top = 272
     object N1: TMenuItem
       Caption = #21516#27493'ERP'#20379#24212#21830
       OnClick = N1Click
+    end
+    object N2: TMenuItem
+      Caption = #20851#32852#24494#20449#21830#22478#36134#25143
+      OnClick = N2Click
+    end
+    object N3: TMenuItem
+      Caption = #21462#28040#21830#22478#36134#21495#20851#32852
+      OnClick = N3Click
     end
   end
 end

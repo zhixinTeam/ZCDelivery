@@ -74,7 +74,7 @@ begin
     if nStr = '' then Continue;
 
     gCardUsed := GetCardUsed(nStr);
-    if gCardUsed = sFlag_Provide then
+    if (gCardUsed = sFlag_Provide) or (gCardUsed = sFlag_Mul) then
          nRet := GetPurchaseOrders(nStr, sFlag_TruckOut, gBills)
     else nRet := GetLadingBills(nStr, sFlag_TruckOut, gBills);
 
@@ -150,7 +150,7 @@ begin
   for nIdx:=Low(gBills) to High(gBills) do
   with ListBill.Items.Add,gBills[nIdx] do
   begin
-    if gCardUsed = sFlag_Provide then
+    if (gCardUsed = sFlag_Provide) then
          Caption := FZhiKa
     else Caption := FID;
 
@@ -174,12 +174,20 @@ begin
 
     with gBills[nIdx] do
     begin
-      if gCardUsed = sFlag_Provide then
+      if (gCardUsed = sFlag_Provide) or (gCardUsed = sFlag_Mul) then
       begin
         LayItem1.Caption := '采购单号:';
         EditBill.Text := FZhiKa;
 
         //LoadOrderItemToMC(gBills[nIdx], ListInfo.Items, ListInfo.Delimiter);
+      end
+      else
+      if (gCardUsed = sFlag_Mul) then
+      begin
+        LayItem1.Caption := '采购单号:';
+        EditBill.Text := FID;
+
+        LoadOrderItemToMC(gBills[nIdx], ListInfo.Items, ListInfo.Delimiter);
       end
       else
       begin
@@ -215,7 +223,7 @@ end;
 procedure TfFormTruckOut.BtnOKClick(Sender: TObject);
 var nRet: Boolean;
 begin
-  if gCardUsed = sFlag_Provide then
+  if (gCardUsed = sFlag_Provide) or (gCardUsed = sFlag_Mul) then
        nRet := SavePurchaseOrders(sFlag_TruckOut, gBills)
   else nRet := SaveLadingBills(sFlag_TruckOut, gBills);
 

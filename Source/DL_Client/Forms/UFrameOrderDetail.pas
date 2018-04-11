@@ -250,19 +250,19 @@ begin
         begin
           nSQL := 'Update $OrderBase Set B_FreezeValue=B_FreezeValue-$FreezeVal  ' +
                   'Where B_ID = (select O_BID From $Order Where O_ID=''$ID'') and '+
-                  'B_Value>0'; 
+                  'B_Value>0';
 
           nSQL := MacroValue(nSQL, [MI('$OrderBase', sTable_OrderBase),
                   MI('$Order', sTable_Order),MI('$ID', nOrderID),
                   MI('$FreezeVal', FloatToStr(nFreeze))]);
           FDM.ExecuteSQL(nSQL);
 
-          nSQL := 'Update $Order Set O_Value=0.00 Where O_ID=''$ID'''; 
+          nSQL := 'Update $Order Set O_Value=0.00 Where O_ID=''$ID''';
           nSQL := MacroValue(nSQL, [MI('$Order', sTable_Order),MI('$ID', nOrderID)]);
           FDM.ExecuteSQL(nSQL);
           //防止二次进厂删除重复冻结量
         end;
-      end;  
+      end;
 
       nStr := 'Insert Into $DB($FL,D_DelMan,D_DelDate) ' +
               'Select $FL,''$User'',$Now From $DL Where D_ID=''$ID''';
@@ -271,7 +271,7 @@ begin
               MI('$Now', sField_SQLServer_Now),
               MI('$DL', sTable_OrderDtl), MI('$ID', nID)]);
       FDM.ExecuteSQL(nStr);
-    
+
       nStr := 'Delete From %s Where D_ID=''%s''';
       nStr := Format(nStr, [sTable_OrderDtl, nID]);
       FDM.ExecuteSQL(nStr);
@@ -279,6 +279,13 @@ begin
       FDM.ADOConn.CommitTrans;
       InitFormData(FWhere);
       ShowMsg('删除完毕', sHint);
+
+      try
+        SaveWebOrderDelMsg(nOrderID,sFlag_Provide);
+      except
+      end;
+      //插入删除推送
+
     except
       FDM.ADOConn.RollbackTrans;
       ShowMsg('删除失败', sError);

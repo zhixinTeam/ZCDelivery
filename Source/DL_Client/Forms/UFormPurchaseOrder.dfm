@@ -1,33 +1,33 @@
 inherited fFormPurchaseOrder: TfFormPurchaseOrder
   Left = 451
   Top = 243
-  ClientHeight = 315
-  ClientWidth = 523
+  ClientHeight = 396
+  ClientWidth = 524
   OnClose = FormClose
   OnCreate = FormCreate
   PixelsPerInch = 96
   TextHeight = 12
   inherited dxLayout1: TdxLayoutControl
-    Width = 523
-    Height = 315
+    Width = 524
+    Height = 396
     inherited BtnOK: TButton
-      Left = 377
-      Top = 282
+      Left = 378
+      Top = 363
       Caption = #24320#21333
-      TabOrder = 11
+      TabOrder = 16
     end
     inherited BtnExit: TButton
-      Left = 447
-      Top = 282
-      TabOrder = 12
+      Left = 448
+      Top = 363
+      TabOrder = 17
     end
     object EditValue: TcxTextEdit [2]
       Left = 320
-      Top = 171
+      Top = 250
       ParentFont = False
       Style.BorderColor = clWindowFrame
       Style.BorderStyle = ebsSingle
-      TabOrder = 8
+      TabOrder = 11
       Text = '0.00'
       OnKeyPress = EditLadingKeyPress
       Width = 138
@@ -69,7 +69,7 @@ inherited fFormPurchaseOrder: TfFormPurchaseOrder
     end
     object EditTruck: TcxButtonEdit [6]
       Left = 87
-      Top = 171
+      Top = 250
       ParentFont = False
       Properties.Buttons = <
         item
@@ -80,13 +80,13 @@ inherited fFormPurchaseOrder: TfFormPurchaseOrder
       Style.BorderColor = clWindowFrame
       Style.BorderStyle = ebsSingle
       Style.ButtonStyle = btsHotFlat
-      TabOrder = 4
+      TabOrder = 7
       OnKeyPress = EditLadingKeyPress
       Width = 135
     end
     object EditCardType: TcxComboBox [7]
       Left = 87
-      Top = 196
+      Top = 275
       ParentFont = False
       Properties.DropDownListStyle = lsEditFixedList
       Properties.Items.Strings = (
@@ -97,45 +97,87 @@ inherited fFormPurchaseOrder: TfFormPurchaseOrder
       Style.BorderStyle = ebsSingle
       Style.ButtonStyle = btsHotFlat
       Style.PopupBorderStyle = epbsSingle
-      TabOrder = 5
+      TabOrder = 8
       Width = 121
     end
     object cxLabel1: TcxLabel [8]
       Left = 262
-      Top = 196
+      Top = 275
       Caption = #27880':'#20020#26102#21345#20986#21378#26102#22238#25910';'#22266#23450#21345#20986#21378#26102#19981#22238#25910
       ParentFont = False
     end
     object chkNeiDao: TcxCheckBox [9]
       Left = 23
-      Top = 246
+      Top = 325
       AutoSize = False
       Caption = #20869#37096#20498#36816'('#30382#37325#12289#27611#37325#12289#30382#37325#12289#27611#37325'...)'
       ParentFont = False
-      TabOrder = 7
+      TabOrder = 10
       Height = 21
       Width = 234
     end
     object editMemo: TcxTextEdit [10]
       Left = 87
-      Top = 111
+      Top = 186
       ParentFont = False
-      TabOrder = 3
+      Style.BorderStyle = ebsSingle
+      TabOrder = 6
       Width = 121
     end
     object EditOppositeValue: TcxTextEdit [11]
       Left = 87
-      Top = 221
+      Top = 300
       ParentFont = False
-      TabOrder = 6
+      TabOrder = 9
       Text = '0.00'
       Width = 121
     end
     object dtexpiretime: TcxDateEdit [12]
       Left = 320
-      Top = 217
+      Top = 321
       ParentFont = False
-      TabOrder = 10
+      TabOrder = 14
+      Width = 121
+    end
+    object EditShip: TcxTextEdit [13]
+      Left = 320
+      Top = 296
+      ParentFont = False
+      TabOrder = 13
+      Width = 121
+    end
+    object chkIfPrint: TcxCheckBox [14]
+      Left = 11
+      Top = 363
+      Caption = #20986#21378#25171#21360#30917#21333
+      ParentFont = False
+      TabOrder = 15
+      Width = 121
+    end
+    object EditModel: TcxTextEdit [15]
+      Left = 87
+      Top = 111
+      ParentFont = False
+      Properties.ReadOnly = True
+      Style.BorderStyle = ebsSingle
+      TabOrder = 3
+      Width = 121
+    end
+    object EditKD: TcxTextEdit [16]
+      Left = 87
+      Top = 136
+      ParentFont = False
+      Properties.ReadOnly = True
+      Style.BorderStyle = ebsSingle
+      TabOrder = 4
+      Width = 121
+    end
+    object EditYear: TcxTextEdit [17]
+      Left = 87
+      Top = 161
+      ParentFont = False
+      Properties.ReadOnly = True
+      TabOrder = 5
       Width = 121
     end
     inherited dxLayout1Group_Root: TdxLayoutGroup
@@ -153,6 +195,21 @@ inherited fFormPurchaseOrder: TfFormPurchaseOrder
         object dxLayout1Item9: TdxLayoutItem
           Caption = #21407' '#26448' '#26009':'
           Control = EditMate
+          ControlOptions.ShowBorder = False
+        end
+        object dxLayout1Item14: TdxLayoutItem
+          Caption = #22411'    '#21495':'
+          Control = EditModel
+          ControlOptions.ShowBorder = False
+        end
+        object dxLayout1Item15: TdxLayoutItem
+          Caption = #30719'    '#28857':'
+          Control = EditKD
+          ControlOptions.ShowBorder = False
+        end
+        object dxLayout1Item16: TdxLayoutItem
+          Caption = #35760#36134#24180#26376':'
+          Control = EditYear
           ControlOptions.ShowBorder = False
         end
         object dxLayout1Item10: TdxLayoutItem
@@ -205,11 +262,24 @@ inherited fFormPurchaseOrder: TfFormPurchaseOrder
             Control = cxLabel1
             ControlOptions.ShowBorder = False
           end
+          object dxLayout1Item12: TdxLayoutItem
+            Caption = #30721#22836#33337#21495':'
+            Control = EditShip
+            ControlOptions.ShowBorder = False
+          end
           object dxLayout1Item7: TdxLayoutItem
             Caption = #21040#26399#26102#38388':'
             Control = dtexpiretime
             ControlOptions.ShowBorder = False
           end
+        end
+      end
+      inherited dxLayout1Group1: TdxLayoutGroup
+        object dxLayout1Item13: TdxLayoutItem [0]
+          Caption = 'cxCheckBox1'
+          ShowCaption = False
+          Control = chkIfPrint
+          ControlOptions.ShowBorder = False
         end
       end
     end

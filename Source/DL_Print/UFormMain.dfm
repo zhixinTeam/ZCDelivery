@@ -19,7 +19,7 @@ object fFormMain: TfFormMain
   object GroupBox1: TGroupBox
     Left = 0
     Top = 0
-    Width = 549
+    Width = 541
     Height = 70
     Align = alTop
     TabOrder = 0
@@ -75,8 +75,8 @@ object fFormMain: TfFormMain
   object MemoLog: TMemo
     Left = 0
     Top = 70
-    Width = 549
-    Height = 278
+    Width = 541
+    Height = 267
     Align = alClient
     ImeName = #35895#27468#25340#38899#36755#20837#27861' 2'
     ScrollBars = ssBoth
@@ -84,8 +84,8 @@ object fFormMain: TfFormMain
   end
   object StatusBar1: TStatusBar
     Left = 0
-    Top = 348
-    Width = 549
+    Top = 337
+    Width = 541
     Height = 19
     Panels = <>
   end

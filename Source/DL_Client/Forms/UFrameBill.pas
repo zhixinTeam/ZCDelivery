@@ -46,6 +46,14 @@ type
     CheckDelete: TcxCheckBox;
     N6: TMenuItem;
     N7: TMenuItem;
+    N2: TMenuItem;
+    N8: TMenuItem;
+    N9: TMenuItem;
+    N15: TMenuItem;
+    N10: TMenuItem;
+    N11: TMenuItem;
+    N12: TMenuItem;
+    N13: TMenuItem;
     procedure EditIDPropertiesButtonClick(Sender: TObject;
       AButtonIndex: Integer);
     procedure BtnDelClick(Sender: TObject);
@@ -57,14 +65,19 @@ type
     procedure N2Click(Sender: TObject);
     procedure PMenu1Popup(Sender: TObject);
     procedure CheckDeleteClick(Sender: TObject);
-    procedure N10Click(Sender: TObject);
+    procedure N15Click(Sender: TObject);
     procedure N6Click(Sender: TObject);
     procedure N7Click(Sender: TObject);
+    procedure N8Click(Sender: TObject);
+    procedure N10Click(Sender: TObject);
+    procedure N12Click(Sender: TObject);
+    procedure N13Click(Sender: TObject);
   protected
     FStart,FEnd: TDate;
     //时间区间
     FUseDate: Boolean;
     //使用区间
+    FPreFix: string;
     procedure OnCreateFrame; override;
     procedure OnDestroyFrame; override;
     function FilterColumnField: string; override;
@@ -93,8 +106,19 @@ begin
 end;
 
 procedure TfFrameBill.OnCreateFrame;
+var nStr: string;
 begin
   inherited;
+  FPreFix := 'WY';
+  nStr := 'Select B_Prefix From %s ' +
+          'Where B_Group=''%s'' And B_Object=''%s''';
+  nStr := Format(nStr, [sTable_SerialBase, sFlag_BusGroup, sFlag_SaleOrderOther]);
+
+  with FDM.QueryTemp(nStr) do
+  if RecordCount > 0 then
+  begin
+    FPreFix := Fields[0].AsString;
+  end;
   FUseDate := True;
   InitDateRange(Name, FStart, FEnd);
 end;
@@ -114,7 +138,7 @@ begin
   EditDate.Text := Format('%s 至 %s', [Date2Str(FStart), Date2Str(FEnd)]);
 
   Result := 'Select * From $Bill ' +
-            ' Left Join $ZK on VBELN=L_ZhiKa ';
+            ' Left Join $ZK on O_Order=L_ZhiKa ';
   //提货单
 
   if (nWhere = '') or FUseDate then
@@ -224,7 +248,6 @@ end;
 //Desc: 删除
 procedure TfFrameBill.BtnDelClick(Sender: TObject);
 var nStr: string;
-    nModifySuccess: Boolean;
 begin
   if cxView1.DataController.GetSelectedCount < 1 then
   begin
@@ -235,27 +258,15 @@ begin
   nStr := Format(nStr, [SQLQuery.FieldByName('L_ID').AsString]);
   if not QueryDlg(nStr, sAsk) then Exit;
 
-  nModifySuccess := False;
-  try
-    //修改商城订单状态
-     ModifyWebOrderStatus(SQLQuery.FieldByName('L_ID').AsString);
-     nModifySuccess := True;
-  except
-    //不处理异常
-  end;
-
-  try
-    if nModifySuccess then
-    //推送公众号消息
-    SendMsgToWebMall(SQLQuery.FieldByName('L_ID').AsString);
-  except
-    //不处理异常
-  end;
-
   if DeleteBill(SQLQuery.FieldByName('L_ID').AsString) then
   begin
     InitFormData(FWhere);
     ShowMsg('提货单已删除', sHint);
+    try
+      SaveWebOrderDelMsg(SQLQuery.FieldByName('L_ID').AsString,sFlag_Sale);
+    except
+    end;
+    //插入删除推送
   end;
 end;
 
@@ -326,14 +337,42 @@ begin
   end;
 end;
 
-procedure TfFrameBill.N10Click(Sender: TObject);
-var nStr: string;
+procedure TfFrameBill.N15Click(Sender: TObject);
+var nStr,nID: string;
+    nList: TStrings;
+    nP: TFormCommandParam;
 begin
-  if cxView1.DataController.GetSelectedCount > 0 then
+  if cxView1.DataController.GetSelectedCount < 1 then
   begin
-    nStr := SQLQuery.FieldByName('L_ID').AsString;
-    PrintBillReport(nStr, False);
+    ShowMsg('请选择要勘误的记录', sHint);
+    Exit;
   end;
+
+  if Pos(FPreFix,SQLQuery.FieldByName('L_ZhiKa').AsString) > 0 then
+  begin
+    ShowMsg('矿山外运业务请在(报表查询--矿山外运发货明细)进行勘误', sHint);
+    Exit;
+  end;
+
+  nID := SQLQuery.FieldByName('L_ID').AsString;
+
+  nList := TStringList.Create;
+  try
+    nList.Add(nID);
+
+    nP.FCommand := cCmd_EditData;
+    nP.FParamA := nList.Text;
+    CreateBaseFormItem(cFI_FormSaleKw, '', @nP);
+
+    if (nP.FCommand = cCmd_ModalResult) and (nP.FParamA = mrOK) then
+    begin
+      InitFormData(FWhere);
+    end;
+
+  finally
+    nList.Free;
+  end;
+
 end;
 
 procedure TfFrameBill.N7Click(Sender: TObject);
@@ -457,6 +496,120 @@ begin
   finally
     nList.Free;
   end;
+end;
+
+procedure TfFrameBill.N8Click(Sender: TObject);
+var nStr: string;
+begin
+  if cxView1.DataController.GetSelectedCount > 0 then
+  begin
+    nStr := SQLQuery.FieldByName('L_ID').AsString;
+    PrintCNSReport(nStr, False);
+  end;
+end;
+
+procedure TfFrameBill.N10Click(Sender: TObject);
+var nStr,nID: string;
+    nList: TStrings;
+    nP: TFormCommandParam;
+begin
+  if cxView1.DataController.GetSelectedCount < 1 then
+  begin
+    ShowMsg('请选择要修改的记录', sHint);
+    Exit;
+  end;
+
+  if Length(SQLQuery.FieldByName('L_MValue').AsString) > 0 then
+  begin
+    ShowMsg('车辆已过毛重,请进行提货勘误', sHint);
+    Exit;
+  end;
+
+  nID := SQLQuery.FieldByName('L_ID').AsString;
+
+  nList := TStringList.Create;
+  try
+    nList.Add(nID);
+
+    nP.FCommand := cCmd_EditData;
+    nP.FParamA := nList.Text;
+    CreateBaseFormItem(cFI_FormSaleModifyStock, '', @nP);
+
+    if (nP.FCommand = cCmd_ModalResult) and (nP.FParamA = mrOK) then
+    begin
+      InitFormData(FWhere);
+    end;
+
+  finally
+    nList.Free;
+  end;
+end;
+
+procedure TfFrameBill.N12Click(Sender: TObject);
+var nStr,nID: string;
+    nList: TStrings;
+    nP: TFormCommandParam;
+begin
+  if cxView1.DataController.GetSelectedCount < 1 then
+  begin
+    ShowMsg('请选择要补单的记录', sHint);
+    Exit;
+  end;
+
+  if Pos(FPreFix,SQLQuery.FieldByName('L_ZhiKa').AsString) <= 0 then
+  begin
+    ShowMsg('非矿山外运提货单,不能进行补单', sHint);
+    Exit;
+  end;
+
+  nID := SQLQuery.FieldByName('L_ID').AsString;
+
+  nList := TStringList.Create;
+  try
+    nList.Add(nID);
+
+    nP.FCommand := cCmd_EditData;
+    nP.FParamA := nList.Text;
+    CreateBaseFormItem(cFI_FormSaleBuDanOther, '', @nP);
+
+    if (nP.FCommand = cCmd_ModalResult) and (nP.FParamA = mrOK) then
+    begin
+      InitFormData(FWhere);
+    end;
+
+  finally
+    nList.Free;
+  end;
+end;
+
+procedure TfFrameBill.N13Click(Sender: TObject);
+var nStr,nStatus: string;
+begin
+  if cxView1.DataController.GetSelectedCount < 1 then
+  begin
+    ShowMsg('请选择要修改的记录', sHint);
+    Exit;
+  end;
+
+  if Pos(FPreFix,SQLQuery.FieldByName('L_ZhiKa').AsString) <= 0 then
+  begin
+    ShowMsg('非矿山外运提货单,不能进行修改', sHint);
+    Exit;
+  end;
+
+  nStr := '修改提货单当前状态[ %s -> %s ].确定要修改吗?';
+  nStr := Format(nStr, [SQLQuery.FieldByName('L_Status').AsString, sFlag_TruckOut]);
+  if not QueryDlg(nStr, sHint) then Exit;
+
+  nStr := 'Update %s Set L_Status=''%s'',L_NextStatus='''' ' +
+          'Where L_ID=''%s''';
+
+  nStr := Format(nStr, [sTable_Bill, sFlag_TruckOut,
+                        SQLQuery.FieldByName('L_ID').AsString]);
+  FDM.ExecuteSQL(nStr);
+  
+  InitFormData(FWhere);
+  ShowMsg('提货单状态修改成功', sHint);
 end;
 
 initialization

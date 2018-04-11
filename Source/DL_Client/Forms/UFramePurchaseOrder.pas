@@ -41,6 +41,9 @@ type
     N4: TMenuItem;
     N5: TMenuItem;
     N7: TMenuItem;
+    N8: TMenuItem;
+    N9: TMenuItem;
+    N10: TMenuItem;
     procedure EditDatePropertiesButtonClick(Sender: TObject;
       AButtonIndex: Integer);
     procedure EditIDPropertiesButtonClick(Sender: TObject;
@@ -55,6 +58,8 @@ type
     procedure Check1Click(Sender: TObject);
     procedure N4Click(Sender: TObject);
     procedure N7Click(Sender: TObject);
+    procedure N9Click(Sender: TObject);
+    procedure N10Click(Sender: TObject);
   private
     { Private declarations }
   protected
@@ -65,6 +70,8 @@ type
     procedure OnDestroyFrame; override;
     function InitFormDataSQL(const nWhere: string): string; override;
     {*查询SQL*}
+    function GetVal(const nRow: Integer; const nField: string): string;
+    //获取指定字段
   public
     { Public declarations }
     class function FrameID: integer; override;
@@ -90,11 +97,6 @@ begin
   FTimeE := Str2DateTime(Date2Str(Now) + ' 00:00:00');
 
   InitDateRange(Name, FStart, FEnd);
-  if not gSysParam.FIsAdmin then
-  begin
-    N3.Enabled:=False;
-    N3.Visible:=False;
-  end;
 end;
 
 procedure TfFramePurchaseOrder.OnDestroyFrame;
@@ -108,7 +110,7 @@ function TfFramePurchaseOrder.InitFormDataSQL(const nWhere: string): string;
 begin
   EditDate.Text := Format('%s 至 %s', [Date2Str(FStart), Date2Str(FEnd)]);
 
-  Result := 'Select oo.* From $OO oo ';
+  Result := 'Select oo.* From $OO oo ' ;
   //xxxxx
 
   if nWhere = '' then
@@ -121,6 +123,7 @@ begin
 
   Result := MacroValue(Result, [MI('$OO', sTable_Order),
             MI('$ST', Date2Str(FStart)), MI('$End', Date2Str(FEnd + 1))]);
+
   //xxxxx
 end;
 
@@ -169,7 +172,15 @@ begin
   nStr := SQLQuery.FieldByName('O_ID').AsString;
   if not QueryDlg('确定要删除编号为[ ' + nStr + ' ]的订单吗?', sAsk) then Exit;
 
-  if DeleteOrder(nStr) then ShowMsg('已成功删除记录', sHint);
+  if DeleteOrder(nStr) then
+  begin
+    try
+      SaveWebOrderDelMsg(nStr,sFlag_Provide);
+    except
+    end;
+    //插入删除推送
+    ShowMsg('已成功删除记录', sHint);
+  end;
 
   InitFormData('');
 end;
@@ -184,6 +195,20 @@ procedure TfFramePurchaseOrder.EditDatePropertiesButtonClick(Sender: TObject;
   AButtonIndex: Integer);
 begin
   if ShowDateFilterForm(FStart, FEnd) then InitFormData(FWhere);
+end;
+
+//Desc: 获取nRow行nField字段的内容
+function TfFramePurchaseOrder.GetVal(const nRow: Integer;
+ const nField: string): string;
+var nVal: Variant;
+begin
+  nVal := cxView1.ViewData.Rows[nRow].Values[
+            cxView1.GetColumnByFieldName(nField).Index];
+  //xxxxx
+
+  if VarIsNull(nVal) then
+       Result := ''
+  else Result := nVal;
 end;
 
 //Desc: 执行查询
@@ -401,6 +426,86 @@ begin
     Exit;
   end;
   ShowMsg('验收成功',sHint);
+end;
+
+procedure TfFramePurchaseOrder.N9Click(Sender: TObject);
+var nStr: string;
+    nIdx: Integer;
+    nList: TStrings;
+    nP: TFormCommandParam;
+begin
+  if cxView1.DataController.GetSelectedCount < 1 then
+  begin
+    ShowMsg('请选择要编辑的记录', sHint); Exit;
+  end;
+
+  nList := TStringList.Create;
+  try
+    for nIdx := 0 to cxView1.DataController.RowCount - 1  do
+    begin
+      if GetVal(nIdx,'O_CType') <> sFlag_OrderCardG then
+      begin
+        ShowMsg('选择的记录中存在临时卡,请重新选择', sHint); Exit;
+      end;
+
+      nStr := GetVal(nIdx,'O_ID');
+      if nStr = '' then
+        Continue;
+
+      nList.Add(nStr);
+    end;
+
+    nP.FCommand := cCmd_EditData;
+    nP.FParamA := nList.Text;
+    CreateBaseFormItem(cFI_FormModifyStock, '', @nP);
+
+    if (nP.FCommand = cCmd_ModalResult) and (nP.FParamA = mrOK) then
+    begin
+      InitFormData(FWhere);
+    end;
+
+  finally
+    nList.Free;
+  end;
+end;
+
+procedure TfFramePurchaseOrder.N10Click(Sender: TObject);
+var
+  nStr,nTruck,nSQL: string;
+begin
+  if cxView1.DataController.GetSelectedCount > 0 then
+  begin
+    nStr := SQLQuery.FieldByName('O_Ship').AsString;
+    nTruck := nStr;
+    if not ShowInputBox('请输入新的船号:', '修改', nTruck, 15) then Exit;
+
+    if (nTruck = '') or (nStr = nTruck) then Exit;
+    //无效或一致
+
+    nStr := SQLQuery.FieldByName('O_ID').AsString;
+    nSQL := 'select top 1 * from %s where D_OID=''%s'' order by R_ID desc ';
+    nSQL := Format(nSQL,[sTable_OrderDtl,nStr]);
+    with FDM.QueryTemp(nSQL) do
+    begin
+      if RecordCount > 0 then
+      begin
+        if (FieldByName('D_Status').AsString=sFlag_TruckBFP) or
+          (FieldByName('D_Status').AsString=sFlag_TruckBFM) then
+        begin
+          ShowMsg('车辆已称重，禁止修改',sHint);
+          Exit;
+        end;
+      end;
+    end;
+
+    nSQL := 'update %s set O_Ship=''%s'' where O_ID=''%s'' ';
+    nSQL := Format(nSQL,[sTable_Order, nTruck, nStr]);
+
+    FDM.ExecuteSQL(nSQL);
+    
+    InitFormData(FWhere);
+    ShowMsg('船号修改成功', sHint);
+  end;
 end;
 
 initialization

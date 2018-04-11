@@ -56,6 +56,7 @@ type
   protected
     function InitFormDataSQL(const nWhere: string): string; override;
     {*查询SQL*}
+    function DeleteDirectory(nDir :String): boolean;
   public
     { Public declarations }
     class function FrameID: integer; override;
@@ -65,7 +66,8 @@ implementation
 
 {$R *.dfm}
 uses
-  ULibFun, UMgrControl, USysBusiness, USysConst, USysDB, UDataModule, UFormBase;
+  ULibFun, UMgrControl, USysBusiness, USysConst, USysDB, UDataModule, UFormBase,
+  UFormWait, ShellAPI;
 
 class function TfFrameTrucks.FrameID: integer;
 begin
@@ -287,21 +289,88 @@ begin
 end;
 
 procedure TfFrameTrucks.N10Click(Sender: TObject);
-var
-  nStr: string;
+var nStr,nID,nDir: string;
+    nPic: TPicture;
 begin
-  nStr := '清除后不可恢复，确定要清除所有预置皮重吗?';
-  if not QueryDlg(nStr, sAsk) then Exit;
-  nStr := 'Update %s Set T_PrePValue=0,T_PrePMan=null,T_PrePTime=0 Where T_PrePUse=''%s''';
-  nStr := Format(nStr, [sTable_Truck,sFlag_Yes]);
-  FDM.ExecuteSQL(nStr);
-  WriteSysLog('清除所有预置皮重成功');
-  ShowDlg('清除所有预置皮重成功', sHint);
+  if cxView1.DataController.GetSelectedCount < 1 then
+  begin
+    ShowMsg('请选择要查看的记录', sHint);
+    Exit;
+  end;
+
+  if SQLQuery.FieldByName('T_PrePUse').AsString <> sFlag_Yes then
+  begin
+    ShowMsg('非预制皮重车辆,无抓拍', sHint);
+    Exit;
+  end;
+
+  nID := SQLQuery.FieldByName('R_ID').AsString;
+  nDir := gSysParam.FPicPath + nID + '\';
+
+  DeleteDirectory(gSysParam.FPicPath + nID);
+  if DirectoryExists(nDir) then
+  begin
+    ShellExecute(GetDesktopWindow, 'open', PChar(nDir), nil, nil, SW_SHOWNORMAL);
+    Exit;
+  end else ForceDirectories(nDir);
+
+  nPic := nil;
+  nStr := 'Select * From %s Where P_ID=''%s''';
+  nStr := Format(nStr, [sTable_Picture, nID]);
+
+  ShowWaitForm(ParentForm, '读取图片', True);
+  try
+    with FDM.QueryTemp(nStr) do
+    begin
+      if RecordCount < 1 then
+      begin
+        ShowMsg('本次预制无抓拍', sHint);
+        Exit;
+      end;
+
+      nPic := TPicture.Create;
+      First;
+
+      While not eof do
+      begin
+        nStr := nDir + Format('%s_%s.jpg', [FieldByName('P_ID').AsString,
+                FieldByName('R_ID').AsString]);
+        //xxxxx
+
+        FDM.LoadDBImage(FDM.SqlTemp, 'P_Picture', nPic);
+        nPic.SaveToFile(nStr);
+        Next;
+      end;
+    end;
+
+    ShellExecute(GetDesktopWindow, 'open', PChar(nDir), nil, nil, SW_SHOWNORMAL);
+    //open dir
+  finally
+    nPic.Free;
+    CloseWaitForm;
+    FDM.SqlTemp.Close;
+  end;
 end;
 
 procedure TfFrameTrucks.WriteSysLog(const nID: string);
 begin
   FDM.WriteSysLog(sFlag_TruckItem, 'UFrameTrucks',nID);
+end;
+
+function TfFrameTrucks.DeleteDirectory(nDir :String): boolean;
+var
+f: TSHFILEOPSTRUCT;
+begin
+  FillChar(f, SizeOf(f), 0);
+  with f do
+  begin
+    Wnd := 0;
+    wFunc := FO_DELETE;
+    pFrom := PChar(nDir+#0);
+    pTo := PChar(nDir+#0);
+    fFlags := FOF_ALLOWUNDO+FOF_NOCONFIRMATION+FOF_NOERRORUI;
+  end;
+  Result := (SHFileOperation(f) = 0);
 end;
 
 initialization

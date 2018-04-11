@@ -48,6 +48,8 @@ type
     //执行动作
     procedure PrintBill(var nBase: TRPDataBase;var nBuf: TIdBytes;nCtx: TIdContext);
     //打印单据
+    function IsOtherOrder(const nBill: string): Boolean;
+    //是否为临时订单
   public
     { Public declarations }
   end;
@@ -257,7 +259,7 @@ begin
   nHint := '';
   Result := False;
   
-  nStr := 'Select *,%s As L_ValidMoney From %s b Where L_ID=''%s''';
+  nStr := 'Select *,%s As L_ValidMoney From %s Where L_ID=''%s''';
   nStr := Format(nStr, [nMoney, sTable_Bill, nBill]);
 
   nDS := FDM.SQLQuery(nStr, FDM.SQLQuery1);
@@ -310,7 +312,7 @@ var nStr: string;
 begin
   nHint := '';
   Result := False;
-  
+
   {nStr := 'Select * From %s oo Inner Join %s od on oo.O_ID=od.D_OID Where D_ID=''%s''';
   nStr := Format(nStr, [sTable_Order, sTable_OrderDtl, nOrder]);
 
@@ -325,6 +327,88 @@ begin
   end;}
 
   nStr := gPath + 'Report\PurchaseOrder.fr3';
+  if not FDR.LoadReportFile(nStr) then
+  begin
+    nHint := '无法正确加载报表文件: ' + nStr;
+    Exit;
+  end;
+
+  if nPrinter = '' then
+       FDR.Report1.PrintOptions.Printer := 'My_Default_Printer'
+  else FDR.Report1.PrintOptions.Printer := nPrinter;
+
+  FDR.Dataset1.DataSet := FDM.SQLQuery1;
+  FDR.PrintReport;
+  Result := FDR.PrintSuccess;
+end;
+
+//Date: 2018-3-4
+//Parm: 采购单号;提示;数据对象;打印机
+//Desc: 打印nOrder采购单号
+function PrintPoundReport(const nOrder: string; var nHint: string;
+ const nPrinter: string = ''; const nMoney: string = '0'): Boolean;
+var nStr: string;
+    nDS: TDataSet;
+begin
+  nHint := '';
+  Result := False;
+
+  nStr := 'Select top 1 * From %s Where P_OrderBak=''%s'' order by R_ID desc';
+  nStr := Format(nStr, [sTable_PoundLog, nOrder]);
+
+  nDS := FDM.SQLQuery(nStr, FDM.SQLQuery1);
+  if not Assigned(nDS) then Exit;
+
+  if nDS.RecordCount < 1 then
+  begin
+    nHint := '磅单[ %s ] 已无效!!';
+    nHint := Format(nHint, [nOrder]);
+    Exit;
+  end;
+
+  nStr := gPath + 'Report\Pound.fr3';
+  if not FDR.LoadReportFile(nStr) then
+  begin
+    nHint := '无法正确加载报表文件: ' + nStr;
+    Exit;
+  end;
+
+  if nPrinter = '' then
+       FDR.Report1.PrintOptions.Printer := 'My_Default_Printer'
+  else FDR.Report1.PrintOptions.Printer := nPrinter;
+
+  FDR.Dataset1.DataSet := FDM.SQLQuery1;
+  FDR.PrintReport;
+  Result := FDR.PrintSuccess;
+end;
+
+//Date: 2018-4-4
+//Parm: 采购单号;提示;数据对象;打印机
+//Desc: 打印nOrder采购单号
+function PrintPoundOtherReport(const nOrder: string; var nHint: string;
+ const nPrinter: string = ''; const nMoney: string = '0'): Boolean;
+var nStr: string;
+    nDS: TDataSet;
+begin
+  nHint := '';
+  Result := False;
+
+  nStr := 'Select top 1 * From %s pl '+
+  'Left Join %s oo On oo.R_ID=pl.P_OrderBak'+
+  ' Where pl.P_OrderBak=''%s'' order by pl.R_ID desc';
+  nStr := Format(nStr, [sTable_PoundLog, sTable_CardOther, nOrder]);
+
+  nDS := FDM.SQLQuery(nStr, FDM.SQLQuery1);
+  if not Assigned(nDS) then Exit;
+
+  if nDS.RecordCount < 1 then
+  begin
+    nHint := '磅单[ %s ] 已无效!!';
+    nHint := Format(nHint, [nOrder]);
+    Exit;
+  end;
+
+  nStr := gPath + 'Report\PoundOther.fr3';
   if not FDR.LoadReportFile(nStr) then
   begin
     nHint := '无法正确加载报表文件: ' + nStr;
@@ -418,26 +502,8 @@ begin
   nHint := '';
   Result := False;
 
-  {$IFDEF HeGeZhengSimpleData}
-  nSR := 'Select * from %s b ' +
-          ' Left Join %s sp On sp.P_Stock=b.L_StockName ' +
-          'Where b.L_ID=''%s''';
-  nStr := Format(nSR, [sTable_Bill, sTable_StockParam, nBill]);
-  {$ELSE}
-  nSR := 'Select R_SerialNo,P_Stock,P_Name,P_QLevel From %s sr ' +
-         ' Left Join %s sp on sp.P_ID=sr.R_PID';
-  nSR := Format(nSR, [sTable_StockRecord, sTable_StockParam]);
-
-  nStr := 'Select hy.*,sr.*,C_Name From $HY hy ' +
-          ' Left Join $Cus cus on cus.C_ID=hy.H_Custom' +
-          ' Left Join ($SR) sr on sr.R_SerialNo=H_SerialNo ' +
-          'Where H_Reporter=''$ID''';
-  //xxxxx
-
-  nStr := MacroValue(nStr, [MI('$HY', sTable_StockHuaYan),
-          MI('$Cus', sTable_Customer), MI('$SR', nSR), MI('$ID', nBill)]);
-  //xxxxx
-  {$ENDIF}
+  nStr := 'Select * From %s Where L_ID=''%s''';
+  nStr := Format(nStr, [sTable_Bill, nBill]);
 
   if FDM.SQLQuery(nStr, FDM.SqlTemp).RecordCount < 1 then
   begin
@@ -467,7 +533,7 @@ begin
   if nPrinter = '' then
        FDR.Report1.PrintOptions.Printer := 'My_Default_HYPrinter'
   else FDR.Report1.PrintOptions.Printer := nPrinter;
-  
+
   FDR.Dataset1.DataSet := FDM.SqlTemp;
   FDR.PrintReport;
   Result := FDR.PrintSuccess;
@@ -549,10 +615,16 @@ begin
     try
       FIsBusy := True;
       //set flag
-      
-      if nType = 'P' then
+
+      if nType = sFlag_Mul then
       begin
-        PrintOrderReport(nBill, nHint, nPrinter);
+        PrintPoundOtherReport(nBill, nHint, nPrinter);
+        if nHint <> '' then WriteLog(nHint);
+      end else
+      if (nType = 'P') or IsOtherOrder(nBill) then
+      begin
+//        PrintOrderReport(nBill, nHint, nPrinter);
+        PrintPoundReport(nBill, nHint, nPrinter);
         if nHint <> '' then WriteLog(nHint);
       end else
       begin
@@ -577,6 +649,44 @@ begin
 
     FIsBusy := False;
     WriteLog('打印结束.');
+  end;
+end;
+
+//Desc: 是否为临时订单
+function TfFormMain.IsOtherOrder(const nBill: string): Boolean;
+var nStr,nPreFix,nOrder: string;
+    nDS: TDataSet;
+begin
+  Result := False;
+
+  nStr := 'Select L_ZhiKa From %s Where L_ID=''%s''';
+  nStr := Format(nStr, [sTable_Bill, nBill]);
+
+  nDS := FDM.SQLQuery(nStr, FDM.SQLQuery1);
+  if not Assigned(nDS) then Exit;
+
+  if nDS.RecordCount < 1 then
+  begin
+    Exit;
+  end;
+  nOrder := nDS.Fields[0].AsString;
+
+  nPreFix := 'WY';
+  nStr := 'Select B_Prefix From %s ' +
+          'Where B_Group=''%s'' And B_Object=''%s''';
+  nStr := Format(nStr, [sTable_SerialBase, sFlag_BusGroup, sFlag_SaleOrderOther]);
+
+  nDS := FDM.SQLQuery(nStr, FDM.SQLQuery1);
+  if not Assigned(nDS) then Exit;
+
+  if nDS.RecordCount > 0 then
+  begin
+    nPreFix := nDS.Fields[0].AsString;
+  end;
+
+  if Pos(nPreFix,nOrder) > 0 then
+  begin
+    Result := True;
   end;
 end;
 

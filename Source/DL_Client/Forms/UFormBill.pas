@@ -23,36 +23,37 @@ type
     dxLayout1Item8: TdxLayoutItem;
     EditTruck: TcxTextEdit;
     dxLayout1Item9: TdxLayoutItem;
-    EditStock: TcxComboBox;
-    dxLayout1Item7: TdxLayoutItem;
     EditLading: TcxComboBox;
     dxLayout1Item12: TdxLayoutItem;
-    EditFQ: TcxTextEdit;
-    dxLayout1Item5: TdxLayoutItem;
     dxLayout1Item6: TdxLayoutItem;
     EditType: TcxComboBox;
     PrintGLF: TcxCheckBox;
     dxLayout1Item13: TdxLayoutItem;
     dxLayout1Item14: TdxLayoutItem;
     PrintHY: TcxCheckBox;
-    dxLayout1Group4: TdxLayoutGroup;
     dxLayout1Group3: TdxLayoutGroup;
-    dxLayout1Group6: TdxLayoutGroup;
-    dxLayout1Group2: TdxLayoutGroup;
     cxLabel1: TcxLabel;
     dxLayout1Item4: TdxLayoutItem;
     EditPhone: TcxTextEdit;
     dxLayout1Item10: TdxLayoutItem;
-    EditUnloading: TcxMemo;
-    dxLayout1Item11: TdxLayoutItem;
     EditDate: TcxDateEdit;
     dxLayout1Item15: TdxLayoutItem;
     dxLayout1Group5: TdxLayoutGroup;
+    chkMaxMValue: TcxCheckBox;
+    dxLayout1Item7: TdxLayoutItem;
+    dxLayout1Group6: TdxLayoutGroup;
+    dxLayout1Group4: TdxLayoutGroup;
+    EditMaxMValue: TcxTextEdit;
+    dxLayout1Item5: TdxLayoutItem;
+    dxLayout1Group2: TdxLayoutGroup;
+    EditWT: TcxTextEdit;
+    dxLayout1Item11: TdxLayoutItem;
+    dxLayout1Group7: TdxLayoutGroup;
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure BtnOKClick(Sender: TObject);
     procedure EditLadingKeyPress(Sender: TObject; var Key: Char);
-    procedure EditFQPropertiesEditValueChanged(Sender: TObject);
+    procedure chkMaxMValueClick(Sender: TObject);
   protected
     { Protected declarations }
     FMsgNo: Cardinal;
@@ -153,7 +154,7 @@ begin
       dxLayout1Item5.Caption := nStr;
     //xxxxx
 
-    PrintHY.Checked := nIni.ReadBool(Name, 'PrintHY', False);
+    PrintHY.Checked := False;
     //随车开单
     LoadMCListBoxConfig(Name, ListInfo, nIni);
   finally
@@ -173,6 +174,8 @@ begin
   dxLayout1Item14.Visible := False;
   PrintHY.Checked := False;
   {$ENDIF}
+
+  chkMaxMValue.OnClick(nil);
 
   AdjustCtrlData(Self);
 end;
@@ -200,10 +203,8 @@ begin
     Key := #0;
 
     if Sender = EditTruck then ActiveControl := EditValue else
-    if Sender = EditPhone then ActiveControl := EditUnloading else
-    if Sender = EditUnloading then ActiveControl := BtnOK else
     //xxxxx
-    
+
     if Sender = EditValue then
          ActiveControl := BtnOK
     else Perform(WM_NEXTDLGCTL, 0, 0);
@@ -212,6 +213,17 @@ begin
   if (Sender = EditTruck) and (Key = Char(VK_SPACE)) then
   begin
     Key := #0;
+    {$IFDEF GetTruckNoFromERP}
+    nP.FParamA := gBillItem.FZhiKa;
+    CreateBaseFormItem(cFI_FormGetWTTruck, '', @nP);
+
+    if (nP.FCommand = cCmd_ModalResult) and(nP.FParamA = mrOk) then
+    begin
+      EditTruck.Text := nP.FParamB;
+      EditValue.Text := nP.FParamC;
+      EditWT.Text    := nP.FParamD;
+    end;
+    {$ELSE}
     nP.FParamA := EditTruck.Text;
     CreateBaseFormItem(cFI_FormGetTruck, '', @nP);
 
@@ -220,18 +232,9 @@ begin
       EditTruck.Text := nP.FParamB;
       EditPhone.Text := nP.FParamD;
     end;
+    {$ENDIF}
+
     EditTruck.SelectAll;
-  end;
-
-  if (Sender = EditUnloading) and (Key = Char(VK_SPACE)) then
-  begin
-    Key := #0;
-    nP.FParamA := EditUnloading.Text;
-    CreateBaseFormItem(cFI_FormGetUnloading, '', @nP);
-
-    if (nP.FCommand = cCmd_ModalResult) and(nP.FParamA = mrOk) then
-      EditUnloading.Text := nP.FParamB;
-    EditUnloading.SelectAll;
   end;
 end;
 
@@ -247,7 +250,6 @@ begin
   dxLayout1Item15.Visible := FBuDanFlag = sFlag_Yes;
 
   ActiveControl := EditTruck;
-  EditStock.ItemIndex := 1; //水泥
 
   with gBillItem,ListInfo do
   begin
@@ -270,22 +272,19 @@ begin
   end;
 end;
 
-//Desc: 保存封签号
-procedure TfFormBill.EditFQPropertiesEditValueChanged(Sender: TObject);
-var nIni: TIniFile;
-begin
-  inherited;
-  nIni := TIniFile.Create(gPath + sFormConfig);
-  try
-    nIni.WriteString('EditFQ', GetCtrlData(EditStock), EditFQ.Text);
-  finally
-    nIni.Free;
-  end;
-end;
-
 function TfFormBill.OnVerifyCtrl(Sender: TObject; var nHint: string): Boolean;
 begin
   Result := True;
+
+  if Sender = EditMaxMValue then
+  begin
+    if chkMaxMValue.Checked then
+    begin
+      Result := IsNumber(EditMaxMValue.Text, True)
+                and (StrToFloat(EditMaxMValue.Text)>StrToFloat(EditValue.Text));
+      nHint := '请填写有效的毛重限值';
+    end;
+  end else
 
   if Sender = EditTruck then
   begin
@@ -299,22 +298,11 @@ begin
     nHint := '请选择提货方式';
   end else
 
-  if Sender = EditStock then
-  begin
-    Result := EditStock.ItemIndex > -1;
-    nHint := '请选择库存地点';
-  end else
-
-  if Sender = EditFQ then
-  begin
-    EditFQ.Text := Trim(EditFQ.Text);
-    Result := (Length(EditFQ.Text) > 0) or (not VerifyFQSumValue);
-    nHint := '出厂编号不能为空';
-  end else
-
   if Sender = EditValue then
   begin
-    Result := IsNumber(EditValue.Text, True) and (StrToFloat(EditValue.Text)>0);
+    Result := IsNumber(EditValue.Text, True) and
+             (StrToFloat(EditValue.Text) > 0) and
+             (StrToFloat(EditValue.Text) <= gBillItem.FValue);
     nHint := '请填写有效的办理量';
     if not Result then Exit;
   end;
@@ -324,7 +312,29 @@ end;
 procedure TfFormBill.BtnOKClick(Sender: TObject);
 var nPrint: Boolean;
     nList,nStocks: TStrings;
+    nHint: string;
 begin
+  if not OnVerifyCtrl(EditMaxMValue, nHint) then
+  begin
+    ShowMsg(nHint,sHint);
+    Exit;
+  end;
+  if not OnVerifyCtrl(EditTruck, nHint) then
+  begin
+    ShowMsg(nHint,sHint);
+    Exit;
+  end;
+  if not OnVerifyCtrl(EditLading, nHint) then
+  begin
+    ShowMsg(nHint,sHint);
+    Exit;
+  end;
+  if not OnVerifyCtrl(EditValue, nHint) then
+  begin
+    ShowMsg(nHint,sHint);
+    Exit;
+  end;
+
   nStocks := TStringList.Create;
   nList := TStringList.Create;
   try
@@ -351,17 +361,21 @@ begin
       Values['Truck']        := EditTruck.Text;
       Values['Value']        := EditValue.Text;
 
-      Values['Area']         := GetCtrlData(EditStock);
       Values['Lading']       := GetCtrlData(EditLading);
       Values['IsVIP']        := GetCtrlData(EditType);
 
       Values['Value']        := EditValue.Text;
-      Values['Seal']         := EditFQ.Text;
       Values['BuDan']        := FBuDanFlag;
       Values['BuDanDate']    := Date2Str(EditDate.Date);
 
       Values['Phone']        := Trim(EditPhone.Text);
-      Values['Unloading']    := Trim(EditUnloading.Text);
+
+      if chkMaxMValue.Checked then
+      Values['MaxMValue']    := Trim(EditMaxMValue.Text)
+      else
+      Values['MaxMValue']    := '0';
+      Values['WT']           := Trim(EditWT.Text);
+
       Values['MsgNo']        := IntToStr(FMsgNo);
     end;
 
@@ -390,6 +404,14 @@ begin
   
   ModalResult := mrOk;
   ShowMsg('提货单保存成功', sHint);
+end;
+
+procedure TfFormBill.chkMaxMValueClick(Sender: TObject);
+begin
+  if chkMaxMValue.Checked then
+    dxLayout1Item5.Visible := True
+  else
+    dxLayout1Item5.Visible := False;
 end;
 
 initialization
