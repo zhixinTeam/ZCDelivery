@@ -187,10 +187,13 @@ procedure TfFormNewPurchaseCard.BtnOKClick(Sender: TObject);
 begin
   BtnOK.Enabled := False;
   try
-    if not SaveBillProxy then Exit;
+    if not SaveBillProxy then
+    begin
+      BtnOK.Enabled := True;
+      Exit;
+    end;
     Close;
-  finally
-    BtnOK.Enabled := True;
+  except
   end;
 end;
 
@@ -321,7 +324,7 @@ procedure TfFormNewPurchaseCard.LoadSingleOrder;
 var
   nOrderItem:stMallPurchaseItem;
   nRepeat:Boolean;
-  nWebOrderID,nModel,nYear,nKD,nProName:string;
+  nWebOrderID,nModel,nYear,nKD,nProName,nStockName:string;
   nMsg:string;
 begin
   nOrderItem := FWebOrderItems[FWebOrderIndex];
@@ -347,7 +350,7 @@ begin
   EditValue.Text := nOrderItem.FData;
 
   FWebOrderItems[FWebOrderIndex] := nOrderItem;
-  if not GetOrderOtherInfo(EditID.Text,nModel,nYear,nKD,FProID,nProName) then
+  if not GetOrderOtherInfo(EditID.Text,nModel,nYear,nKD,FProID,nProName,nStockName) then
   begin
     ShowMsg('查询订单附加信息失败',sHint);
     nRepeat := False;
@@ -357,6 +360,11 @@ begin
   begin
     ShowMsg('查询订单附加信息失败',sHint);
     nRepeat := False;
+  end;
+
+  if nStockName <> '' then
+  begin
+    EditProduct.Text := nStockName;
   end;
 
   EditModel.Text := nModel;
@@ -479,29 +487,6 @@ begin
   end;
 
   nNewCardNo := '';
-  FBegin := Now;
-
-  //连续三次读卡均失败，则回收卡片，重新发卡
-  for i := 0 to 3 do
-  begin
-    for nIdx:=0 to 3 do
-    if gMgrK720Reader.ReadCard(nNewCardNo) then Break
-    else Sleep(500);
-    //连续三次读卡,成功则退出。
-    if nNewCardNo<>'' then Break;
-    gMgrK720Reader.RecycleCard;
-  end;
-
-  if nNewCardNo = '' then
-  begin
-    ShowDlg('卡箱异常,请查看是否有卡.', sWarn, Self.Handle);
-    Exit;
-  end;
-
-  nNewCardNo := gMgrK720Reader.ParseCardNO(nNewCardNo);
-  WriteLog(nNewCardNo);
-  //解析卡片
-  writelog('TfFormNewPurchaseCard.SaveBillProxy 发卡机读卡-耗时：'+InttoStr(MilliSecondsBetween(Now, FBegin))+'ms');
 
   nList := TStringList.Create;
   try
@@ -514,7 +499,7 @@ begin
     nList.Values['ProviderID'] := FProID;
     nList.Values['ProviderName'] := EditProv.Text;
     nList.Values['StockNO'] := nOrderItem.FGoodsID;
-    nList.Values['StockName'] := nOrderItem.FGoodsname;
+    nList.Values['StockName'] := Trim(EditProduct.Text);
     nList.Values['Value'] := EditValue.Text;
     nList.Values['Model'] := EditModel.Text;
     nList.Values['KD'] := EditKD.Text;
@@ -548,37 +533,18 @@ begin
 
   ShowMsg('采购单保存成功', sHint);
 
-  FBegin := Now;
-  nRet := SaveOrderCard(nOrder,nNewCardNo);
-  if nRet then
-  begin
-    nRet := False;
-    for nIdx := 0 to 3 do
-    begin
-      nRet := gMgrK720Reader.SendReaderCmd('FC0');
-      if nRet then Break;
-
-      Sleep(500);
-    end;
     //发卡
-  end;
-
-  if nRet then
+  if not FSzttceApi.IssueOneCard(nNewCardNo) then
   begin
-    nHint := '商城货单号['+editWebOrderNo.Text+']发卡成功,卡号['+nNewCardNo+'],请收好您的卡片';
-    WriteLog(nHint);
-    ShowMsg(nHint,sWarn);
+    nHint := '出卡失败,请到开票窗口补办磁卡：[errorcode=%d,errormsg=%s]';
+    nHint := Format(nHint,[FSzttceApi.ErrorCode,FSzttceApi.ErrorMsg]);
+    ShowMsg(nHint,sHint);
   end
   else begin
-    gMgrK720Reader.RecycleCard;
-
-    nHint := '商城货单号[%s]卡号 [%s] 关联采购订单 [%s] 失败，请到开票窗口重新关联。';
-    nHint := Format(nHint,[editWebOrderNo.Text,nNewCardNo,nOrder]);
-    Writelog(nHint);
-    ShowMsg(nHint,sHint);
+    ShowMsg('发卡成功,卡号['+nNewCardNo+'],请收好您的卡片',sHint);
+    SaveOrderCard(nOrder,nNewCardNo);
   end;
-  writelog('TfFormNewPurchaseCard.SaveBillProxy 发卡机出卡并关联磁卡号-耗时：'+InttoStr(MilliSecondsBetween(Now, FBegin))+'ms');
-  if nRet then Close;
+  Result := True;
 end;
 
 function TfFormNewPurchaseCard.SaveWebOrderMatch(const nBillID,

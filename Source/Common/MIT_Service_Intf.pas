@@ -9,12 +9,14 @@ unit MIT_Service_Intf;
 {----------------------------------------------------------------------------}
 
 {$I RemObjects.inc}
+{$I LibFun.inc}
 
 interface
 
 uses
   {vcl:} Classes, TypInfo,
-  {RemObjects:} uROXMLIntf, uROClasses, uROClient, uROTypes, uROClientIntf;
+  {RemObjects:} uROXMLIntf, uROClasses, uROClient, uROTypes,
+  {$IFDEF RO_v90}uROProxy,{$ENDIF}uROClientIntf;
 
 const
   { Library ID }

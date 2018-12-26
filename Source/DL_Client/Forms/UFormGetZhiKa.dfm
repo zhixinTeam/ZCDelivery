@@ -1,7 +1,7 @@
 inherited fFormGetZhiKa: TfFormGetZhiKa
   Left = 351
   Top = 280
-  Width = 745
+  Width = 904
   Height = 430
   BorderStyle = bsSizeable
   Position = poDesktopCenter
@@ -10,25 +10,25 @@ inherited fFormGetZhiKa: TfFormGetZhiKa
   PixelsPerInch = 96
   TextHeight = 12
   inherited dxLayout1: TdxLayoutControl
-    Width = 729
+    Width = 888
     Height = 392
     inherited BtnOK: TButton
-      Left = 583
+      Left = 742
       Top = 359
       Caption = #30830#23450
-      TabOrder = 2
+      TabOrder = 4
     end
     inherited BtnExit: TButton
-      Left = 653
+      Left = 812
       Top = 359
-      TabOrder = 3
+      TabOrder = 5
     end
     object GridOrders: TcxGrid [2]
       Left = 23
-      Top = 61
+      Top = 66
       Width = 250
       Height = 200
-      TabOrder = 1
+      TabOrder = 3
       object cxView1: TcxGridDBTableView
         NavigatorButtons.ConfirmDelete = False
         DataController.DataSource = DataSource1
@@ -126,14 +126,55 @@ inherited fFormGetZhiKa: TfFormGetZhiKa
       OnKeyPress = OnCtrlKeyPress
       Width = 228
     end
+    object EditCusList: TcxComboBox [4]
+      Left = 366
+      Top = 36
+      ParentFont = False
+      Properties.IncrementalSearch = False
+      Properties.OnChange = EditCusListPropertiesChange
+      Style.Font.Charset = DEFAULT_CHARSET
+      Style.Font.Color = clWindowText
+      Style.Font.Height = -16
+      Style.Font.Name = #23435#20307
+      Style.Font.Style = []
+      Style.IsFontAssigned = True
+      TabOrder = 1
+      Width = 312
+    end
+    object BtnSearch: TcxButton [5]
+      Left = 683
+      Top = 36
+      Width = 75
+      Height = 25
+      Caption = #26597#35810
+      TabOrder = 2
+      OnClick = BtnSearchClick
+    end
     inherited dxLayout1Group_Root: TdxLayoutGroup
       inherited dxGroup1: TdxLayoutGroup
         Caption = #35746#21333#21015#34920
-        object dxLayout1Item4: TdxLayoutItem
-          AutoAligns = [aaVertical]
-          Caption = #23458#25143#21517#31216':'
-          Control = EditCus
-          ControlOptions.ShowBorder = False
+        object dxLayout1Group2: TdxLayoutGroup
+          ShowCaption = False
+          Hidden = True
+          LayoutDirection = ldHorizontal
+          ShowBorder = False
+          object dxLayout1Item4: TdxLayoutItem
+            AutoAligns = [aaVertical]
+            Caption = #23458#25143#21517#31216':'
+            Control = EditCus
+            ControlOptions.ShowBorder = False
+          end
+          object dxLayout1Item5: TdxLayoutItem
+            Caption = #23458#25143#21015#34920
+            Control = EditCusList
+            ControlOptions.ShowBorder = False
+          end
+          object dxLayout1Item6: TdxLayoutItem
+            Caption = 'cxButton1'
+            ShowCaption = False
+            Control = BtnSearch
+            ControlOptions.ShowBorder = False
+          end
         end
         object dxLayout1Item3: TdxLayoutItem
           AutoAligns = [aaHorizontal]

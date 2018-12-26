@@ -58,6 +58,7 @@ type
     FOldZhiKa: string;
     procedure InitFormData;
     //初始化界面
+    procedure WriteOptionLog(const LID: string; nIdx: Integer);
   public
     { Public declarations }
     class function CreateForm(const nPopedom: string = '';
@@ -451,7 +452,7 @@ begin
       nSQL := Format(nSQL, [sTable_Bill,FListA.Strings[nIdx]]);
       FDM.ExecuteSQL(nSQL);
     end;
-
+    WriteOptionLog(FListA.Strings[nIdx], nIdx);
   end;
 
   ModalResult := mrOK;
@@ -460,6 +461,60 @@ begin
   else
     nStr := '勘误完成';
   ShowMsg(nStr, sHint);
+end;
+
+procedure TfFormSaleKw.WriteOptionLog(const LID: string;nIdx: Integer);
+var nEvent: string;
+begin
+  nEvent := '';
+
+  try
+    with ListQuery.Items[nIdx] do
+    begin
+      if EditID.Text <> SubItems[3] then
+      begin
+        nEvent := nEvent + '订单号由 [ %s ] --> [ %s ];';
+        nEvent := Format(nEvent, [SubItems[3], EditID.Text]);
+      end;
+      if EditCName.Text <> SubItems[4] then
+      begin
+        nEvent := nEvent + '客户名称由 [ %s ] --> [ %s ];';
+        nEvent := Format(nEvent, [SubItems[4], EditCName.Text]);
+      end;
+      if SubItems[1] <> EditMate.Text then
+      begin
+        nEvent := nEvent + '物料由 [ %s ] --> [ %s ];';
+        nEvent := Format(nEvent, [SubItems[1], EditMate.Text]);
+      end;
+      if SubItems[0] <> EditTruck.Text then
+      begin
+        nEvent := nEvent + '车牌号由 [ %s ] --> [ %s ];';
+        nEvent := Format(nEvent, [SubItems[0], EditTruck.Text]);
+      end;
+      if SubItems[5] <> EditPValue.Text then
+      begin
+        nEvent := nEvent + '皮重由 [ %s ] --> [ %s ];';
+        nEvent := Format(nEvent, [SubItems[5], EditPValue.Text]);
+      end;
+      if SubItems[6] <> EditMValue.Text then
+      begin
+        nEvent := nEvent + '毛重由 [ %s ] --> [ %s ];';
+        nEvent := Format(nEvent, [SubItems[6], EditMValue.Text]);
+      end;
+
+      if nEvent <> '' then
+      begin
+        nEvent := '提货单 [ %s ] 参数已被修改:' + nEvent;
+        nEvent := Format(nEvent, [LID]);
+      end;
+    end;
+
+    if nEvent <> '' then
+    begin
+      FDM.WriteSysLog(sFlag_BillItem, LID, nEvent);
+    end;
+  except
+  end;
 end;
 
 initialization

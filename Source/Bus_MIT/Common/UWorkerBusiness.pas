@@ -402,7 +402,7 @@ begin
    cBC_SyncHhOtOrderPoundData : Result := SyncHhOtherOrderPoundData(nData);
 
    cBC_GetHhSalePlan       : Result := GetHhSalePlan(nData);
-   cBC_SyncHhSaleDetai     : Result := SyncHhSaleDetail(nData);
+   cBC_SyncHhSaleDetail     : Result := SyncHhSaleDetail(nData);
    cBC_SyncHhSaleWTTruck   : Result := GetHhSaleWTTruck(nData);
    else
     begin
@@ -1093,6 +1093,8 @@ function TWorkerBusinessCommander.IsTruckTimeOut(var nData: string): Boolean;
 var nStr: string;
     nDate: TDate;
     nInt: Integer;
+    nTruck,nEvent,nMDate: string;
+    nUpdate: Boolean;
 begin
   Result := False;
 
@@ -1114,7 +1116,7 @@ begin
     //xxxxx
   end;
 
-  nStr := 'Select L_MDate From %s ' +
+  nStr := 'Select L_MDate,L_Truck From %s ' +
           'Where L_ID=''%s''';
   nStr := Format(nStr, [sTable_Bill, FIn.FData]);
 
@@ -1126,11 +1128,53 @@ begin
     end;
 
     nDate := Fields[0].AsDateTime;
+    nMDate := Fields[0].AsString;
+    nTruck := Fields[1].AsString;
     //xxxxx
   end;
 
   nDate := IncMinute(nDate,nInt);
   Result := nDate < Now;
+
+  if Result then
+  begin
+    nStr := 'Select * From %s Where E_ID=''%s''';
+    nStr := Format(nStr, [sTable_ManualEvent, FIn.FData+sFlag_ManualF]);
+
+    with gDBConnManager.WorkerQuery(FDBConn, nStr) do
+    begin
+      if RecordCount > 0 then
+      begin
+        nUpdate := True;
+      end
+      else
+      begin
+        nUpdate := False;
+      end;
+    end;
+
+    nEvent := '车辆[ %s ]毛重时间与出厂时间间隔过长,详情如下:' + #13#10 +
+              '※.毛重时间: [ %s ]' + #13#10 +
+              '※.出厂时间: [ %s ]' + #13#10 +
+              '请通知司机重新过磅.';
+    nEvent := Format(nEvent, [nTruck,nMDate,
+                     FormatDateTime('YYYY-MM-DD HH:MM:SS',Now)]);
+
+    nStr := SF('E_ID', FIn.FData+sFlag_ManualF);
+    nStr := MakeSQLByStr([
+            SF('E_ID', FIn.FData+sFlag_ManualF),
+            SF('E_Key', nTruck),
+            SF('E_From', sFlag_DepBangFang),
+            SF('E_Result', 'Null', sfVal),
+
+            SF('E_Event', nEvent),
+            SF('E_Solution', sFlag_Solution_OK),
+            SF('E_Departmen', sFlag_DepDaTing),
+            SF('E_Date', sField_SQLServer_Now, sfVal)
+            ], sTable_ManualEvent, nStr, (not nUpdate));
+    //xxxxx
+    gDBConnManager.WorkerExec(FDBConn, nStr);
+  end;
 end;
 
 //Date: 2015-8-5
@@ -1630,12 +1674,12 @@ begin
 	    end;
 	  end;
 
-	  nStr := 'Select D_ID,D_OID,D_PID,D_YLine,D_Status,D_NextStatus,' +
+	  nStr := 'Select top 1 D_ID,D_OID,D_PID,D_YLine,D_Status,D_NextStatus,' +
 	          'D_KZValue,D_Memo,D_YSResult,' +
 	          'P_PStation,P_PValue,P_PDate,P_PMan,' +
 	          'P_MStation,P_MValue,P_MDate,P_MMan ' +
 	          'From $OD od Left join $PD pd on pd.P_Order=od.D_ID ' +
-	          'Where D_OutFact Is Null And D_OID=''$OID''';
+	          'Where D_OutFact Is Null And D_OID=''$OID'' order by pd.R_ID desc';
 	  //xxxxx
 
 	  nStr := MacroValue(nStr, [MI('$OD', sTable_OrderDtl),
@@ -2034,6 +2078,9 @@ begin
       else
         FNextStatus := sFlag_TruckBFM;
 
+      if nCardType=sFlag_Mul then
+        FNextStatus := sFlag_TruckBFM;
+        
       nSQL := MakeSQLByStr([
             SF('P_ID', nOut.FData),
             SF('P_Type', sFlag_Provide),
@@ -2446,6 +2493,57 @@ begin
     raise;
   end;
 
+  {$IFDEF SyncDataByWSDL}
+  if FIn.FExtParam = sFlag_TruckBFM then //称量毛重
+  with nPound[0] do
+  begin
+    nSQL := 'Select Top 1 P_ID,P_BID From %s Where P_OrderBak=''%s'' order by R_ID desc ';
+    nSQL := Format(nSQL, [sTable_PoundLog, FID]);
+
+    with gDBConnManager.WorkerQuery(FDBConn, nSQL) do
+    if RecordCount > 0 then
+    begin
+      nPID := Fields[0].AsString;
+      if FNeiDao=sFlag_Yes then
+      begin
+        nSQL := MakeSQLByStr([
+              SF('H_ID'   , nPID),
+              SF('H_Order' , Fields[1].AsString),
+              SF('H_Status' , '1'),
+              SF('H_PurType' , sFlag_PurND),
+              SF('H_BillType'   , sFlag_Provide)
+              ], sTable_HHJYSync, '', True);
+      end
+      else
+      if FPoundIdx > 0 then//备品备件
+      begin
+        nSQL := MakeSQLByStr([
+              SF('H_ID'   , nPID),
+              SF('H_Order' , Fields[1].AsString),
+              SF('H_Status' , '1'),
+              SF('H_PurType' , sFlag_PurBP),
+              SF('H_BillType'   , sFlag_Provide)
+              ], sTable_HHJYSync, '', True);
+        FListA.Add(nSQL);
+      end
+      else
+      begin
+        nSQL := MakeSQLByStr([
+              SF('H_ID'   , nPID),
+              SF('H_Order' , Fields[1].AsString),
+              SF('H_Status' , '1'),
+              SF('H_PurType' , sFlag_PurPT),
+              SF('H_BillType'   , sFlag_Provide)
+              ], sTable_HHJYSync, '', True);
+        FListA.Add(nSQL);
+      end;
+      WriteLog('采购单写入同步消息:' + nSQL);
+      gDBConnManager.WorkerExec(FDBConn, nSQL);
+    end;
+  end;
+  {$ENDIF}
+
+  {$IFDEF SyncDataByDataBase}
   if FIn.FExtParam = sFlag_TruckBFM then //称量毛重
   with nPound[0] do
   begin
@@ -2489,6 +2587,7 @@ begin
       end;
     end;
   end;
+  {$ENDIF}
 
   if FIn.FExtParam = sFlag_TruckBFM then //称量毛重
   begin
@@ -3198,9 +3297,10 @@ end;
 
 function TWorkerBusinessCommander.SyncHhOrderPoundData(
   var nData: string): Boolean;
-var nStr:string;
+var nStr, nDate:string;
     nSQL: string;
     nDBWorker: PDBWorker;
+    nPDate, nMDate: TDateTime;
 begin
   Result := False;
 
@@ -3234,8 +3334,18 @@ begin
 
     FListA.Values['FReceivePersonnel']      := GetUserName(
                                                FieldByName('P_MMan').AsString);
+    try
+      nPDate := FieldByName('P_PDate').AsDateTime;
+      nMDate := FieldByName('P_MDate').AsDateTime;
+      if nMDate > nPDate then
+        nDate := FieldByName('P_MDate').AsString
+      else
+        nDate := FieldByName('P_PDate').AsString;
+    except
+        nDate := FieldByName('P_PDate').AsString;
+    end;
 
-    FListA.Values['FReceiveTime']           := FieldByName('P_MDate').AsString;
+    FListA.Values['FReceiveTime']           := nDate;
 
     FListA.Values['FTareStatus']            := '1';
     FListA.Values['FTarePersonnel']         := GetUserName(

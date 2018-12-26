@@ -36,17 +36,20 @@ type
     dxLayout1Item13: TdxLayoutItem;
     EditLValue: TcxTextEdit;
     dxLayout1Item7: TdxLayoutItem;
+    EditMValueMax: TcxTextEdit;
+    dxLayout1Item8: TdxLayoutItem;
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure BtnOKClick(Sender: TObject);
   protected
     { Protected declarations }
     FListA: TStrings;
-    FOldValue: Double;
+    FOldValue, FOldPValue: Double;
     FOldBatchCode: string;
-    FOldZhiKa: string;
+    FOldZhiKa, FOldTruck, FOldMValueMax: string;
     procedure InitFormData;
     //初始化界面
+    procedure WriteOptionLog(const LID: string);
   public
     { Public declarations }
     class function CreateForm(const nPopedom: string = '';
@@ -182,12 +185,16 @@ begin
         ImageIndex := cItemIconIndex;
       end;
       EditTruck.Text := FieldByName('L_Truck').AsString;
+      FOldTruck := FieldByName('L_Truck').AsString;
       if Length(FieldByName('L_PValue').AsString) > 0 then
         EditPValue.Text := FieldByName('L_PValue').AsString
       else
         EditPValue.Text := '0';
       EditLValue.Text := FieldByName('L_Value').AsString;
+      EditMValueMax.Text := FieldByName('L_MValueMax').AsString;
       FOldValue := FieldByName('L_Value').AsFloat;
+      FOldPValue := FieldByName('L_PValue').AsFloat;
+      FOldMValueMax := FieldByName('L_MValueMax').AsString;
       FOldBatchCode := FieldByName('L_HYDan').AsString;
       FOldZhiKa := FieldByName('L_ZhiKa').AsString;
     end;
@@ -199,7 +206,7 @@ end;
 
 //Desc: 保存
 procedure TfFormModifySaleStock.BtnOKClick(Sender: TObject);
-var nStr,nSQL,nStockNo: string;
+var nStr,nSQL,nStockNo,nStockName,nHint: string;
     nIdx: Integer;
     nValue,nNewValue: Double;
     nNewBatchCode: string;
@@ -222,6 +229,15 @@ begin
     Exit;
   end;
 
+  if Length(EditMValueMax.Text) > 0 then
+  if not IsNumber(EditMValueMax.Text,True) then
+  begin
+    EditMValueMax.SetFocus;
+    nStr := '请输入有效毛重限值';
+    ShowMsg(nStr,sHint);
+    Exit;
+  end;
+
   nNewValue := StrToFloat(EditLValue.Text);
   if nNewValue > gBillItem.FValue then
   begin
@@ -233,9 +249,9 @@ begin
 
   nValue := nNewValue - FOldValue;
 
+  {$IFDEF SyncDataByDataBase}
   for nIdx := 0 to FListA.Count - 1 do
   begin
-
     if Length(EditID.Text) > 0 then//更换订单
     begin
       nStr := 'Select D_ParamB From %s Where D_Name = ''%s'' ' +
@@ -267,7 +283,7 @@ begin
       nSQL := 'Update %s Set L_StockNo=''%s'',L_StockName=''%s'',L_ZhiKa=''%s'','+
               ' L_Truck=''%s'',L_PValue=''%s'',L_Value=''%s'','+
               ' L_CusName=''%s'',L_CusPY=''%s'',L_Type=''%s'',L_HYDan=''%s'','+
-              ' L_Order=''%s'' Where L_ID=''%s''';
+              ' L_Order=''%s'',L_MValueMax=''%s'' Where L_ID=''%s''';
       nSQL := Format(nSQL, [sTable_Bill, gBillItem.FStockNo,
                                           gBillItem.FStockName,
                                           gBillItem.FZhiKa,
@@ -279,6 +295,7 @@ begin
                                           gBillItem.FType,
                                           nNewBatchCode,
                                           gBillItem.FZhiKa,
+                                          Trim(EditMValueMax.Text),
                                           FListA.Strings[nIdx]]);
       FDM.ExecuteSQL(nSQL);
 
@@ -330,10 +347,11 @@ begin
     else
     begin
       nSQL := 'Update %s Set L_Truck=''%s'',L_PValue=''%s'','+
-              ' L_Value=''%s'' Where L_ID=''%s''';
+              ' L_Value=''%s'',L_MValueMax=''%s'' Where L_ID=''%s''';
       nSQL := Format(nSQL, [sTable_Bill, Trim(EditTruck.Text),
                                           Trim(EditPValue.Text),
                                           FloatToStr(nNewValue),
+                                          Trim(EditMValueMax.Text),
                                           FListA.Strings[nIdx]]);
       FDM.ExecuteSQL(nSQL);
 
@@ -363,11 +381,158 @@ begin
         //增加批次记录使用量
       end;
     end;
+    WriteOptionLog(FListA.Strings[nIdx]);
   end;
+  {$ELSE}
+  for nIdx := 0 to FListA.Count - 1 do
+  begin
+    if Length(EditID.Text) > 0 then//更换订单
+    begin
+      nStr := 'select L_StockName From %s where L_ID = ''%s'' ';
+
+      nStr := Format(nStr,[sTable_Bill,FListA.Strings[nIdx]]);
+
+      with FDM.QueryTemp(nStr) do
+      begin
+        if RecordCount < 1 then
+        begin
+          ShowMsg('未查询到提货单详细信息',sHint);
+          Exit;
+        end;
+        nStockName := Fields[0].AsString;
+      end;
+
+      if nStockName <> gBillItem.FStockName then
+      begin
+        nNewBatchCode := GetHhSaleWareNumberWSDL(gBillItem.FZhiKa, EditLValue.Text, nHint);
+        if nNewBatchCode = '' then
+        begin
+          ShowMsg('获取批次号失败:' + nHint,sHint);
+          Exit;
+        end;
+      end;
+      nStr := 'Select D_ParamB From %s Where D_Name = ''%s'' ' +
+              'And D_Memo=''%s'' and D_Value like ''%%%s%%''';
+      nStr := Format(nStr, [sTable_SysDict, sFlag_StockItem,
+                            gBillItem.FType,
+                            Trim(gBillItem.FStockName)]);
+
+      with FDM.QueryTemp(nStr) do
+      begin
+        if RecordCount < 1 then
+        begin
+          ShowMsg('未查询到物料编号',sHint);
+          Exit;
+        end;
+        gBillItem.FStockNo := Fields[0].AsString;
+      end;
+
+      nSQL := 'Update %s Set L_StockNo=''%s'',L_StockName=''%s'',L_ZhiKa=''%s'','+
+              ' L_Truck=''%s'',L_PValue=''%s'',L_Value=''%s'','+
+              ' L_CusName=''%s'',L_CusPY=''%s'',L_Type=''%s'',L_HYDan=''%s'','+
+              ' L_Order=''%s'',L_MValueMax=''%s'' Where L_ID=''%s''';
+      nSQL := Format(nSQL, [sTable_Bill, gBillItem.FStockNo,
+                                          gBillItem.FStockName,
+                                          gBillItem.FZhiKa,
+                                          Trim(EditTruck.Text),
+                                          Trim(EditPValue.Text),
+                                          FloatToStr(nNewValue),
+                                          gBillItem.FCusName,
+                                          GetPinYinOfStr(gBillItem.FCusName,),
+                                          gBillItem.FType,
+                                          nNewBatchCode,
+                                          gBillItem.FZhiKa,
+                                          Trim(EditMValueMax.Text),
+                                          FListA.Strings[nIdx]]);
+      FDM.ExecuteSQL(nSQL);
+
+
+      nSQL := 'Update %s Set P_MID=''%s'', P_MName=''%s'', P_MType=''%s'','+
+              ' P_CusName=''%s'',P_PValue=''%s'','+
+              ' P_KwMan=''%s'',P_KwDate=%s,P_Truck=''%s'' Where P_Bill=''%s''';
+      nSQL := Format(nSQL, [sTable_PoundLog, gBillItem.FStockNo,
+                                          gBillItem.FStockName,
+                                          gBillItem.FType,
+                                          gBillItem.FCusName,
+                                          EditPValue.Text,
+                                          gSysParam.FUserID,
+                                          sField_SQLServer_Now,
+                                          Trim(EditTruck.Text),
+                                          FListA.Strings[nIdx]]);
+      FDM.ExecuteSQL(nSQL);
+    end
+    else
+    begin
+      nSQL := 'Update %s Set L_Truck=''%s'',L_PValue=''%s'','+
+              ' L_Value=''%s'',L_MValueMax=''%s'' Where L_ID=''%s''';
+      nSQL := Format(nSQL, [sTable_Bill, Trim(EditTruck.Text),
+                                          Trim(EditPValue.Text),
+                                          FloatToStr(nNewValue),
+                                          Trim(EditMValueMax.Text),
+                                          FListA.Strings[nIdx]]);
+      FDM.ExecuteSQL(nSQL);
+
+      nSQL := 'Update %s Set P_PValue=''%s'','+
+              ' P_KwMan=''%s'',P_KwDate=%s,P_Truck=''%s'' Where P_Bill=''%s''';
+      nSQL := Format(nSQL, [sTable_PoundLog,EditPValue.Text,
+                                            gSysParam.FUserID,
+                                            sField_SQLServer_Now,
+                                            Trim(EditTruck.Text),
+                                            FListA.Strings[nIdx]]);
+      FDM.ExecuteSQL(nSQL);
+    end;
+    WriteOptionLog(FListA.Strings[nIdx]);
+  end;
+  {$ENDIF}
 
   ModalResult := mrOK;
   nStr := '修改完成';
   ShowMsg(nStr, sHint);
+end;
+
+procedure TfFormModifySaleStock.WriteOptionLog(const LID: string);
+var nEvent: string;
+begin
+  nEvent := '';
+
+  begin
+    if EditID.Text <> '' then
+    begin
+      nEvent := nEvent + '订单号由 [ %s ] --> [ %s ];';
+      nEvent := Format(nEvent, [FOldZhiKa, EditID.Text]);
+    end;
+    if FOldTruck <> EditTruck.Text then
+    begin
+      nEvent := nEvent + '车牌号由 [ %s ] --> [ %s ];';
+      nEvent := Format(nEvent, [FOldTruck, EditTruck.Text]);
+    end;
+    if FOldValue <> StrToFloatDef(EditLValue.Text,0) then
+    begin
+      nEvent := nEvent + '开单量由 [ %.2f ] --> [ %s ];';
+      nEvent := Format(nEvent, [FOldValue, EditLValue.Text]);
+    end;
+    if FOldPValue <> StrToFloatDef(EditPValue.Text,0) then
+    begin
+      nEvent := nEvent + '皮重由 [ %.2f ] --> [ %s ];';
+      nEvent := Format(nEvent, [FOldPValue, EditPValue.Text]);
+    end;
+    if FOldMValueMax <> EditMValueMax.Text then
+    begin
+      nEvent := nEvent + '毛重上限由 [ %s ] --> [ %s ];';
+      nEvent := Format(nEvent, [FOldMValueMax, EditMValueMax.Text]);
+    end;
+
+    if nEvent <> '' then
+    begin
+      nEvent := '提货单 [ %s ] 参数已被修改:' + nEvent;
+      nEvent := Format(nEvent, [LID]);
+    end;
+  end;
+
+  if nEvent <> '' then
+  begin
+    FDM.WriteSysLog(sFlag_BillItem, LID, nEvent);
+  end;
 end;
 
 initialization

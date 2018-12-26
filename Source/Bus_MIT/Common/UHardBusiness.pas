@@ -537,7 +537,8 @@ begin
 
   if not nRet then
   begin
-    nStr := '读取磁卡[ %s ]订单信息失败.';
+    Result := True;
+    nStr := '读取磁卡[ %s ]订单信息失败.吞卡机吞卡';
     nStr := Format(nStr, [nCard]);
     WriteHardHelperLog(nStr, sPost_Out);
 
@@ -560,6 +561,7 @@ begin
   for nIdx:=Low(nTrucks) to High(nTrucks) do
   with nTrucks[nIdx] do
   begin
+    {$IFDEF TruckOutTimeOut}
     if (FType = sFlag_San) and (nCardType = sFlag_Sale) and
        (FStatus = sFlag_TruckFH) then //散装多次过磅
     begin
@@ -570,8 +572,9 @@ begin
         WriteHardHelperLog(nStr, sPost_Out);
         Exit;
       end;
-       Continue;
+      Continue;
     end;
+    {$ENDIF}
 
     if FNextStatus = sFlag_TruckOut then Continue;
 	//xxxxx
@@ -615,17 +618,17 @@ begin
         Continue;
     end;
 
-    if nCardType = sFlag_Sale then
-    begin
-      if nTrucks[nIdx].FYSValid = sFlag_Yes then//空车出厂不打印
-        Continue;
-    end;
+//    if nCardType = sFlag_Sale then
+//    begin
+//      if nTrucks[nIdx].FYSValid = sFlag_Yes then//空车出厂不打印
+//        Continue;
+//    end;
 
     nStr := #7 + nCardType;
     //磁卡类型
     if nCardType = sFlag_Sale then
     begin
-      if nTrucks[nIdx].FPrintHY then
+      if nTrucks[nIdx].FPrintHY and (nTrucks[nIdx].FYSValid <> sFlag_Yes) then
       begin
         if nHYPrinter <> '' then
           nStr := nStr + #6 + nHYPrinter;

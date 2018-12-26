@@ -490,7 +490,7 @@ begin
   begin
     Result := IsNumber(EditFWC.Text, True);
     nHint  := '请输入有效误差范围(负误差)';
-  end;      
+  end;
 end;    
 
 //Desc: 保存数据

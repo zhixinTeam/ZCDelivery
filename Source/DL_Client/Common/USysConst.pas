@@ -58,7 +58,8 @@ const
   cFI_FrameQPoundTemp   = $1112;                      //临时称重
   CFI_FormMakeCardOther = $1113;                     //临时称重业务
   cFI_FormGetPOrderBase = $1156;                     //采购订单
-  cFI_FormPurchase      = $1155;                     //采购验收  
+  cFI_FormPurchase      = $1155;                     //采购验收
+  CFI_FormSearchCard    = $1157;                     //磁卡查询
 
   cFI_FrameTrucks       = $0070;                     //车辆档案
   cFI_FrameUnloading    = $0071;                     //卸货地点
@@ -73,6 +74,7 @@ const
   cFI_FormIncInfo       = $1003;                     //公司信息
   cFI_FormChangePwd     = $1005;                     //修改密码
   cFI_FormOptions       = $1006;                     //参数选项
+  cFI_FormOutOverTime   = $1007;                     //出厂超时
 
   cFI_FormBaseInfo      = $1017;                     //基本信息
   cFI_FormCustomer      = $1018;                     //客户资料
@@ -176,6 +178,7 @@ type
     FMITServURL : string;                            //业务服务
     FHardMonURL : string;                            //硬件守护
     FWechatURL  : string;                            //微信服务
+    FHHJYURL    : string;                            //恒河久远数据服务
 
     FFactNum    : string;                            //工厂编号
     FSerialID   : string;                            //电脑编号
@@ -290,12 +293,14 @@ begin
   AddMenuModuleItem('MAIN_A07', cFI_FrameAuthorize);
   AddMenuModuleItem('MAIN_A08', cFI_FormTodo, mtForm);
   AddMenuModuleItem('MAIN_A09', cFI_FrameTodo);
+  AddMenuModuleItem('MAIN_A10', cFI_FormOutOverTime, mtForm);
 
   AddMenuModuleItem('MAIN_B01', cFI_FormBaseInfo, mtForm);
   AddMenuModuleItem('MAIN_B02', cFI_FrameCustomer);
   AddMenuModuleItem('MAIN_B03', cFI_FrameSalesMan);
   AddMenuModuleItem('MAIN_B04', cFI_FrameTrucks);
   AddMenuModuleItem('MAIN_B05', cFI_FrameUnloading);
+  AddMenuModuleItem('MAIN_B06', CFI_FormSearchCard, mtForm);
 
   AddMenuModuleItem('MAIN_D02', cFI_FrameMakeCard);
   AddMenuModuleItem('MAIN_D03', cFI_FormBill, mtForm);

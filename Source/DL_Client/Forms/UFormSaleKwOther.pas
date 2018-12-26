@@ -33,6 +33,7 @@ type
     FOldValue: Double;
     procedure InitFormData;
     //初始化界面
+    procedure WriteOptionLog(const LID: string; nIdx: Integer);
   public
     { Public declarations }
     class function CreateForm(const nPopedom: string = '';
@@ -164,7 +165,7 @@ procedure TfFormSaleKwOther.BtnOKClick(Sender: TObject);
 var nStr,nSQL,nStockNo: string;
     nIdx: Integer;
     nValue,nNewValue: Double;
-    nOrder: string;
+    nOrder, nLID: string;
 begin
   if not QueryDlg('确定要修改上述磅单数据吗?', sHint) then Exit;
 
@@ -212,30 +213,33 @@ begin
         Exit;
       end;
       nOrder := FieldByName('L_ZhiKa').AsString;
+      nLID   := FieldByName('L_ID').AsString;
     end;
 
     if FDM.QueryTemp(nStr).FieldByName('P_MValue').AsString = '' then
     begin
       nSQL := 'Update %s Set P_PValue=''%s'',P_MValue=''%s'',P_MMan=''%s'',P_MDate=P_PDate,'+
-              ' P_KwMan=''%s'',P_KwDate=%s,P_Truck=''%s'' Where P_ID=''%s''';
+              ' P_KwMan=''%s'',P_KwDate=%s,P_Truck=''%s'',P_OrderBak=''%s'',P_Bill=null Where P_ID=''%s''';
       nSQL := Format(nSQL, [sTable_PoundLog,EditPValue.Text,
                                             EditMValue.Text,
                                             gSysParam.FUserID,
                                             gSysParam.FUserID,
                                             sField_SQLServer_Now,
                                             Trim(EditTruck.Text),
+                                            nLID,
                                             FListA.Strings[nIdx]]);
       FDM.ExecuteSQL(nSQL);
     end
     else
     begin
-      nSQL := 'Update %s Set P_PValue=''%s'',P_MValue=''%s'','+
-              ' P_KwMan=''%s'',P_KwDate=%s,P_Truck=''%s'' Where P_ID=''%s''';
+      nSQL := 'Update %s Set P_PValue=''%s'',P_MValue=''%s'',P_KwMan=''%s'',P_KwDate=%s,'+
+              ' P_Truck=''%s'',P_OrderBak=''%s'',P_Bill=null Where P_ID=''%s''';
       nSQL := Format(nSQL, [sTable_PoundLog,EditPValue.Text,
                                             EditMValue.Text,
                                             gSysParam.FUserID,
                                             sField_SQLServer_Now,
                                             Trim(EditTruck.Text),
+                                            nLID,
                                             FListA.Strings[nIdx]]);
       FDM.ExecuteSQL(nSQL);
     end;
@@ -246,11 +250,51 @@ begin
       nStr := Format(nStr, [sTable_SalesOrder, nValue, nOrder]);
       FDM.ExecuteSQL(nStr); //已发
     end;
+    WriteOptionLog(FListA.Strings[nIdx], nIdx);
   end;
 
   ModalResult := mrOK;
   nStr := '勘误完成';
   ShowMsg(nStr, sHint);
+end;
+
+procedure TfFormSaleKwOther.WriteOptionLog(const LID: string;nIdx: Integer);
+var nEvent: string;
+begin
+  nEvent := '';
+
+  try
+    with ListQuery.Items[nIdx] do
+    begin
+      if SubItems[0] <> EditTruck.Text then
+      begin
+        nEvent := nEvent + '车牌号由 [ %s ] --> [ %s ];';
+        nEvent := Format(nEvent, [SubItems[0], EditTruck.Text]);
+      end;
+      if SubItems[5] <> EditPValue.Text then
+      begin
+        nEvent := nEvent + '皮重由 [ %s ] --> [ %s ];';
+        nEvent := Format(nEvent, [SubItems[5], EditPValue.Text]);
+      end;
+      if SubItems[6] <> EditMValue.Text then
+      begin
+        nEvent := nEvent + '毛重由 [ %s ] --> [ %s ];';
+        nEvent := Format(nEvent, [SubItems[6], EditMValue.Text]);
+      end;
+
+      if nEvent <> '' then
+      begin
+        nEvent := '磅单 [ %s ] 参数已被修改:' + nEvent;
+        nEvent := Format(nEvent, [LID]);
+      end;
+    end;
+
+    if nEvent <> '' then
+    begin
+      FDM.WriteSysLog(sFlag_BillItem, LID, nEvent);
+    end;
+  except
+  end;
 end;
 
 initialization

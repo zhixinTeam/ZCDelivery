@@ -10,8 +10,9 @@ interface
 uses
   Windows, Classes, Controls, SysUtils, DB, ADODB, NativeXml, UBusinessWorker,
   UBusinessPacker, UBusinessConst, UMgrDBConn, UMgrParam, UFormCtrl, USysLoger,
-  ZnMD5, ULibFun, USysDB, UMITConst, UMgrChannel, UWorkerBusiness,
-  {$IFDEF WXChannelPool}Wechat_Intf{$ELSE}wechat_soap{$ENDIF},IdHTTP,Graphics;
+  ZnMD5, ULibFun, USysDB, UMITConst, UMgrChannel, UWorkerBusiness, DateUtils,
+  {$IFDEF WXChannelPool}Wechat_Intf{$ELSE}wechat_soap{$ENDIF},IdHTTP,Graphics,
+  UWorkerBussinessHHJY;
 
 type
   TMITDBWorker = class(TBusinessWorkerBase)
@@ -638,6 +639,8 @@ function TBusWorkerBusinessWebchat.GetOrderList(var nData: string): Boolean;
 var nStr, nType: string;
     nNode: TXmlNode;
     nValue,nMoney: Double;
+    nOut: TWorkerBusinessCommand;
+    nBeginDate, nEndDate: string;
 begin
   Result := False;
   BuildDefaultXML;
@@ -648,6 +651,33 @@ begin
 
   {$IFDEF UseERP_K3}
   nMoney := GetCustomerValidMoneyFromK3(FIn.FData);
+  {$ENDIF}
+
+  {$IFDEF SyncDataByWSDL}
+  nBeginDate := FormatDateTime('YYYY-MM-DD HH:MM:SS', IncMonth(Now, -2));
+  nEndDate   := FormatDateTime('YYYY-MM-DD', IncDay(Now, -1)) + ' 00:00:00';
+
+  nStr := 'FCustomerID = ''%s'' and FStatus = ''1'' ' +
+          'and FRemainAmount >= 0 and FBeginDate >= ''%s'' and FEndDate >= ''%s'' ';
+  nStr := Format(nStr, [FIn.FData, nBeginDate, nEndDate]);
+
+  nStr := PackerEncodeStr(nStr);
+
+  if not TBusWorkerBusinessHHJY.CallMe(cBC_GetHhSalePlan
+           ,nStr,'',@nOut) then
+  begin
+    nData := '客户(%s)读取ERP订单失败.';
+    nData := Format(nData, [FIn.FData]);
+
+    with FPacker.XMLBuilder.Root.NodeNew('EXMG') do
+    begin
+      NodeNew('MsgTxt').ValueAsString     := nData;
+      NodeNew('MsgResult').ValueAsString  := sFlag_No;
+      NodeNew('MsgCommand').ValueAsString := IntToStr(FIn.FCommand);
+    end;
+    nData := FPacker.XMLBuilder.WriteToString;
+    Exit;
+  end;
   {$ENDIF}
 
   nStr := 'select O_Order,' +                    //销售卡片编号
@@ -706,8 +736,12 @@ begin
         NodeNew('StockName').ValueAsString  := FieldByName('O_StockName').AsString
                                              + FieldByName('O_StockType').AsString ;
 
-        nValue := FieldByName('O_PlanRemain').AsFloat -
-                  FieldByName('O_Freeze').AsFloat  ;
+        {$IFDEF SyncDataByWSDL}//接口模式下开单即推单 订单量会实时扣减
+        nValue       := FieldByName('O_PlanRemain').AsFloat;
+        {$ELSE}
+        nValue       := FieldByName('O_PlanRemain').AsFloat -
+                        FieldByName('O_Freeze').AsFloat;
+        {$ENDIF}
 
         NodeNew('MaxNumber').ValueAsString  := FloatToStr(nValue);
         NodeNew('SaleArea').ValueAsString   := '';
@@ -894,12 +928,21 @@ begin
         +'	  </Item>	'
         +'</Items>'
         +'</DATA>';
-  nStr := Format(nStr, [gSysParam.FFactID, FListA.Values['CusID'],
-                  FListA.Values['MsgType'], FListA.Values['BillID'],
-                  FListA.Values['Card'], FListA.Values['Truck'],
-                  FListA.Values['StockNo'], FListA.Values['StockName'],
-                  FListA.Values['CusID'], FListA.Values['CusName'],
-                  FListA.Values['Value']]);
+
+  if FListA.Values['MsgType'] = IntToStr(cSendWeChatMsgType_DelBill) then
+    nStr := Format(nStr, [gSysParam.FFactID, FListA.Values['CusID'],
+                    FListA.Values['MsgType'], FListA.Values['BillID'],
+                    FListA.Values['Card'], FListA.Values['Truck'],
+                    FListA.Values['WOM_WebOrderID'], FListA.Values['StockName'],
+                    FListA.Values['CusID'], FListA.Values['CusName'],
+                    FListA.Values['Value']])
+  else
+    nStr := Format(nStr, [gSysParam.FFactID, FListA.Values['CusID'],
+                    FListA.Values['MsgType'], FListA.Values['BillID'],
+                    FListA.Values['Card'], FListA.Values['Truck'],
+                    FListA.Values['StockNo'], FListA.Values['StockName'],
+                    FListA.Values['CusID'], FListA.Values['CusName'],
+                    FListA.Values['Value']]);
   WriteLog('发送商城模板消息入参'+nStr);
   FWXChannel := GetReviceWS(gSysParam.FSrvRemote);
   nStr := FWXChannel.mainfuncs('send_event_msg', nStr);
@@ -1353,12 +1396,40 @@ begin
      nDate := FormatDateTime('YYYY-MM',Now);
   end;
 
+  BuildDefaultXML;
+
+  {$IFDEF SyncDataByWSDL}
+  nStr := 'FYearPeriod = ''%s'' and FStatus = ''254'' and FCancelStatus = ''0'' ';
+  nStr := Format(nStr, [nDate]);
+
+  if nProID <> '' then
+  begin
+    nStr := nStr + 'and FMaterialProviderID = ''%s'' ';
+    nStr := Format(nStr, [nProID]);
+  end;
+
+  nStr := PackerEncodeStr(nStr);
+
+  if not TBusWorkerBusinessHHJY.CallMe(cBC_GetHhOrderPlan
+           ,nStr,'',@nOut) then
+  begin
+    nData := '供应商(%s)读取ERP订单失败.';
+    nData := Format(nData, [FIn.FData]);
+
+    with FPacker.XMLBuilder.Root.NodeNew('EXMG') do
+    begin
+      NodeNew('MsgTxt').ValueAsString     := nData;
+      NodeNew('MsgResult').ValueAsString  := sFlag_No;
+      NodeNew('MsgCommand').ValueAsString := IntToStr(FIn.FCommand);
+    end;
+    nData := FPacker.XMLBuilder.WriteToString;
+    Exit;
+  end;
+  {$ELSE}
   FListA.Clear;
   FListA.Values['Provider']   := nProID;
   FListA.Values['YearPeriod'] := nDate;
   nStr := PackerEncodeStr(FListA.Text);
-
-  BuildDefaultXML;
 
   if not TWorkerBusinessCommander.CallMe(cBC_GetHhOrderPlan,
      nStr, '', @nOut) then
@@ -1375,6 +1446,7 @@ begin
     Exit;
   end;
   //xxxxx
+  {$ENDIF}
 
   FListA.Clear;
   FListA.Text := PackerDecodeStr(nOut.FData);
@@ -1404,10 +1476,14 @@ begin
       NodeNew('BillNumber').ValueAsString := FListB.Values['Order'];
       NodeNew('StockNo').ValueAsString    := FListB.Values['StockNo'];
       if Length(Trim(FListB.Values['Model'])) > 0 then
-        NodeNew('StockName').ValueAsString  := FListB.Values['StockName']+'('
-                                              +FListB.Values['Model']+')'
+        nStr := FListB.Values['StockName'] +'('+ FListB.Values['Model']+')'
       else
-        NodeNew('StockName').ValueAsString  := FListB.Values['StockName'];
+        nStr := FListB.Values['StockName'];
+
+      if Length(Trim(FListB.Values['KD'])) > 0 then
+        nStr := nStr +'(矿点:'+ FListB.Values['KD']+')';
+
+      NodeNew('StockName').ValueAsString  := nStr;
       NodeNew('MaxNumber').ValueAsString  := FListB.Values['Value'];
     end;
   end;

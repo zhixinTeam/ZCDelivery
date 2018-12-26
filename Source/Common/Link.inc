@@ -52,7 +52,7 @@
 {.$DEFINE COMMON}
 //通用版本
 
-{$DEFINE AHZC}
+{$DEFINE ZZZC}
 //特定系统
 
 //安徽中材
@@ -63,6 +63,8 @@
   //状态栏显示
   {.$DEFINE MITTruckProber}
   //车检由中间件控制
+  {$DEFINE TruckProberEx}
+  //车检判断Ex
   {$DEFINE MultiReplay}
   //计数器应答模式
   {$DEFINE DaiStepWuCha}
@@ -85,5 +87,49 @@
   //微信
   {$DEFINE GetTruckNoFromERP}
   //从ERP委托单获取车号
+  {$DEFINE SyncDataByDataBase}
+  //通过访问数据库进行数据交互
+  {$DEFINE TruckOutTimeOut}
+  //车辆出厂超时
+{$ENDIF}
+
+//株洲中材
+{$IFDEF ZZZC}
+  {$DEFINE HYRFID201}
+  //华益读头
+  {$DEFINE AppAtTaskBar}
+  //状态栏显示
+  {$DEFINE MITTruckProber}
+  //车检由中间件控制
+  {.$DEFINE TruckProberEx}
+  //车检判断Ex
+  {$DEFINE MultiReplay}
+  //计数器应答模式
+  {$DEFINE DaiStepWuCha}
+  //包装阶梯误差
+  {.$DEFINE DaiOpenBackWhenError}
+  //包装错误抬后杆
+  {$DEFINE BatchInHYOfBill}
+  //批次保存在化验单字段
+  {.$DEFINE PrintHYEach}
+  //随车开化验单
+  {.$DEFINE HeGeZhengOnly}
+  //随车开单时只打合格证
+  {.$DEFINE HeGeZhengSimpleData}
+  //使用简单合格证数据(无检验结果)
+  {$DEFINE JSTruck}
+  //格式化计数器车牌
+  {$DEFINE SyncRemote}
+  //远程同步
+  {$DEFINE MicroMsg}
+  //微信
+  {$DEFINE GetTruckNoFromERP}
+  //从ERP委托单获取车号
+  {$DEFINE SyncDataByWSDL}
+  //通过接口进行数据交互
+  {$DEFINE AutoTruckIn}
+  //车辆自动进厂
+  {$DEFINE SaleOpenBackWhenError}
+  //销售异常过磅抬后杆
 {$ENDIF}
 

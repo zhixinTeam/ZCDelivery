@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Library Name="MIT_Service" UID="{9EFB4070-F3EF-4F02-ACF0-00A22B2A64AB}" Version="3.0">
+<Documentation><![CDATA[MIT Service Interface]]></Documentation>
+<Services>
+<Service Name="SrvConnection" UID="{EC3C2D79-1514-486F-9FB1-812C37B9EF38}">
+<Documentation><![CDATA[Service For Login Verify,SweetHeart ETC.]]></Documentation>
+<Interfaces>
+<Interface Name="Default" UID="{3E08D66D-DFBE-485E-A65C-F5EC6DC9F7CF}">
+<Operations>
+<Operation Name="Action" UID="{5BE3709D-9AFA-4DF7-BA80-30C783A3E9A8}">
+<Parameters>
+<Parameter Name="Result" DataType="Boolean" Flag="Result">
+</Parameter>
+<Parameter Name="nFunName" DataType="AnsiString" Flag="In" >
+<Documentation><![CDATA[Function Or Worker Name]]></Documentation>
+</Parameter>
+<Parameter Name="nData" DataType="AnsiString" Flag="InOut" >
+<Documentation><![CDATA[[in]输入参数;[out]输出数据]]></Documentation>
+</Parameter>
+</Parameters>
+</Operation>
+</Operations>
+</Interface>
+</Interfaces>
+</Service>
+<Service Name="SrvBusiness" UID="{9BDC9D97-E1D8-4791-A692-758EC0E6235F}">
+<Documentation><![CDATA[Service For Business]]></Documentation>
+<Interfaces>
+<Interface Name="Default" UID="{6173318C-3ECB-4FA8-A32A-4FC64D22AFF5}">
+<Operations>
+<Operation Name="Action" UID="{D2302A81-D793-4DE6-A98F-1049AFEFF6E5}">
+<Parameters>
+<Parameter Name="Result" DataType="Boolean" Flag="Result">
+</Parameter>
+<Parameter Name="nFunName" DataType="AnsiString" Flag="In" >
+<Documentation><![CDATA[Function Or Worker Name]]></Documentation>
+</Parameter>
+<Parameter Name="nData" DataType="AnsiString" Flag="InOut" >
+<Documentation><![CDATA[[in]输入参数;[out]输出数据]]></Documentation>
+</Parameter>
+</Parameters>
+</Operation>
+</Operations>
+</Interface>
+</Interfaces>
+</Service>
+<Service Name="SrvWebchat" UID="{47BAAE6D-417D-4D9B-8088-010A80BE10E3}">
+<Documentation><![CDATA[Service For Webchat]]></Documentation>
+<Interfaces>
+<Interface Name="Default" UID="{3FE68845-E146-4F43-98E7-D5B127946F5D}">
+<Operations>
+<Operation Name="Action" UID="{05066CC8-483D-4613-92B4-FC559D2FA4D8}">
+<Parameters>
+<Parameter Name="Result" DataType="Boolean" Flag="Result">
+</Parameter>
+<Parameter Name="nFunName" DataType="AnsiString" Flag="In" >
+<Documentation><![CDATA[Function Or Worker Name]]></Documentation>
+</Parameter>
+<Parameter Name="nData" DataType="AnsiString" Flag="InOut" >
+<Documentation><![CDATA[[in]输入参数;[out]输出数据]]></Documentation>
+</Parameter>
+</Parameters>
+</Operation>
+</Operations>
+</Interface>
+</Interfaces>
+</Service>
+</Services>
+<Structs>
+</Structs>
+<Enums>
+</Enums>
+<Arrays>
+</Arrays>
+</Library>

@@ -191,9 +191,17 @@ function GetStockNo(const nStockName,nStockType: string): string;
 //获取物料编号
 function GetHhOrderPlan(const nStr: string): string;
 //获取ERP采购进厂计划
+function GetHhOrderPlanWSDL(const nStr: string): string;
+//获取ERP采购进厂计划
 function GetOrderOtherInfo(const nID: string;
-                           var nModel,nYear,nKD,nProID,nProName: string): Boolean;
+                           var nModel,nYear,nKD,nProID,nProName,nStockName: string): Boolean;
 //获取订单型号 矿点 记账年月
+function GetHhSaleWareNumberWSDL(const nOrder, nValue: string;
+                                 var nHint: string): string;
+//Desc: 获取批次号
+function NewHhWTDetailWSDL(const nOrder, nTruck, nValue: string;
+                                 var nHint: string): string;
+//Desc: 生成派车单并返回单号
 
 function CallBusinessCommand(const nCmd: Integer; const nData,nExt: string;
   const nOut: PWorkerBusinessCommand; const nWarn: Boolean = True): Boolean;
@@ -408,6 +416,41 @@ begin
     //close hint param
 
     nWorker := gBusinessWorkerManager.LockWorker(sCLI_BusinessWebchat);
+    //get worker
+    Result := nWorker.WorkActive(@nIn, nOut);
+
+    if not Result then
+      WriteLog(nOut.FBase.FErrDesc);
+    //xxxxx
+  finally
+    gBusinessWorkerManager.RelaseWorker(nWorker);
+  end;
+end;
+
+//Date: 2017-10-26
+//Parm: 命令;数据;参数;服务地址;输出
+//Desc: 调用中间件上的销售单据对象
+function CallBusinessHHJY(const nCmd: Integer; const nData,nExt,nSrvURL: string;
+  const nOut: PWorkerHHJYData; const nWarn: Boolean = True): Boolean;
+var nIn: TWorkerHHJYData;
+    nWorker: TBusinessWorkerBase;
+begin
+  nWorker := nil;
+  try
+    nIn.FCommand := nCmd;
+    nIn.FData := nData;
+    nIn.FExtParam := nExt;
+    nIn.FRemoteUL := nSrvURL;
+
+    if nWarn then
+         nIn.FBase.FParam := ''
+    else nIn.FBase.FParam := sParam_NoHintOnError;
+
+    if gSysParam.FAutoPound and (not gSysParam.FIsManual) then
+      nIn.FBase.FParam := sParam_NoHintOnError;
+    //close hint param
+
+    nWorker := gBusinessWorkerManager.LockWorker(sCLI_BusinessHHJY);
     //get worker
     Result := nWorker.WorkActive(@nIn, nOut);
 
@@ -1607,7 +1650,7 @@ end;
 
 //根据订单号获取订单信息
 function get_shoporderbyno(const nXmlStr: string): string;
-var nOut: TWorkerBusinessCommand;
+var nOut: TWorkerWebChatData;
 begin
   Result := '';
   if CallBusinessWechat(cBC_WX_get_shoporderbyNO, nXmlStr, '', '' , @nOut,False) then
@@ -1656,11 +1699,22 @@ begin
   else Result := '';
 end;
 
+//Date: 2018-02-06
+//Parm: 供应商,物料,计划年月
+//Desc: 获取ERP采购进厂计划
+function GetHhOrderPlanWSDL(const nStr: string): string;
+var nOut: TWorkerHHJYData;
+begin
+  if CallBusinessHHJY(cBC_GetHhOrderPlan, nStr, '', '', @nOut) then
+    Result := nOut.FData
+  else Result := '';
+end;
+
 //Date: 2018-03-22
 //Parm: 原材料订单ID
 //Desc: 获取订单型号 矿点 记账年月
 function GetOrderOtherInfo(const nID: string;
-                           var nModel,nYear,nKD,nProID,nProName: string): Boolean;
+                           var nModel,nYear,nKD,nProID,nProName,nStockName: string): Boolean;
 var nStr, nData,nDate: string;
     nIdx, nOrderCount: Integer;
     nListA, nListB: TStrings;
@@ -1669,6 +1723,7 @@ begin
   nModel := '';
   nYear  := '';
   nKD    := '';
+  nStockName := '';
 
   nListA := TStringList.Create;
   nListB := TStringList.Create;
@@ -1683,6 +1738,38 @@ begin
        nDate := FormatDateTime('YYYY-MM',Now);
     end;
 
+    {$IFDEF SyncDataByWSDL}
+    nStr := 'FEntryPlanNumber = ''%s'' ';
+    nStr := Format(nStr, [nID]);
+
+    nStr := PackerEncodeStr(nStr);
+
+    nData := GetHhOrderPlanWSDL(nStr);
+
+    if nData = '' then
+    begin
+      Exit;
+    end;
+
+    nListB.Text := PackerDecodeStr(nData);
+
+    nModel    := nListB.Values['FModel'];
+    nKD       := nListB.Values['FProducerName'];
+    nYear     := nListB.Values['FYearPeriod'];                                   
+    nProID    := nListB.Values['FMaterialProviderID'];
+    nProName  := nListB.Values['FMaterialProviderName'];
+    nStockName:= nListB.Values['FMaterielName'];
+    if nYear <> nDate then
+    begin
+      nData := '当前记账年月[ %s ]与采购订单[ %s ]所属计划年月不一致,采购订单可能已失效';
+      nData := Format(nData,[nDate, nID, nYear]);
+      WriteLog(nData);
+
+      ShowMsg('申请单已失效,请重新下单', sHint);
+      Exit;
+    end;
+    Result := True;
+    {$ELSE}
     nListA.Values['YearPeriod'] := nDate;
 
     nStr := PackerEncodeStr(nListA.Text);
@@ -1706,13 +1793,136 @@ begin
         nYear     := nDate;
         nProID    := nListB.Values['ProID'];
         nProName  := nListB.Values['ProName'];
+        nStockName:= nListB.Values['StockName'];
         Result := True;
         Break;
       end;
     end;
+    {$ENDIF}
   finally
     nListA.Free;
     nListB.Free;
+  end;
+end;
+
+//Date: 2018-03-13
+//Parm: 提货ID
+//Desc: 获取批次号
+function GetHhSaleWareNumberWSDL(const nOrder, nValue: string;
+                                 var nHint: string): string;
+var nOut: TWorkerHHJYData;
+    nStr: string;
+    nList: TStrings;
+    nEID, nEvent, nStockName, nStockType: string;
+begin
+  Result := '';
+  nHint := '';
+  nList := TStringList.Create;
+
+  try
+    nStr := 'Select O_FactoryID, O_StockID, O_PackingID, O_StockName,' +
+            ' O_STockType From %s Where O_Order =''%s'' ';
+    nStr := Format(nStr, [sTable_SalesOrder, nOrder]);
+
+    with FDM.QueryTemp(nStr) do
+    if RecordCount > 0 then
+    begin
+      nList.Values['FactoryID'] := Fields[0].AsString;
+      nList.Values['StockID']   := Fields[1].AsString;
+      nList.Values['PackingID'] := Fields[2].AsString;
+      nStockName := Fields[3].AsString;
+      nStockType := Fields[4].AsString;
+
+      nStr := PackerEncodeStr(nList.Text);
+      if CallBusinessHHJY(cBC_GetHhSaleWareNumber, nStr, '', '', @nOut, False) then
+      begin
+        nStr := PackerDecodeStr(nOut.FData);
+        nList.Clear;
+        nList.Text := nStr;
+        try
+          if IsNumber(nList.Values['FAmount'], True) and
+             IsNumber(nList.Values['FDeliveryAmount'], True) then
+          begin
+            if StrToFloat(nList.Values['FAmount']) -
+               StrToFloat(nList.Values['FDeliveryAmount']) -
+               StrToFloat(nValue) >= 0 then
+            begin
+              Result := nList.Values['FWareNumber'];
+            end;
+          end;
+        except
+        end;
+      end
+      else
+      begin
+        nHint := PackerDecodeStr(nOut.FData);
+      end;
+    end
+    else
+    begin
+      nHint := '订单[ %s ]不存在';
+      nHint := Format(nHint,[nOrder]);
+      Exit;
+    end;
+
+    if Result = '' then
+    begin
+      nEID := nList.Values['FactoryID'] +
+              nList.Values['StockID'] +
+              nList.Values['PackingID'];
+
+      nStr := 'Delete From %s Where E_ID=''%s''';
+      nStr := Format(nStr, [sTable_ManualEvent, nEID]);
+
+      FDM.ExecuteSQL(nStr);
+
+      nEvent := '水泥品种[ %s ]的批次编号已用尽,请化验室尽快补录';
+      nEvent := Format(nEvent,[nStockname + nStockType]);
+
+      nStr := MakeSQLByStr([
+          SF('E_ID', nEID),
+          SF('E_Key', ''),
+          SF('E_From', sFlag_DepDaTing),
+          SF('E_Event', nEvent),
+          SF('E_Solution', sFlag_Solution_OK),
+          SF('E_Departmen', sFlag_DepHauYanShi),
+          SF('E_Date', sField_SQLServer_Now, sfVal)
+          ], sTable_ManualEvent, '', True);
+      FDM.ExecuteSQL(nStr);
+    end;
+  finally
+    nList.Free;
+  end;
+end;
+
+//Date: 2018-11-29
+//Desc: 生成派车单并返回单号
+function NewHhWTDetailWSDL(const nOrder, nTruck, nValue: string;
+                                 var nHint: string): string;
+var nOut: TWorkerHHJYData;
+    nStr: string;
+    nList: TStrings;
+begin
+  Result := '';
+  nHint := '';
+  nList := TStringList.Create;
+
+  try
+    nList.Values['FConsignPlanNumber'] := nOrder;
+    nList.Values['Truck']   := nTruck;
+    nList.Values['Value'] := nValue;
+
+    nStr := PackerEncodeStr(nList.Text);
+    if  CallBusinessHHJY(cBC_NewHhWTDetail, nStr, '', '', @nOut, False) then
+    begin
+      Result := nOut.FData;
+    end
+    else
+    begin
+      nHint := nOut.FData;
+    end;
+  finally
+    nList.Free;
   end;
 end;
 

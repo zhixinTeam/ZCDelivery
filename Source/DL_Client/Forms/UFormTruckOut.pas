@@ -85,6 +85,19 @@ begin
   for nIdx:=Low(gBills) to High(gBills) do
   if gBills[nIdx].FNextStatus <> sFlag_TruckOut then
   begin
+    if (gBills[nIdx].FType = sFlag_San) and (gCardUsed = sFlag_Sale) and
+       (gBills[nIdx].FStatus = sFlag_TruckFH) then //散装多次过磅
+    begin
+      if IsTruckTimeOut(gBills[nIdx].FID) then
+      begin
+        nStr := '车辆[ %s ]出厂超时,请重新过磅.';
+        nStr := Format(nStr, [gBills[nIdx].FTruck]);
+        ShowMsg(nStr,sHint);
+        Exit;
+      end;
+       Continue;
+    end;
+
     nStr := '※.单号:[ %s ] 状态:[ %-6s -> %-6s ]   ';
     if nIdx < High(gBills) then nStr := nStr + #13#10;
 
@@ -116,7 +129,7 @@ begin
   dxGroup1.AlignVert := avClient;
   dxLayout1Item3.AlignVert := avClient;
   //client align
-  
+
   nIni := TIniFile.Create(gPath + sFormConfig);
   try
     LoadFormConfig(Self, nIni);

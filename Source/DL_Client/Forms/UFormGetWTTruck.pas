@@ -4,6 +4,7 @@
 *******************************************************************************}
 unit UFormGetWTTruck;
 
+{$I Link.inc}
 interface
 
 uses
@@ -31,6 +32,8 @@ type
     { Private declarations }
     function QueryTruckFromERP(const nOrder: string): Boolean;
     //查询ERP委托车辆
+    function QueryTruckFromWSDL(const nOrder: string): Boolean;
+    //查询ERP委托车辆(调用接口)
   public
     { Public declarations }
     class function CreateForm(const nPopedom: string = '';
@@ -62,7 +65,11 @@ begin
     N2.Enabled := N1.Enabled;
     N4.Enabled := N1.Enabled;
     N5.Enabled := N1.Enabled;}
+    {$IFDEF SyncDataByWSDL}
+    QueryTruckFromWSDL(nP.FParamA);
+    {$ELSE}
     QueryTruckFromERP(nP.FParamA);
+    {$ENDIF}
     
     nP.FCommand := cCmd_ModalResult;
     nP.FParamA := ShowModal;
@@ -187,6 +194,75 @@ begin
         Caption := nListB.Values['Truck'];
         SubItems.Add(nListB.Values['Value']);
         SubItems.Add(nListB.Values['FBillNumber']);
+        ImageIndex := 11;
+        StateIndex := ImageIndex;
+      end;
+    end;
+    if ListTruck.Items.Count>0 then
+    begin
+      ActiveControl := ListTruck;
+      ListTruck.ItemIndex := 0;
+      ListTruck.ItemFocused := ListTruck.TopItem;
+    end;
+    Result := True;
+  finally
+    nListA.Free;
+    nListB.Free;
+  end;
+end;
+
+function TfFormGetWTTruck.QueryTruckFromWSDL(const nOrder: string): Boolean;
+var nStr, nQuery, nData: string;
+    nIdx, nOrderCount: Integer;
+    nListA, nListB: TStrings;
+begin
+  Result := False;
+  ListTruck.Items.Clear;
+
+  nListA := TStringList.Create;
+  nListB := TStringList.Create;
+  try
+    nStr := 'Select * From %s Where O_Order=''%s''';
+    nStr := Format(nStr, [sTable_SalesOrder, nOrder]);
+
+    with FDM.QueryTemp(nStr) do
+    begin
+      if RecordCount <= 0 then
+      begin
+        nStr := '未查询到订单[ %s ]信息';
+        nStr := Format(nStr, [nOrder]);
+        ShowMsg(nStr,sHint);
+        Exit;
+      end;
+      nListA.Values['CusID'] := FieldByName('O_CusID').AsString;
+      nListA.Values['SaleManID'] := FieldByName('O_SaleMan').AsString;
+      nListA.Values['StockID'] := FieldByName('O_StockID').AsString;
+      nListA.Values['PackingID'] := FieldByName('O_PackingID').AsString;
+    end;
+
+    nStr := PackerEncodeStr(nListA.Text);
+
+    nData := GetHhSaleWTTruckWSDL(nStr);
+
+    if nData = '' then
+    begin
+      nStr := '未查询到订单[ %s ]相关委托函信息';
+      nStr := Format(nStr, [nOrder]);
+      ShowMsg(nStr,sHint);
+      Exit;
+    end;
+
+    nListA.Text := PackerDecodeStr(nData);
+    nOrderCount := nListA.Count;
+    for nIdx := 0 to nOrderCount-1 do
+    begin
+      nListB.Text := PackerDecodeStr(nListA.Strings[nIdx]);
+
+      with ListTruck.Items.Add do
+      begin
+        Caption := nListB.Values['FTransportation'];
+        SubItems.Add(nListB.Values['FAmount']);
+        SubItems.Add(nListB.Values['FScheduleVanID']);
         ImageIndex := 11;
         StateIndex := ImageIndex;
       end;

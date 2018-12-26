@@ -54,6 +54,8 @@ type
     N11: TMenuItem;
     N12: TMenuItem;
     N13: TMenuItem;
+    N16: TMenuItem;
+    N17: TMenuItem;
     procedure EditIDPropertiesButtonClick(Sender: TObject;
       AButtonIndex: Integer);
     procedure BtnDelClick(Sender: TObject);
@@ -72,6 +74,8 @@ type
     procedure N10Click(Sender: TObject);
     procedure N12Click(Sender: TObject);
     procedure N13Click(Sender: TObject);
+    procedure N16Click(Sender: TObject);
+    procedure N17Click(Sender: TObject);
   protected
     FStart,FEnd: TDate;
     //时间区间
@@ -109,6 +113,20 @@ procedure TfFrameBill.OnCreateFrame;
 var nStr: string;
 begin
   inherited;
+  {$IFDEF SyncDataByDataBase}
+  N10.Visible := True;
+  N12.Visible := True;
+  N13.Visible := True;
+  N15.Visible := True;
+  N16.Visible := False;
+  N17.Visible := False;
+  {$ELSE}
+  N10.Visible := False;
+  N12.Visible := False;
+  N13.Visible := False;
+  N15.Visible := False;
+  N16.Visible := True;
+  {$ENDIF}
   FPreFix := 'WY';
   nStr := 'Select B_Prefix From %s ' +
           'Where B_Group=''%s'' And B_Object=''%s''';
@@ -133,6 +151,17 @@ end;
 function TfFrameBill.InitFormDataSQL(const nWhere: string): string;
 var nStr: string;
 begin
+  {$IFDEF SyncDataByWSDL}
+  if gPopedomManager.HasPopedom(PopedomItem, sPopedom_Edit) then
+  begin
+    N17.Visible := True;
+  end
+  else
+  begin
+    N17.Visible := False;
+  end;
+  {$ENDIF}
+
   FEnableBackDB := True;
 
   EditDate.Text := Format('%s 至 %s', [Date2Str(FStart), Date2Str(FEnd)]);
@@ -247,23 +276,43 @@ end;
 
 //Desc: 删除
 procedure TfFrameBill.BtnDelClick(Sender: TObject);
-var nStr: string;
+var nStr, nLID: string;
+    nList: TStrings;
 begin
   if cxView1.DataController.GetSelectedCount < 1 then
   begin
     ShowMsg('请选择要删除的记录', sHint); Exit;
   end;
 
+  nLID := SQLQuery.FieldByName('L_ID').AsString;
+
   nStr := '确定要删除编号为[ %s ]的单据吗?';
   nStr := Format(nStr, [SQLQuery.FieldByName('L_ID').AsString]);
   if not QueryDlg(nStr, sAsk) then Exit;
+
+  {$IFDEF SyncDataByWSDL}
+  nList := TStringList.Create;
+  nList.Values['ID'] := SQLQuery.FieldByName('L_ID').AsString;
+  nList.Values['Delete'] := sFlag_Yes;
+
+  nStr := PackerEncodeStr(nList.Text);
+  try
+    if not SyncHhSaleDetailWSDL(nStr) then
+    begin
+      ShowMsg('提货单作废失败',sHint);
+      Exit;
+    end;
+  finally
+    nList.Free;
+  end;
+  {$ENDIF}
 
   if DeleteBill(SQLQuery.FieldByName('L_ID').AsString) then
   begin
     InitFormData(FWhere);
     ShowMsg('提货单已删除', sHint);
     try
-      SaveWebOrderDelMsg(SQLQuery.FieldByName('L_ID').AsString,sFlag_Sale);
+      SaveWebOrderDelMsg(nLID,sFlag_Sale);
     except
     end;
     //插入删除推送
@@ -519,6 +568,7 @@ begin
     Exit;
   end;
 
+  if Pos(FPreFix,SQLQuery.FieldByName('L_ZhiKa').AsString) <= 0 then
   if Length(SQLQuery.FieldByName('L_MValue').AsString) > 0 then
   begin
     ShowMsg('车辆已过毛重,请进行提货勘误', sHint);
@@ -610,6 +660,88 @@ begin
   
   InitFormData(FWhere);
   ShowMsg('提货单状态修改成功', sHint);
+end;
+
+procedure TfFrameBill.N16Click(Sender: TObject);
+var nPID, nStr,nPreFix: string;
+    nList: TStrings;
+begin
+  if cxView1.DataController.GetSelectedCount > 0 then
+  begin
+    nPID := SQLQuery.FieldByName('L_ID').AsString;
+
+    nPreFix := 'WY';
+    nStr := 'Select B_Prefix From %s ' +
+            'Where B_Group=''%s'' And B_Object=''%s''';
+    nStr := Format(nStr, [sTable_SerialBase, sFlag_BusGroup, sFlag_SaleOrderOther]);
+
+    with FDM.QueryTemp(nStr) do
+    if RecordCount > 0 then
+    begin
+      nPreFix := Fields[0].AsString;
+    end;
+
+    if Pos(nPreFix,SQLQuery.FieldByName('L_ZhiKa').AsString) > 0 then
+    begin
+      nStr := Format('提货单[ %s ]非ERP订单,无法上传', [nPID]);
+      ShowMsg(nStr, sHint);
+      Exit;
+    end;
+
+    nStr := Format('确认上传提货单[ %s ]吗?', [nPID]);
+    if not QueryDlg(nStr, sHint) then Exit;
+
+    nList := TStringList.Create;
+    nList.Values['ID'] := SQLQuery.FieldByName('L_ID').AsString;
+
+    if SQLQuery.FieldByName('L_OutFact').AsString <> '' then
+      nList.Values['Status'] := '1';
+
+    nStr := PackerEncodeStr(nList.Text);
+    try
+      if not SyncHhSaleDetailWSDL(nStr) then
+      begin
+        ShowMsg('提货单上传失败',sHint);
+        Exit;
+      end;
+    finally
+      nList.Free;
+    end;
+
+    ShowMsg('上传成功',sHint);
+    InitFormData('');
+  end;
+end;
+
+procedure TfFrameBill.N17Click(Sender: TObject);
+var nStr,nID: string;
+    nList: TStrings;
+    nP: TFormCommandParam;
+begin
+  if cxView1.DataController.GetSelectedCount < 1 then
+  begin
+    ShowMsg('请选择要修改的记录', sHint);
+    Exit;
+  end;
+
+  nID := SQLQuery.FieldByName('L_ID').AsString;
+
+  nList := TStringList.Create;
+  try
+    nList.Add(nID);
+
+    nP.FCommand := cCmd_EditData;
+    nP.FParamA := nList.Text;
+    CreateBaseFormItem(cFI_FormSaleModifyStock, '', @nP);
+
+    if (nP.FCommand = cCmd_ModalResult) and (nP.FParamA = mrOK) then
+    begin
+      InitFormData(FWhere);
+    end;
+
+  finally
+    nList.Free;
+  end;
 end;
 
 initialization

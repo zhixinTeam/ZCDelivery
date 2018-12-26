@@ -4,6 +4,7 @@
 *******************************************************************************}
 unit UFrameQuerySaleDetail;
 
+{$I Link.inc}
 interface
 
 uses
@@ -39,12 +40,16 @@ type
     N1: TMenuItem;
     chkAll: TcxCheckBox;
     dxLayout1Item9: TdxLayoutItem;
+    N2: TMenuItem;
+    N3: TMenuItem;
     procedure EditDatePropertiesButtonClick(Sender: TObject;
       AButtonIndex: Integer);
     procedure EditTruckPropertiesButtonClick(Sender: TObject;
       AButtonIndex: Integer);
     procedure mniN1Click(Sender: TObject);
     procedure N1Click(Sender: TObject);
+    procedure N2Click(Sender: TObject);
+    procedure N3Click(Sender: TObject);
   private
     { Private declarations }
   protected
@@ -74,7 +79,7 @@ implementation
 {$R *.dfm}
 uses
   ULibFun, UMgrControl, UFormDateFilter, USysPopedom, USysBusiness,
-  UBusinessConst, USysConst, USysDB, UDataModule;
+  UBusinessConst, USysConst, USysDB, UDataModule, UBusinessPacker;
 
 class function TfFrameSaleDetailQuery.FrameID: integer;
 begin
@@ -89,6 +94,16 @@ begin
 
   FJBWhere := '';
   InitDateRange(Name, FStart, FEnd);
+
+  {$IFDEF SyncDataByWSDL}
+  N1.Visible := False;
+  N2.Visible := True;
+  N3.Visible := True;
+  {$ELSE}
+  N1.Visible := True;
+  N2.Visible := False;
+  N3.Visible := False;
+  {$ENDIF}
 end;
 
 procedure TfFrameSaleDetailQuery.OnDestroyFrame;
@@ -238,7 +253,7 @@ begin
   if cxView1.DataController.GetSelectedCount > 0 then
   begin
     nPID := SQLQuery.FieldByName('L_ID').AsString;
-    
+
     nPreFix := 'WY';
     nStr := 'Select B_Prefix From %s ' +
             'Where B_Group=''%s'' And B_Object=''%s''';
@@ -288,6 +303,97 @@ begin
     end;
 
     ShowMsg('上传成功',sHint);
+    InitFormData('');
+  end;
+end;
+
+procedure TfFrameSaleDetailQuery.N2Click(Sender: TObject);
+var nPID, nStr,nPreFix: string;
+    nList: TStrings;
+begin
+  if cxView1.DataController.GetSelectedCount > 0 then
+  begin
+    nPID := SQLQuery.FieldByName('L_ID').AsString;
+
+    nPreFix := 'WY';
+    nStr := 'Select B_Prefix From %s ' +
+            'Where B_Group=''%s'' And B_Object=''%s''';
+    nStr := Format(nStr, [sTable_SerialBase, sFlag_BusGroup, sFlag_SaleOrderOther]);
+
+    with FDM.QueryTemp(nStr) do
+    if RecordCount > 0 then
+    begin
+      nPreFix := Fields[0].AsString;
+    end;
+
+    if Pos(nPreFix,SQLQuery.FieldByName('L_ZhiKa').AsString) > 0 then
+    begin
+      nStr := Format('提货单[ %s ]非ERP订单,无法上传', [nPID]);
+      ShowMsg(nStr, sHint);
+      Exit;
+    end;
+
+    nStr := Format('确认上传提货单[ %s ]吗?', [nPID]);
+    if not QueryDlg(nStr, sHint) then Exit;
+
+    if SQLQuery.FieldByName('L_OutFact').AsString = '' then
+    begin
+      nStr := Format('提货单[ %s ]未出厂,无法上传', [nPID]);
+      ShowMsg(nStr, sHint);
+      Exit;
+    end;
+
+    nList := TStringList.Create;
+    nList.Values['ID'] := SQLQuery.FieldByName('L_ID').AsString;
+    nList.Values['Status'] := '1';
+
+    nStr := PackerEncodeStr(nList.Text);
+    try
+      if not SyncHhSaleDetailWSDL(nStr) then
+      begin
+        ShowMsg('提货单上传失败',sHint);
+        Exit;
+      end;
+    finally
+      nList.Free;
+    end;
+
+    ShowMsg('上传成功',sHint);
+    InitFormData('');
+  end;
+end;
+
+procedure TfFrameSaleDetailQuery.N3Click(Sender: TObject);
+var nLID, nStr,nPreFix,nHint: string;
+begin
+  if cxView1.DataController.GetSelectedCount > 0 then
+  begin
+    nLID := SQLQuery.FieldByName('L_ID').AsString;
+
+    nPreFix := 'WY';
+    nStr := 'Select B_Prefix From %s ' +
+            'Where B_Group=''%s'' And B_Object=''%s''';
+    nStr := Format(nStr, [sTable_SerialBase, sFlag_BusGroup, sFlag_SaleOrderOther]);
+
+    with FDM.QueryTemp(nStr) do
+    if RecordCount > 0 then
+    begin
+      nPreFix := Fields[0].AsString;
+    end;
+
+    if Pos(nPreFix,SQLQuery.FieldByName('L_ZhiKa').AsString) > 0 then
+    begin
+      nStr := Format('提货单[ %s ]非ERP订单,无法更新', [nLID]);
+      ShowMsg(nStr, sHint);
+      Exit;
+    end;
+
+    if not PoundVerifyHhSalePlanWSDL(nLID,
+           SQLQuery.FieldByName('L_Value').AsFloat,
+           SQLQuery.FieldByName('L_OutFact').AsString, nHint) then
+    begin
+      ShowMsg('更新失败',sHint);
+    end;
     InitFormData('');
   end;
 end;

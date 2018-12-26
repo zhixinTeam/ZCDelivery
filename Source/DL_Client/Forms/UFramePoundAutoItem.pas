@@ -94,6 +94,14 @@ type
     FEmptyPoundIdleLong, FEmptyPoundIdleShort: Int64;
     //空磅等待时长
     FLogin: Integer;
+    //摄像机登陆
+    FSampleNum: Integer;
+    //当前采样次数
+    FSaveResult: Boolean;
+    //保存结果
+    FDept: string;
+    //事件推送部门
+    FIdx: Integer;
     procedure SetUIData(const nReset: Boolean; const nOnlyData: Boolean = False);
     //界面数据
     procedure SetImageStatus(const nImage: TImage; const nOff: Boolean);
@@ -154,6 +162,7 @@ begin
   FLEDContent := '';
   FEmptyPoundInit := 0;
   FLogin := -1;
+  FDept := GetEventDept;
 end;
 
 procedure TfFrameAutoPoundItem.OnDestroyFrame;
@@ -394,6 +403,7 @@ var nRet: Boolean;
 begin
   nStr := Format('读取到卡号[ %s ],开始执行业务.', [nCard]);
   WriteLog(nStr);
+  WriteSysLog(nStr);
 
   FCardUsed := GetCardUsed(nCard);
   if (FCardUsed = sFlag_Provide) or (FCardUsed = sFlag_Mul) then
@@ -406,6 +416,7 @@ begin
     PlayVoice(nVoice);
 
     WriteLog(nVoice);
+    WriteSysLog(nVoice);
     SetUIData(True);
     Exit;
   end;
@@ -417,6 +428,49 @@ begin
   for nIdx:=Low(nBills) to High(nBills) do
   with nBills[nIdx] do
   begin
+    {$IFDEF AutoTruckIn}
+    if ((FNextStatus=sFlag_TruckNone) or (FStatus=sFlag_TruckNone))
+        and (FCardUsed=sFlag_Mul) then
+    begin
+      if SavePurchaseOrders(sFlag_TruckIn, nBills) then
+      begin
+        ShowMsg('车辆进厂成功', sHint);
+        LoadBillItems(FCardTmp);
+        Exit;
+      end else
+      begin
+        ShowMsg('车辆进厂失败', sHint);
+
+        nVoice := '车辆进厂失败,请联系管理员';
+        PlayVoice(nVoice);
+
+        WriteLog(nVoice);
+        WriteSysLog(nVoice);
+        SetUIData(True);
+        Exit;
+      end;
+    end;
+    if ((FNextStatus=sFlag_TruckNone) or (FStatus=sFlag_TruckNone))
+        and (FCardUsed=sFlag_Provide) and (FCtype=sFlag_CardLinShi) then
+    begin
+      if SavePurchaseOrders(sFlag_TruckIn, nBills) then
+      begin
+        ShowMsg('车辆进厂成功', sHint);
+        LoadBillItems(FCardTmp);
+        Exit;
+      end else
+      begin
+        ShowMsg('车辆进厂失败', sHint);
+
+        nVoice := '车辆进厂失败,请联系管理员';
+        PlayVoice(nVoice);
+
+        WriteLog(nVoice);
+        WriteSysLog(nVoice);
+        SetUIData(True);
+        Exit;
+      end;
+    end;
     if ((FNextStatus=sFlag_TruckNone) or (FStatus=sFlag_TruckOut))
         and (FCardUsed=sFlag_Provide) and (FCtype=sFlag_CardGuDing) then
     begin
@@ -433,11 +487,55 @@ begin
         PlayVoice(nVoice);
 
         WriteLog(nVoice);
+        WriteSysLog(nVoice);
         SetUIData(True);
         Exit;
       end;
     end;
-    if (FNextStatus=sFlag_TruckNone) and (FCardUsed=sFlag_Sale) then
+    if ((FNextStatus=sFlag_TruckNone) or (FStatus=sFlag_TruckNone))
+      and (FCardUsed=sFlag_Sale) then
+    begin
+      if SaveLadingBills(sFlag_TruckIn, nBills) then
+      begin
+        ShowMsg('车辆进厂成功', sHint);
+        LoadBillItems(FCardTmp);
+        Exit;
+      end else
+      begin
+        ShowMsg('车辆进厂失败', sHint);
+        nVoice := '车辆进厂失败,请联系管理员';
+        PlayVoice(nVoice);
+
+        WriteSysLog(nVoice);
+
+        SetUIData(True);
+        Exit;
+      end;
+    end;
+    {$ELSE}
+    if ((FNextStatus=sFlag_TruckNone) or (FStatus=sFlag_TruckOut))
+        and (FCardUsed=sFlag_Provide) and (FCtype=sFlag_CardGuDing) then
+    begin
+      if SavePurchaseOrders(sFlag_TruckIn, nBills) then
+      begin
+        ShowMsg('车辆进厂成功', sHint);
+        LoadBillItems(FCardTmp);
+        Exit;
+      end else
+      begin
+        ShowMsg('车辆进厂失败', sHint);
+
+        nVoice := '车辆进厂失败,请联系管理员';
+        PlayVoice(nVoice);
+
+        WriteLog(nVoice);
+        WriteSysLog(nVoice);
+        SetUIData(True);
+        Exit;
+      end;
+    end;
+    if (FNextStatus=sFlag_TruckNone) and (FCardUsed=sFlag_Sale)
+       and IsOtherOrder(nBills[nIdx]) then//矿山外运自动进厂
     begin
       if SaveLadingBills(sFlag_TruckIn, nBills) then
       begin
@@ -451,11 +549,21 @@ begin
         PlayVoice(nVoice);
 
         WriteLog(nVoice);
+        WriteSysLog(nVoice);
+
         SetUIData(True);
         Exit;
       end;
     end;
-    WriteLog('交货单状态:'+'内倒:'+FNeiDao+'当前:'+FStatus+'下一状态:'+FNextStatus);
+    {$ENDIF}
+    WriteSysLog('交货单状态:'+'内倒:'+FNeiDao+'当前:'+FStatus+'下一状态:'+FNextStatus);
+    if (FStatus = sFlag_TruckBFM) and (FCardUsed = sFlag_Sale)
+       and IsMulMaoStock(FStockNo) then
+    begin
+      FStatus := sFlag_TruckFH;
+      FNextStatus := sFlag_TruckBFM;
+      WriteSysLog('交货单状态调整:'+'允许多次过重:Y,当前:'+FStatus+'下一状态:'+FNextStatus);
+    end;
     if FNeiDao=sflag_yes then
     begin
       if ((FStatus=sFlag_TruckOut)
@@ -484,6 +592,7 @@ begin
         PlayVoice(nVoice);
 
         WriteLog(nVoice);
+        WriteSysLog(nVoice);
         SetUIData(True);
         Exit;
       end;
@@ -621,6 +730,8 @@ begin
   Timer_ReadCard.Enabled := False;
   FDoneEmptyPoundInit := 0;
   FIsWeighting := True;
+  FSampleNum := 0;
+  FSaveResult := True;
   //停止读卡,开始称重
 
   if FBarrierGate then
@@ -700,8 +811,9 @@ end;
 
 //Desc: 保存销售
 function TfFrameAutoPoundItem.SavePoundSale: Boolean;
-var nStr: string;
+var nStr, nHint: string;
     nVal,nNet: Double;
+    nIdx: Integer;
 begin
   Result := False;
   //init
@@ -773,11 +885,14 @@ begin
     with FUIData do
     begin
       nStr := GetTruckNO(FTruck) + '重量  ' + GetValue(FMData.FValue);
-      {$IFDEF MITTruckProber}
-      ProberShowTxt(FPoundTunnel.FID, nStr);
-      {$ELSE}
-      gProberManager.ShowTxt(FPoundTunnel.FID, nStr);
-      {$ENDIF}
+      for nIdx := 1 to 3 do
+      begin
+        {$IFDEF MITTruckProber}
+        ProberShowTxt(FPoundTunnel.FID, nStr);
+        {$ELSE}
+        gProberManager.ShowTxt(FPoundTunnel.FID, nStr);
+        {$ENDIF}
+      end;
 
       nStr := '车辆[ %s ]毛重超出开票毛重限值,详情如下:' + #13#10 +
               '※.物料名称: [ %s ]' + #13#10 +
@@ -810,11 +925,14 @@ begin
       if nNet < nVal then
       begin
         nStr := GetTruckNO(FTruck) + '重量  ' + GetValue(FMData.FValue);
-        {$IFDEF MITTruckProber}
-        ProberShowTxt(FPoundTunnel.FID, nStr);
-        {$ELSE}
-        gProberManager.ShowTxt(FPoundTunnel.FID, nStr);
-        {$ENDIF}
+        for nIdx := 1 to 3 do
+        begin
+          {$IFDEF MITTruckProber}
+          ProberShowTxt(FPoundTunnel.FID, nStr);
+          {$ELSE}
+          gProberManager.ShowTxt(FPoundTunnel.FID, nStr);
+          {$ENDIF}
+        end;
 
         nStr := '车辆[ %s ]净重小于过磅净重限值,详情如下:' + #13#10 +
                 '※.物料名称: [ %s ]' + #13#10 +
@@ -838,6 +956,47 @@ begin
       end;
     end;
 
+    {$IFDEF SyncDataByWSDL}
+    with FUIData do
+    begin
+      if FType = sFlag_San then
+        nNet := Abs(FUIData.FMData.FValue - FUIData.FPData.FValue)
+      else
+        nNet := FUIData.FValue;
+      //净重
+      if not PoundVerifyHhSalePlanWSDL(FUIData.FID, nNet, '', nHint) then
+      begin
+        nStr := GetTruckNO(FTruck) + '重量  ' + GetValue(FMData.FValue);
+        for nIdx := 1 to 3 do
+        begin
+          {$IFDEF MITTruckProber}
+          ProberShowTxt(FPoundTunnel.FID, nStr);
+          {$ELSE}
+          gProberManager.ShowTxt(FPoundTunnel.FID, nStr);
+          {$ENDIF}
+        end;
+
+        nStr := '车辆[ %s ]过磅校验失败,详情如下:' + #13#10 +
+                '※.物料名称: [ %s ]' + #13#10 +
+                '※.车辆净重: %.2f吨' + #13#10 +
+                '※.详细原因为:[ %s ].';
+        nStr := Format(nStr, [FTruck, FStockName, nNet, nHint]);
+
+        if not VerifyManualEventRecord(FID + sFlag_ManualB, nStr) then
+        begin
+          AddManualEventRecord(FID + sFlag_ManualB, FTruck, nStr,
+              sFlag_DepBangFang, sFlag_Solution_OK, sFlag_DepDaTing, True);
+          WriteSysLog(nStr);
+
+          nStr := '[n1]%s重车过磅订单校验失败,请下磅联系开票员处理后再次过磅';
+          nStr := Format(nStr, [FTruck]);
+          PlayVoice(nStr);
+
+          Exit;
+        end;
+      end;
+    end;
+    {$ELSE}
     with FUIData do
     if FType = sFlag_San then
     begin
@@ -848,11 +1007,14 @@ begin
       if nNet > nVal then
       begin
         nStr := GetTruckNO(FTruck) + '重量  ' + GetValue(FMData.FValue);
-        {$IFDEF MITTruckProber}
-        ProberShowTxt(FPoundTunnel.FID, nStr);
-        {$ELSE}
-        gProberManager.ShowTxt(FPoundTunnel.FID, nStr);
-        {$ENDIF}
+        for nIdx := 1 to 3 do
+        begin
+          {$IFDEF MITTruckProber}
+          ProberShowTxt(FPoundTunnel.FID, nStr);
+          {$ELSE}
+          gProberManager.ShowTxt(FPoundTunnel.FID, nStr);
+          {$ENDIF}
+        end;
 
         nStr := '车辆[ %s ]净重超出订单可用量,详情如下:' + #13#10 +
                 '※.物料名称: [ %s ]' + #13#10 +
@@ -875,6 +1037,7 @@ begin
         end;
       end;
     end;
+    {$ENDIF}
 
     nNet := FUIData.FMData.FValue - FUIData.FPData.FValue;
     //净重
@@ -900,9 +1063,10 @@ begin
       end;
       {$ENDIF}
 
+      if nVal <> 0 then
       if ((FType = sFlag_Dai) and (
           ((nVal > 0) and (FPoundDaiZ > 0) and (nVal > FPoundDaiZ)) or
-          (nVal < 0))) then
+          ((nVal < 0) and (FPoundDaiF > 0) and (-nVal > FPoundDaiF)))) then
       begin
         {$IFDEF AutoPoundInManual}
         nStr := '车辆[%s]实际装车量误差较大,请去包装点包.';
@@ -929,21 +1093,6 @@ begin
           if not QueryDlg(nStr, sAsk) then Exit;
         end;
         {$ELSE}
-        nStr := '车辆[n1]%s净重[n2]%.2f吨,开票量[n2]%.2f吨,'+
-                '误差量[n2]%.2f公斤,请去包装点包';
-        nStr := Format(nStr, [FTruck, nNet, FInnerData.FValue, nVal]);
-        PlayVoice(nStr);
-
-        if nVal < 0 then
-          nStr := GetTruckNO(FTruck) + '补包  ' + GetValue(Abs(nVal))
-        else
-          nStr := GetTruckNO(FTruck) + '卸包  ' + GetValue(nVal);
-        {$IFDEF MITTruckProber}
-        ProberShowTxt(FPoundTunnel.FID, nStr);
-        {$ELSE}
-        gProberManager.ShowTxt(FPoundTunnel.FID, nStr);
-        {$ENDIF}
-
         nStr := '车辆[ %s ]实际装车量误差较大,详情如下:' + #13#10 +
                 '※.物料名称: [ %s ]' + #13#10 +
                 '※.开单量: %.2f吨' + #13#10 +
@@ -955,8 +1104,28 @@ begin
         if not VerifyManualEventRecord(FID + sFlag_ManualC, nStr) then
         begin
           AddManualEventRecord(FID + sFlag_ManualC, FTruck, nStr,
-            sFlag_DepBangFang, sFlag_Solution_YN, sFlag_DepJianZhuang, True);
+            sFlag_DepBangFang, sFlag_Solution_YN, FDept, True);
           WriteSysLog(nStr);
+
+          nStr := '车辆[n1]%s净重[n2]%.2f吨,开票量[n2]%.2f吨,'+
+                  '误差量[n2]%.2f公斤,请去包装点包';
+          nStr := Format(nStr, [FTruck, nNet, FInnerData.FValue, nVal]);
+          PlayVoice(nStr);
+
+          if nVal < 0 then
+            nStr := GetTruckNO(FTruck) + '补包  ' + GetValue(Abs(nVal))
+          else
+            nStr := GetTruckNO(FTruck) + '卸包  ' + GetValue(nVal);
+
+          for nIdx := 1 to 3 do
+          begin
+            {$IFDEF MITTruckProber}
+            ProberShowTxt(FPoundTunnel.FID, nStr);
+            {$ELSE}
+            gProberManager.ShowTxt(FPoundTunnel.FID, nStr);
+            {$ENDIF}
+          end;
+
           Exit;
         end;
         {$ENDIF}
@@ -996,7 +1165,7 @@ begin
       PlayVoice(nStr);
       Exit;
     end;
-
+    FUIData.FMData.FValue := FUIData.FPData.FValue;
 //    nStr := '车辆[ %s ]正在空车出厂,详情如下:' + #13#10 +
 //            '※.单据号: %s' + #13#10 +
 //            '※.开单量: %.2f吨' + #13#10 +
@@ -1031,7 +1200,8 @@ begin
 
     FPoundID := sFlag_Yes;
     //标记该项有称重数据
-    Result := SaveLadingBills(FNextStatus, FBillItems, FPoundTunnel, FLogin);
+    FSaveResult := SaveLadingBills(FNextStatus, FBillItems, FPoundTunnel, FLogin);
+    Result := FSaveResult;
     //保存称重
   end;
 end;
@@ -1044,6 +1214,7 @@ var nNextStatus: string;
     nPrePValue: Double;
     nPrePMan: string;
     nPrePTime: TDateTime;
+    nIdx: Integer;
 begin
   Result := False;
   //init
@@ -1092,7 +1263,8 @@ begin
     else FMData.FStation := FPoundTunnel.FID;
   end;
 
-  Result := SavePurchaseOrders(nNextStatus, FBillItems,FPoundTunnel,FLogin)
+  FSaveResult := SavePurchaseOrders(nNextStatus, FBillItems,FPoundTunnel,FLogin);
+  Result := FSaveResult;
   //保存称重
 end;
 
@@ -1122,6 +1294,7 @@ var nStr: string;
     nPrePValue: Double;
     nPrePMan: string;
     nPrePTime: TDateTime;
+    nIdx: Integer;
 begin
   FLastBT := GetTickCount;
   EditValue.Text := Format('%.2f', [nValue]);
@@ -1208,16 +1381,16 @@ begin
   {$IFDEF MITTruckProber}
   if not IsTunnelOK(FPoundTunnel.FID) then
   {$ELSE}
-  if not gProberManager.IsTunnelOK(FPoundTunnel.FID) then
+    {$IFNDEF TruckProberEx}
+    if not gProberManager.IsTunnelOK(FPoundTunnel.FID) then
+    {$ELSE}
+    if not gProberManager.IsTunnelOKEx(FPoundTunnel.FID) then
+    {$ENDIF}
   {$ENDIF}
   begin
     nStr := '车辆未停到位,请移动车辆.';
+    WriteSysLog(nStr);
     PlayVoice(nStr);
-    {$IFDEF MITTruckProber}
-    ProberShowTxt(FPoundTunnel.FID, nStr);
-    {$ELSE}
-    gProberManager.ShowTxt(FPoundTunnel.FID, nStr);
-    {$ENDIF}
 
     InitSamples;
     Exit;
@@ -1232,13 +1405,49 @@ begin
   if nRet then
   begin
     nStr := GetTruckNO(FUIData.FTruck) + '重量  ' + GetValue(nValue);
-    {$IFDEF MITTruckProber}
-    ProberShowTxt(FPoundTunnel.FID, nStr);
-    {$ELSE}
-    gProberManager.ShowTxt(FPoundTunnel.FID, nStr);
-    {$ENDIF}
+    WriteSysLog(nStr);
+    for nIdx := 1 to 3 do
+    begin
+      {$IFDEF MITTruckProber}
+      ProberShowTxt(FPoundTunnel.FID, nStr);
+      {$ELSE}
+      gProberManager.ShowTxt(FPoundTunnel.FID, nStr);
+      {$ENDIF}
+    end;
     TimerDelay.Enabled := True;
-  end else Timer_SaveFail.Enabled := True;
+  end else
+  begin
+    if not FSaveResult then
+    begin
+      nStr := GetTruckNO(FUIData.FTruck) + '数据保存失败';
+      for nIdx := 1 to 3 do
+      begin
+        {$IFDEF MITTruckProber}
+        ProberShowTxt(FPoundTunnel.FID, nStr);
+        {$ELSE}
+        gProberManager.ShowTxt(FPoundTunnel.FID, nStr);
+        {$ENDIF}
+      end;
+
+      with FUIData do
+      begin
+        nStr := '车辆[ %s ]数据保存失败,详情如下:' + #13#10 +
+                '※.物料名称: [ %s ]' + #13#10 +
+                '※.车辆重量: %s吨' + #13#10 +
+                '请进行人工干预.';
+        nStr := Format(nStr, [FTruck, FStockName, EditValue.Text]);
+
+        if not VerifyManualEventRecord(FID + sFlag_ManualB, nStr) then
+        begin
+          AddManualEventRecord(FID + sFlag_ManualB, FTruck, nStr,
+              sFlag_DepBangFang, sFlag_Solution_OK, sFlag_DepDaTing, True);
+          WriteSysLog(nStr);
+        end;
+      end;
+    end;
+
+    Timer_SaveFail.Enabled := True;
+  end;
 
   if FBarrierGate then
   begin
@@ -1250,8 +1459,22 @@ begin
       OpenDoorByReader(FLastReader, sFlag_Yes); //打开主道闸(后杆)
     end;
     {$ENDIF}
-    
-    if nInt = 0 then
+
+    {$IFDEF SaleOpenBackWhenError}
+    if not nRet then
+    begin
+      nInt := 10;
+      OpenDoorByReader(FLastReader, sFlag_Yes); //打开主道闸(后杆)
+    end;
+    {$ENDIF}
+
+    if IsAsternStock(FUIData.FStockName) then
+    begin
+      nInt := 10;
+      OpenDoorByReader(FLastReader, sFlag_Yes); //打开主道闸(后杆)
+    end;
+
+    if (nInt = 0) and FSaveResult then
       OpenDoorByReader(FLastReader, sFlag_No);
     //打开副道闸
   end;

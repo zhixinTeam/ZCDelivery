@@ -224,6 +224,14 @@ inherited fFramePurchaseOrder: TfFramePurchaseOrder
       Caption = #25209#37327#20462#25913#29289#26009
       OnClick = N9Click
     end
+    object N11: TMenuItem
+      Caption = #20462#25913#36827#21378#35745#21010'WSDL'
+      OnClick = N11Click
+    end
+    object N12: TMenuItem
+      Caption = #25209#37327#20462#25913#36827#21378#35745#21010'('#22266#23450#21345')'
+      OnClick = N12Click
+    end
     object N5: TMenuItem
       Caption = '-'
     end

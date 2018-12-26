@@ -1,25 +1,25 @@
 inherited fFormModifySaleStock: TfFormModifySaleStock
   Left = 275
   Top = 100
-  ClientHeight = 458
-  ClientWidth = 711
+  ClientHeight = 498
+  ClientWidth = 717
   OnClose = FormClose
   OnCreate = FormCreate
   PixelsPerInch = 96
   TextHeight = 12
   inherited dxLayout1: TdxLayoutControl
-    Width = 711
-    Height = 458
+    Width = 717
+    Height = 498
     inherited BtnOK: TButton
-      Left = 565
-      Top = 425
+      Left = 571
+      Top = 465
       Caption = #20462#25913
-      TabOrder = 10
+      TabOrder = 11
     end
     inherited BtnExit: TButton
-      Left = 635
-      Top = 425
-      TabOrder = 11
+      Left = 641
+      Top = 465
+      TabOrder = 12
     end
     object EditMate: TcxTextEdit [2]
       Left = 81
@@ -55,10 +55,10 @@ inherited fFormModifySaleStock: TfFormModifySaleStock
     end
     object editMemo: TcxTextEdit [5]
       Left = 81
-      Top = 392
+      Top = 417
       ParentFont = False
       Style.BorderStyle = ebsSingle
-      TabOrder = 9
+      TabOrder = 10
       Width = 121
     end
     object ListQuery: TcxListView [6]
@@ -151,6 +151,14 @@ inherited fFormModifySaleStock: TfFormModifySaleStock
       TabOrder = 8
       Width = 121
     end
+    object EditMValueMax: TcxTextEdit [12]
+      Left = 81
+      Top = 392
+      ParentFont = False
+      Style.BorderStyle = ebsSingle
+      TabOrder = 9
+      Width = 121
+    end
     inherited dxLayout1Group_Root: TdxLayoutGroup
       object dxLayout1Item3: TdxLayoutItem [0]
         Control = ListQuery
@@ -197,6 +205,11 @@ inherited fFormModifySaleStock: TfFormModifySaleStock
         object dxLayout1Item7: TdxLayoutItem
           Caption = #25552' '#36135' '#37327':'
           Control = EditLValue
+          ControlOptions.ShowBorder = False
+        end
+        object dxLayout1Item8: TdxLayoutItem
+          Caption = #27611#37325#38480#20540':'
+          Control = EditMValueMax
           ControlOptions.ShowBorder = False
         end
         object dxLayout1Item10: TdxLayoutItem

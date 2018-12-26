@@ -462,6 +462,14 @@ begin
                RightStr(Trim(FieldByName('L_Truck').AsString),3);
       //香格里拉:  月日 + 批次号+基地拼音首字母+客户编号后6位+车牌号后3位
       {$ENDIF}
+
+      {$IFDEF ZZZC}
+
+      nStr := Date2Str(Now, False);
+      System.Delete(nStr, 1, 2);
+
+      nCode := Trim(Fields[0].AsString) + ' ' + nStr;
+      {$ENDIF}
     end;
   end;
 

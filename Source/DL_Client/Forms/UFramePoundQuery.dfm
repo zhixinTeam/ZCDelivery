@@ -271,5 +271,16 @@ inherited fFramePoundQuery: TfFramePoundQuery
       Visible = False
       OnClick = N12Click
     end
+    object N13: TMenuItem
+      Caption = '-'
+    end
+    object N15: TMenuItem
+      Caption = #21407#26448#26009#30917#21333#21208#35823'WSDL'
+      OnClick = N15Click
+    end
+    object N14: TMenuItem
+      Caption = #21407#26448#26009#30917#21333#19978#20256'WSDL'
+      OnClick = N14Click
+    end
   end
 end

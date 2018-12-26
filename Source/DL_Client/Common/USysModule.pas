@@ -29,6 +29,8 @@ uses
   UFormPoundKw, UFormTruckEmpty, UFormPoundKwOther, UFormSaleKw, UFormGetWTTruck,
   UFormSaleOrderOther, UFrameSaleOrderOther, UFormModifySaleStock, UFormSaleKwOther,
   UFormGetWechartAccount,UFramePoundQueryOther, uFormSaleBuDanOther,
+  UFormCardSearch, UFormTruckOutOverTime,
+
   UFrameHYData, UFormHYData, UFrameBatcodeJ, UFormBatcodeJ, UFormGetStockNo,
   UFrameHYRecord, UFormHYRecord, UFrameHYStock, UFormHYStock,
   UFrameBatcodeRecord,
@@ -97,6 +99,10 @@ begin
 
       if nStr = sFlag_WXServiceMIT then
         FWechatURL := Fields[0].AsString;
+      //xxxxx
+
+      if nStr = sFlag_HHJYServiceMIT then
+        FHHJYURL := Fields[0].AsString;
       //xxxxx
 
       Next;

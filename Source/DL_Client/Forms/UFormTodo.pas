@@ -179,7 +179,7 @@ begin
   try                            
     nStr := 'Select * from %s Where (E_Date>=%s-1 and E_Result Is Null ' +
             'and E_Departmen=''%s'') or (E_Date>=dateadd(hour,-1,%s) and ' +
-            'E_Departmen=''%s'') Order By R_ID ASC';
+            'E_Departmen=''%s'') Order By R_ID desc';
     nStr := Format(nStr, [sTable_ManualEvent, sField_SQLServer_Now,
             gSysParam.FDepartment, sField_SQLServer_Now, sFlag_Departments]);
     //一天之内本部门,或所有部门一小时内未处理消息

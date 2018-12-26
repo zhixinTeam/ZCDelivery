@@ -4,6 +4,7 @@
 *******************************************************************************}
 unit UFramePoundQuery;
 
+{$I Link.inc}
 interface
 
 uses
@@ -51,6 +52,9 @@ type
     chkTime: TcxComboBox;
     dxLayout1Item10: TdxLayoutItem;
     N12: TMenuItem;
+    N14: TMenuItem;
+    N13: TMenuItem;
+    N15: TMenuItem;
     procedure EditDatePropertiesButtonClick(Sender: TObject;
       AButtonIndex: Integer);
     procedure EditTruckPropertiesButtonClick(Sender: TObject;
@@ -65,6 +69,8 @@ type
     procedure N10Click(Sender: TObject);
     procedure chkTimePropertiesChange(Sender: TObject);
     procedure N12Click(Sender: TObject);
+    procedure N14Click(Sender: TObject);
+    procedure N15Click(Sender: TObject);
   private
     { Private declarations }
   protected
@@ -90,7 +96,7 @@ implementation
 {$R *.dfm}
 uses
   ShellAPI, ULibFun, UMgrControl, UDataModule, USysBusiness, UFormDateFilter,
-  UFormWait, USysConst, USysDB, UFormBase;
+  UFormWait, USysConst, USysDB, UFormBase, UBusinessPacker, USysPopedom;
 
 class function TfFramePoundQuery.FrameID: integer;
 begin
@@ -101,6 +107,24 @@ procedure TfFramePoundQuery.OnCreateFrame;
 var nStr: string;
 begin
   inherited;
+  {$IFDEF SyncDataByDataBase}
+  N6.Visible := True;
+  N9.Visible := True;
+  N10.Visible := True;
+  N11.Visible := True;
+  N12.Visible := True;
+  N13.Visible := False;
+  N14.Visible := False;
+  N15.Visible := False;
+  {$ELSE}
+  N6.Visible := False;
+  N9.Visible := False;
+  N10.Visible := False;
+  N11.Visible := False;
+  N12.Visible := False;
+  N13.Visible := True;
+  N14.Visible := True;
+  {$ENDIF}
   FPreFix := 'WY';
   nStr := 'Select B_Prefix From %s ' +
           'Where B_Group=''%s'' And B_Object=''%s''';
@@ -126,6 +150,17 @@ end;
 
 function TfFramePoundQuery.InitFormDataSQL(const nWhere: string): string;
 begin
+  {$IFDEF SyncDataByWSDL}
+  if gPopedomManager.HasPopedom(PopedomItem, sPopedom_Edit) then
+  begin
+    N15.Visible := True;
+  end
+  else
+  begin
+    N15.Visible := False;
+  end;
+  {$ENDIF}
+
   FEnableBackDB := True;
   //启用备份数据库
 
@@ -287,7 +322,8 @@ end;
 //Desc: 删除榜单
 procedure TfFramePoundQuery.BtnDelClick(Sender: TObject);
 var nIdx: Integer;
-    nStr,nID,nP: string;
+    nStr,nID,nP,nInStr: string;
+    nList: TStrings;
 begin
   if cxView1.DataController.GetSelectedCount < 1 then
   begin
@@ -298,6 +334,71 @@ begin
   nID := SQLQuery.FieldByName('P_ID').AsString;
   nStr := Format('确定要删除编号为[ %s ]的过磅单吗?', [nID]);
   if not QueryDlg(nStr, sAsk) then Exit;
+
+  {$IFDEF SyncDataByWSDL}
+  nList := TStringList.Create;
+  nList.Values['ID'] := SQLQuery.FieldByName('P_ID').AsString;
+  nList.Values['Delete'] := sFlag_Yes;
+
+  nInStr := PackerEncodeStr(nList.Text);
+  try
+    if SQLQuery.FieldByName('P_Type').AsString = sFlag_Sale then
+    begin
+      nStr := '销售单据请在发货明细进行删除';
+      ShowMsg(nStr, sHint);
+      Exit;
+    //xxxxx
+    end
+    else
+    begin
+      if SQLQuery.FieldByName('P_PoundIdx').AsInteger > 0  then//备品备件
+      begin
+        if not SyncHhOtherOrderDataWSDL(nInStr) then
+        begin
+          ShowMsg('作废失败',sHint);
+          Exit;
+        end;
+      end
+      else
+      begin
+        nStr := 'Select O_IfNeiDao From %s a , %s b' +
+        ' where a.O_ID = b.D_OID and  b.D_ID = ''%s''';
+        //xxxxx
+
+        nStr := Format(nStr, [sTable_Order, sTable_OrderDtl,
+                              SQLQuery.FieldByName('P_OrderBak').AsString]);
+
+        with FDM.QueryTemp(nStr) do
+        begin
+          if RecordCount < 1 then
+          begin
+            nStr := Format('未找到磅单[ %s ]对应的采购单据,无法作废', [nID]);
+            ShowMsg(nStr, sHint);
+            Exit;
+          end;
+          if Fields[0].AsString = sFlag_Yes then
+          begin
+            if not SyncHhNdOrderDataWSDL(nInStr) then
+            begin
+              ShowMsg('作废失败',sHint);
+              Exit;
+            end;
+          end
+          else
+          begin
+            if not SyncHhOrderDataWSDL(nInStr) then
+            begin
+              ShowMsg('作废失败',sHint);
+              Exit;
+            end;
+          end;
+        end;
+      end;
+    end;
+  finally
+    nList.Free;
+  end;
+  {$ENDIF}
 
   nStr := Format('Select * From %s Where 1<>1', [sTable_PoundLog]);
   //only for fields
@@ -592,6 +693,120 @@ begin
     nList.Free;
   end;
 
+end;
+
+procedure TfFramePoundQuery.N14Click(Sender: TObject);
+var nPID, nStr, nInStr: string;
+    nList: TStrings;
+begin
+  if cxView1.DataController.GetSelectedCount > 0 then
+  begin
+    nPID := SQLQuery.FieldByName('P_ID').AsString;
+    nStr := Format('确认上传编号为[ %s ]的过磅单吗?', [nPID]);
+    if not QueryDlg(nStr, sHint) then Exit;
+
+    nList := TStringList.Create;
+    nList.Values['ID'] := SQLQuery.FieldByName('P_ID').AsString;
+    nInStr := PackerEncodeStr(nList.Text);
+    try
+      if SQLQuery.FieldByName('P_Type').AsString = sFlag_Sale then
+      begin
+        nStr := '销售单据请在发货明细进行上传';
+        ShowMsg(nStr, sHint);
+        Exit;
+      //xxxxx
+      end
+      else
+      begin
+        if SQLQuery.FieldByName('P_PoundIdx').AsInteger > 0  then//备品备件
+        begin
+          if not SyncHhOtherOrderDataWSDL(nInStr) then
+          begin
+            ShowMsg('上传失败',sHint);
+            Exit;
+          end;
+        end
+        else
+        begin
+          nStr := 'Select O_IfNeiDao From %s a , %s b' +
+          ' where a.O_ID = b.D_OID and  b.D_ID = ''%s''';
+          //xxxxx
+
+          nStr := Format(nStr, [sTable_Order, sTable_OrderDtl,
+                                SQLQuery.FieldByName('P_OrderBak').AsString]);
+
+          with FDM.QueryTemp(nStr) do
+          begin
+            if RecordCount < 1 then
+            begin
+              nStr := Format('未找到磅单[ %s ]对应的采购单据,无法上传', [nPID]);
+              ShowMsg(nStr, sHint);
+              Exit;
+            end;
+            if Fields[0].AsString = sFlag_Yes then
+            begin
+              if not SyncHhNdOrderDataWSDL(nInStr) then
+              begin
+                ShowMsg('上传失败',sHint);
+                Exit;
+              end;
+            end
+            else
+            begin
+              if not SyncHhOrderDataWSDL(nInStr) then
+              begin
+                ShowMsg('上传失败',sHint);
+                Exit;
+              end;
+            end;
+          end;
+        end;
+      end;
+      ShowMsg('上传成功',sHint);
+      InitFormData('');
+    finally
+      nList.Free;
+    end;
+  end;
+end;
+
+procedure TfFramePoundQuery.N15Click(Sender: TObject);
+var nStr,nID: string;
+    nList: TStrings;
+    nP: TFormCommandParam;
+begin
+  if cxView1.DataController.GetSelectedCount < 1 then
+  begin
+    ShowMsg('请选择要勘误的记录', sHint);
+    Exit;
+  end;
+
+  if SQLQuery.FieldByName('P_Type').AsString = sFlag_Sale then
+  begin
+    nStr := '销售单据请在提货查询进行勘误';
+    ShowMsg(nStr, sHint);
+    Exit;
+  //xxxxx
+  end;
+
+  nID := SQLQuery.FieldByName('P_ID').AsString;
+
+  nList := TStringList.Create;
+  try
+    nList.Add(nID);
+
+    nP.FCommand := cCmd_EditData;
+    nP.FParamA := nList.Text;
+
+    CreateBaseFormItem(cFI_FormPoundKw, '', @nP);
+
+    if (nP.FCommand = cCmd_ModalResult) and (nP.FParamA = mrOK) then
+    begin
+      InitFormData(FWhere);
+    end;
+  finally
+    nList.Free;
+  end;
 end;
 
 initialization

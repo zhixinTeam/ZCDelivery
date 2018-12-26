@@ -90,8 +90,27 @@ const
   cBC_SyncHhNdOrderPoundData  = $0098;   //上传采购内倒磅单
   cBC_SyncHhOtOrderPoundData  = $0099;   //上传采购临时磅单
   cBC_GetHhSalePlan           = $0100;   //获取销售计划
-  cBC_SyncHhSaleDetai         = $0101;   //上传销售发货明细
+  cBC_SyncHhSaleDetail        = $0101;   //上传销售发货明细
   cBC_SyncHhSaleWTTruck       = $0102;   //获取销售委托车辆
+  cBC_PoundVerifyHhSalePlan   = $0103;   //销售计划过磅校验
+  cBC_BillVerifyHhSalePlan    = $0104;   //销售计划开单校验
+  cBC_IsHhSaleDetailExits     = $0105;   //查询发货明细
+  cBC_GetHhSaleDetailID       = $0106;   //获取新增发货明细ID
+  cBC_GetHhSaleWareNumber     = $0107;   //获取批次号
+
+  cBC_IsHhOrderDetailExits    = $0108;   //查询普通原材料采购单明细
+  cBC_GetHhOrderDetailID      = $0109;   //获取新增普通原材料采购单明细ID
+
+  cBC_IsHhNdOrderDetailExits  = $0110;   //查询内倒原材料采购单明细
+  cBC_GetHhNdOrderDetailID    = $0111;   //获取新增内倒原材料采购单明细ID
+
+  cBC_IsHhOtherOrderDetailExits= $0112;  //查询临时称重采购单明细
+  cBC_GetHhOtherOrderDetailID = $0113;   //获取新增临时称重采购单明细ID
+
+  cBC_SyncHhSaleWareNumber    = $0114;   //同步批次号
+  cBC_GetHhSaleRealPrice      = $0115;   //获取最新价格
+
+  cBC_NewHhWTDetail           = $0116;   //生成派车单
 
   cBC_WX_VerifPrintCode       = $0501;   //微信：验证喷码信息
   cBC_WX_WaitingForloading    = $0502;   //微信：工厂待装查询
@@ -207,6 +226,15 @@ type
     FRemoteUL : string;            //工厂服务器UL
   end;
 
+  PWorkerHHJYData = ^TWorkerHHJYData;
+  TWorkerHHJYData = record
+    FBase     : TBWDataBase;
+    FCommand  : Integer;           //类型
+    FData     : string;            //数据
+    FExtParam : string;            //参数
+    FRemoteUL : string;            //工厂服务器UL
+  end;
+
 procedure AnalyseBillItems(const nData: string; var nItems: TLadingBillItems);
 //解析由业务对象返回的交货单数据
 function CombineBillItmes(const nItems: TLadingBillItems): string;
@@ -261,6 +289,7 @@ resourcestring
   sBus_HardwareCommand        = 'Bus_HardwareCommand';  //硬件指令
   sBus_BusinessWebchat        = 'Bus_BusinessWebchat';  //Web平台服务
   sBus_BusinessPurchase       = 'Bus_BusinessPurchase'; //采购单相关
+  sBus_BusinessHHJY           = 'Bus_BusinessHHJY';     //恒河久远接口服务
 
   {*client function name*}
   sCLI_ServiceStatus          = 'CLI_ServiceStatus';    //服务状态
@@ -271,6 +300,7 @@ resourcestring
   sCLI_HardwareCommand        = 'CLI_HardwareCommand';  //硬件指令
   sCLI_BusinessWebchat        = 'CLI_BusinessWebchat';  //Web平台服务
   sCLI_BusinessPurchaseOrder  = 'CLI_BusinessPurchaseOrder'; //采购单相关
+  sCLI_BusinessHHJY           = 'CLI_BusinessHHJY';     //恒河久远接口服务
 
 implementation
 
@@ -366,8 +396,8 @@ begin
         FNeiDao  := Values['NeiDao'];
         Fexpiretime := Values['expiretime'];
         FCtype := Values['ctype'];
-        FPoundIdx := StrToInt(Values['PoundIdx']);
-        FPoundMax := StrToInt(Values['PoundMax']);
+        FPoundIdx := StrToIntDef(Values['PoundIdx'],0);
+        FPoundMax := StrToIntDef(Values['PoundMax'],0);
         FPrintBD := Values['PrintBD'] = sFlag_Yes;
       end;
 

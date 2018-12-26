@@ -156,6 +156,11 @@ const
   sFlag_ManualC       = 'C';                         //净重超出误差范围
   sFlag_ManualD       = 'D';                         //空车出厂
   sFlag_ManualE       = 'E';                         //车牌识别
+  sFlag_ManualF       = 'F';                         //出厂超时
+
+  sFlag_PurPT         = 'PPT';                       //普通原材料
+  sFlag_PurND         = 'PND';                       //内倒原材料
+  sFlag_PurBP         = 'PBP';                       //备品备件
 
   sFlag_SysParam      = 'SysParam';                  //系统参数
   sFlag_FactoryID     = 'FactoryID';                 //工厂编号
@@ -178,6 +183,9 @@ const
   sFlag_WXServiceMIT  = 'WXServiceMIT';              //微信工厂服务
   sFlag_WXSrvRemote   = 'WXServiceRemote';           //微信远程服务
 
+  sFlag_HHJYServiceMIT= 'HHJYService';              //恒河久远工厂服务
+  sFlag_HHJYDepotID   = 'HHJYDepotID';               //恒河久远存货场ID
+
   sFlag_PrinterBill   = 'PrinterBill';               //小票打印机
   sFlag_PrinterHYDan  = 'PrinterHYDan';              //化验单打印机
 
@@ -192,6 +200,7 @@ const
   sFlag_PSanWuChaF    = 'PoundSanWuChaF';            //散装负误差
   sFlag_PTruckPWuCha  = 'PoundTruckPValue';          //空车皮误差
   sFlag_PoundMultiM   = 'PoundMultiM';               //允许多次过重
+  sFlag_PoundAsternM  = 'PoundAsternM';              //倒车下磅物料
 
   sFlag_CommonItem    = 'CommonItem';                //公共信息
   sFlag_AreaItem      = 'AreaItem';                  //区域信息项
@@ -225,7 +234,8 @@ const
   sFlag_BatchAuto     = 'BatchAuto';                 //使用自动批次号
   sFlag_SetPValue     = 'SetPValue';                 //预设皮重阀值
   sFlag_MinNetValue   = 'MinNetValue';               //销售过磅净重限值
-  sFlag_TimeOutValue  = 'TimeOutValue';               //销售出厂超时时间
+  sFlag_TimeOutValue  = 'TimeOutValue';              //销售出厂超时时间
+  sFlag_EventDept     = 'PoundEventDept';            //销售过磅事件推送部门
 
   sFlag_BusGroup      = 'BusFunction';               //业务编码组
   sFlag_BillNo        = 'Bus_Bill';                  //交货单号
@@ -236,6 +246,8 @@ const
   sFlag_WeiXin        = 'Bus_WeiXin';                //微信映射编号
   sFlag_HYDan         = 'Bus_HYDan';                 //化验单号
   sFlag_SaleOrderOther= 'Bus_SOO';                   //临时订单号
+  sFlag_WTNo          = 'Bus_WT';                    //委托单号
+
   sFlag_TruckInNeedManu = 'TruckInNeedManu';         //车牌识别需要人工干预
   sFlag_CardGInvalid  = 'CardGInvalid';              //长期卡是否失效
   
@@ -248,6 +260,7 @@ const
   sFlag_DepJianZhuang = '监装';                      //监装
   sFlag_DepBangFang   = '磅房';                      //磅房
   sFlag_DepMenGang    = '门岗';                      //门岗
+  sFlag_DepHauYanShi  = '化验室';                    //化验室
 
   sFlag_Solution_OK   = 'O=知道了';
   sFlag_Solution_YN   = 'Y=通过;N=禁止';
@@ -301,6 +314,9 @@ const
   sTable_Picture      = 'Sys_Picture';               //存放图片
   sTable_PoundDaiWC   = 'Sys_PoundDaiWuCha';         //包装误差
   sTable_WebOrderMatch   = 'S_WebOrderMatch';        //商城订单映射
+  sTable_HHJYUrl      = 'Sys_HHJYUrl';               //恒河久远接口地址表
+  sTable_HHJYUrlBak   = 'Sys_HHJYUrlBak';            //恒河久远接口地址表
+  sTable_HHJYSync     = 'Sys_HHJYSync';              //恒河久远数据同步表
 
   //恒河久远ERP数据表-----------------------------------------------------------
   sTable_HH_MaterielType = 'T_Sys_MaterielType';    //物料分类
@@ -598,7 +614,7 @@ const
        'O_Company varChar(80),' +
        'O_Depart varChar(20), O_SaleMan varChar(20), O_CusID varChar(30),' +
        'O_Remark varChar(200), O_Price $Float, O_CompanyID varChar(30),' +
-       'O_StockID varChar(30), O_PackingID varChar(5),' +
+       'O_StockID varChar(30), O_PackingID varChar(5), O_FactoryID varChar(30),' +
        'O_Valid Char(1), O_Freeze $Float, O_HasDone $Float, O_StopAmount $Float,' +
        'O_Create DateTime, O_ModifyNum Integer, O_Modify DateTime)';
   {-----------------------------------------------------------------------------
@@ -629,6 +645,7 @@ const
     *.O_CompanyID: 公司编号
     *.O_StockID: 物料ID
     *.O_PackingID: 包装类型ID
+    *.O_FactoryID: 生产厂ID
     *.O_Create,O_Modify: 创建修改时间
   -----------------------------------------------------------------------------}
 
@@ -1333,6 +1350,39 @@ const
    *.WOM_BillType: 业务类型  采购 销售
   -----------------------------------------------------------------------------}
 
+  sSQL_NewHHJYURL = 'Create Table $Table(R_ID $Inc,'
+      +'U_CID varchar(20) null,'
+      +'U_Url varchar(100) null,'
+      +'U_Password varchar(30) null,'
+      +'U_DefWhere varchar(200) null)';
+  {-----------------------------------------------------------------------------
+   恒河久远接口地址表:
+   *.R_ID: 记录编号
+   *.U_CID: 命令字
+   *.U_Url: 地址
+   *.U_Password: 密码
+   *.U_DefWhere: 缺省条件
+  -----------------------------------------------------------------------------}
+
+  sSQL_NewHHJYSync = 'Create Table $Table(R_ID $Inc,'
+      +'H_ID varchar(20) null,'
+      +'H_Order varchar(20) null,'
+      +'H_Status Integer,'
+      +'H_SyncNum Integer default 0,'
+      +'H_BillType char(1),'
+      +'H_PurType varchar(5),'
+      +'H_Deleted char(1) default ''N'')';
+  {-----------------------------------------------------------------------------
+   单据同步表:
+   *.R_ID: 记录编号
+   *.H_ID: 单据号
+   *.H_Order: 订单号
+   *.H_Status: 单据状态 0.开卡  1.完成
+   *.H_SyncNum: 发送次数
+   *.H_BillType: 业务类型  采购 销售
+   *.H_PurType: 采购流程类型 普通 内倒 临时
+  -----------------------------------------------------------------------------}
+
 function CardStatusToStr(const nStatus: string): string;
 //磁卡状态
 function TruckStatusToStr(const nStatus: string): string;
@@ -1448,6 +1498,10 @@ begin
   AddSysTableItem(sTable_OrderBaseMain, sSQL_NewOrdBaseMain);
 
   AddSysTableItem(sTable_WebOrderMatch,sSQL_NewWebOrderMatch);
+
+  AddSysTableItem(sTable_HHJYUrl,sSQL_NewHHJYURL);
+  AddSysTableItem(sTable_HHJYUrlBak,sSQL_NewHHJYURL);
+  AddSysTableItem(sTable_HHJYSync,sSQL_NewHHJYSync);
 end;
 
 //Desc: 清理系统表

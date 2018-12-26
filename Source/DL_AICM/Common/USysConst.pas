@@ -216,7 +216,8 @@ type
     FLocalName  : string;                            //本机名称
     FHardMonURL : string;                            //硬件守护
     FWechatURL  : string;                            //微信服务
-    
+    FHHJYURL    : string;                            //恒河久远接口服务
+
     FFactNum    : string;                            //工厂编号
     FSerialID   : string;                            //电脑编号
     FIsManual   : Boolean;                           //手动过磅

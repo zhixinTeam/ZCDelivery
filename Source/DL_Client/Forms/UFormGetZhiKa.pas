@@ -4,6 +4,7 @@
 *******************************************************************************}
 unit UFormGetZhiKa;
 
+{$I Link.inc}
 interface
 
 uses
@@ -14,7 +15,7 @@ uses
   dxLayoutControl, StdCtrls, cxStyles, cxCustomData, cxFilter, cxData,
   cxDataStorage, DB, cxDBData, ADODB, cxGridLevel, cxClasses,
   cxGridCustomView, cxGridCustomTableView, cxGridTableView,
-  cxGridDBTableView, cxGrid;
+  cxGridDBTableView, cxGrid, Menus, cxButtons, DateUtils;
 
 type
   TfFormGetZhiKa = class(TfFormNormal)
@@ -42,11 +43,18 @@ type
     cxView1Column14: TcxGridDBColumn;
     cxView1Column15: TcxGridDBColumn;
     cxView1Column16: TcxGridDBColumn;
+    EditCusList: TcxComboBox;
+    dxLayout1Item5: TdxLayoutItem;
+    dxLayout1Group2: TdxLayoutGroup;
+    BtnSearch: TcxButton;
+    dxLayout1Item6: TdxLayoutItem;
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure BtnOKClick(Sender: TObject);
     procedure EditCusPropertiesButtonClick(Sender: TObject;
       AButtonIndex: Integer);
+    procedure EditCusListPropertiesChange(Sender: TObject);
+    procedure BtnSearchClick(Sender: TObject);
   protected
     { Private declarations }
     FListA: TStrings;
@@ -66,7 +74,7 @@ implementation
 {$R *.dfm}
 uses
   ULibFun, UFormBase, UMgrControl, UDataModule, USysGrid, USysDB, USysConst,
-  USysBusiness;
+  USysBusiness, UBusinessPacker;
 
 class function TfFormGetZhiKa.CreateForm(const nPopedom: string;
   const nParam: Pointer): TWinControl;
@@ -80,12 +88,15 @@ begin
   try
     Caption := '销售订单';
     FBillItem := nP.FParamE;
+    {$IFDEF SyncDataByDataBase}
     if not GetHhSalePlan('') then
     begin
       ShowMsg('获取销售计划失败',sHint);
       Exit;
     end;
+
     InitFormData('');
+    {$ENDIF}
 
     nP.FCommand := cCmd_ModalResult;
     nP.FParamA := ShowModal;
@@ -100,7 +111,8 @@ begin
 end;
 
 procedure TfFormGetZhiKa.FormCreate(Sender: TObject);
-var nIdx: Integer;
+var nStr: string;
+    nIdx: Integer;
 begin
   FListA := TStringList.Create;
   dxGroup1.AlignVert := avClient;
@@ -109,6 +121,16 @@ begin
   for nIdx:=0 to cxView1.ColumnCount-1 do
     cxView1.Columns[nIdx].Tag := nIdx;
   InitTableView(Name, cxView1);
+
+  {$IFDEF SyncDataByWSDL}
+  dxLayout1Item4.Visible := False;
+  dxLayout1Item5.Visible := True;
+  dxLayout1Item6.Visible := True;
+  {$ELSE}
+  dxLayout1Item4.Visible := True;
+  dxLayout1Item5.Visible := False;
+  dxLayout1Item6.Visible := False;
+  {$ENDIF}
 end;
 
 procedure TfFormGetZhiKa.FormClose(Sender: TObject;
@@ -135,8 +157,13 @@ begin
     ActiveControl := BtnOK;
   end else
   begin
+    {$IFDEF SyncDataByWSDL}
+    ActiveControl := EditCusList;
+    EditCusList.SelectAll;
+    {$ELSE}
     ActiveControl := EditCus;
     EditCus.SelectAll;
+    {$ENDIF}
   end;
 end;
 
@@ -212,13 +239,91 @@ begin
     FCusID       := '';
     FCusName     := FieldByName('O_CusName').AsString;
 
+    {$IFDEF SyncDataByWSDL}//接口模式下开单即推单 订单量会实时扣减
+    FValue       := FieldByName('O_PlanRemain').AsFloat;
+    {$ELSE}
     FValue       := FieldByName('O_PlanRemain').AsFloat -
                     FieldByName('O_Freeze').AsFloat;
+    {$ENDIF}
     FStatus      := '';
     FNextStatus  := FieldByName('O_Company').AsString;
   end;
 
   ModalResult := mrOk;
+end;
+
+procedure TfFormGetZhiKa.EditCusListPropertiesChange(Sender: TObject);
+var nIdx : Integer;
+    nStr : string;
+begin
+  EditCusList.Properties.Items.Clear;
+  nStr := 'Select C_Name From %s Where C_Name Like ''%%%s%%'' or C_PY Like ''%%%s%%'' ';
+  nStr := Format(nStr, [sTable_Customer, EditCusList.Text, EditCusList.Text]);
+
+  with FDM.QueryTemp(nStr) do
+  begin
+    if RecordCount > 0 then
+    begin
+      try
+        EditCusList.Properties.BeginUpdate;
+
+        First;
+
+        while not Eof do
+        begin
+          EditCusList.Properties.Items.Add(Fields[0].AsString);
+          Next;
+        end;
+      finally
+        EditCusList.Properties.EndUpdate;
+      end;
+    end;
+  end;
+  for nIdx := 0 to EditCusList.Properties.Items.Count - 1 do
+  begin;
+    if Pos(EditCusList.Text,EditCusList.Properties.Items.Strings[nIdx]) > 0 then
+    begin
+      EditCusList.SelectedItem := nIdx;
+      Break;
+    end;
+  end;
+end;
+
+procedure TfFormGetZhiKa.BtnSearchClick(Sender: TObject);
+var nStr, nCusID, nBeginDate, nEndDate: string;
+begin
+  if EditCusList.Text = '' then
+  begin
+    nStr := '请选择客户';
+    EditCusList.SetFocus;
+    ShowMsg(nStr, sHint);
+    Exit;
+  end;
+  nCusID := GetCusID(EditCusList.Text);
+  if nCusID = '' then
+  begin
+    nStr := '未找到[ %s ]对应的客户ID';
+    nStr := Format(nStr, [EditCusList.Text]);
+    ShowMsg(nStr, sHint);
+    Exit;
+  end;
+
+  nBeginDate := FormatDateTime('YYYY-MM-DD HH:MM:SS', IncMonth(Now, -2));
+  nEndDate   := FormatDateTime('YYYY-MM-DD', IncDay(Now, -1)) + ' 00:00:00';
+
+  nStr := 'FCustomerID = ''%s'' and FStatus = ''1'' ' +
+          'and FRemainAmount >= 0 and FBeginDate >= ''%s'' and FEndDate >= ''%s'' ';
+  nStr := Format(nStr, [nCusID, nBeginDate, nEndDate]);
+
+  nStr := PackerEncodeStr(nStr);
+  if not GetHhSalePlanWSDL(nStr, '') then
+  begin
+    ShowMsg('获取销售计划失败',sHint);
+    Exit;
+  end;
+  nStr := 'O_CusName Like ''%%%s%%'' Or O_CusPY Like ''%%%s%%''';
+  nStr := Format(nStr, [EditCusList.Text, EditCusList.Text]);
+  InitFormData(nStr);
 end;
 
 initialization

@@ -1,7 +1,7 @@
 inherited fFormBill: TfFormBill
-  Left = 482
-  Top = 88
-  ClientHeight = 557
+  Left = 448
+  Top = 32
+  ClientHeight = 548
   ClientWidth = 468
   Position = poDesktopCenter
   OnClose = FormClose
@@ -10,17 +10,17 @@ inherited fFormBill: TfFormBill
   TextHeight = 12
   inherited dxLayout1: TdxLayoutControl
     Width = 468
-    Height = 557
+    Height = 548
     AutoControlTabOrders = False
     inherited BtnOK: TButton
       Left = 322
-      Top = 524
+      Top = 515
       Caption = #24320#21333
       TabOrder = 8
     end
     inherited BtnExit: TButton
       Left = 392
-      Top = 524
+      Top = 515
       TabOrder = 13
     end
     object ListInfo: TcxMCListBox [2]
@@ -44,7 +44,7 @@ inherited fFormBill: TfFormBill
     end
     object EditValue: TcxTextEdit [3]
       Left = 289
-      Top = 403
+      Top = 394
       ParentFont = False
       TabOrder = 4
       OnKeyPress = EditLadingKeyPress
@@ -52,7 +52,7 @@ inherited fFormBill: TfFormBill
     end
     object EditTruck: TcxTextEdit [4]
       Left = 289
-      Top = 378
+      Top = 369
       ParentFont = False
       Properties.MaxLength = 15
       TabOrder = 3
@@ -61,7 +61,7 @@ inherited fFormBill: TfFormBill
     end
     object EditLading: TcxComboBox [5]
       Left = 81
-      Top = 403
+      Top = 394
       ParentFont = False
       Properties.DropDownListStyle = lsEditFixedList
       Properties.ItemHeight = 18
@@ -75,7 +75,7 @@ inherited fFormBill: TfFormBill
     end
     object EditType: TcxComboBox [6]
       Left = 81
-      Top = 378
+      Top = 369
       ParentFont = False
       Properties.DropDownListStyle = lsEditFixedList
       Properties.ItemHeight = 18
@@ -90,7 +90,7 @@ inherited fFormBill: TfFormBill
     end
     object PrintGLF: TcxCheckBox [7]
       Left = 11
-      Top = 524
+      Top = 515
       Caption = #25171#21360#36807#36335#36153
       ParentFont = False
       TabOrder = 6
@@ -99,7 +99,7 @@ inherited fFormBill: TfFormBill
     end
     object PrintHY: TcxCheckBox [8]
       Left = 111
-      Top = 524
+      Top = 515
       Caption = #25171#21360#36136#37327#25215#35834#20070
       ParentFont = False
       TabOrder = 7
@@ -108,7 +108,7 @@ inherited fFormBill: TfFormBill
     end
     object cxLabel1: TcxLabel [9]
       Left = 23
-      Top = 479
+      Top = 470
       AutoSize = False
       ParentFont = False
       Properties.LineOptions.Alignment = cxllaBottom
@@ -119,7 +119,7 @@ inherited fFormBill: TfFormBill
     end
     object EditPhone: TcxTextEdit [10]
       Left = 289
-      Top = 492
+      Top = 483
       ParentFont = False
       Properties.MaxLength = 32
       TabOrder = 5
@@ -127,7 +127,7 @@ inherited fFormBill: TfFormBill
     end
     object EditDate: TcxDateEdit [11]
       Left = 81
-      Top = 492
+      Top = 483
       ParentFont = False
       Properties.SaveTime = False
       Properties.ShowTime = False
@@ -136,7 +136,7 @@ inherited fFormBill: TfFormBill
     end
     object chkMaxMValue: TcxCheckBox [12]
       Left = 23
-      Top = 428
+      Top = 419
       Caption = #27611#37325#38480#20540#35774#23450':'
       ParentFont = False
       TabOrder = 15
@@ -145,7 +145,7 @@ inherited fFormBill: TfFormBill
     end
     object EditMaxMValue: TcxTextEdit [13]
       Left = 288
-      Top = 428
+      Top = 419
       ParentFont = False
       TabOrder = 16
       Text = '70'
@@ -153,7 +153,7 @@ inherited fFormBill: TfFormBill
     end
     object EditWT: TcxTextEdit [14]
       Left = 81
-      Top = 454
+      Top = 445
       ParentFont = False
       Properties.ReadOnly = True
       TabOrder = 17

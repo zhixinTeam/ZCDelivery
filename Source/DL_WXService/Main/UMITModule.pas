@@ -13,6 +13,7 @@ uses
   Forms, Classes, SysUtils, ULibFun, UMITConst, USysDB,
   //常规定义
   UMITPacker, UWorkerBussinessWebchat, UMessageScan, UWorkerBusiness,
+  UWorkerBussinessHHJY,
   //业务对象
   UBusinessWorker, UBusinessPacker, UMgrDBConn, UMgrParam, UMgrPlug,
   UMgrChannel, UTaskMonitor, UChannelChooser, USysShareMem,
@@ -77,6 +78,7 @@ end;
 procedure LoadDBConfig;
 var nStr: string;
     nWorker: PDBWorker;
+    nIdx: Integer;
 begin
   nWorker := nil;
   try
@@ -116,6 +118,39 @@ begin
     nStr := Format(nStr, [sTable_SysDict, sFlag_FactoryID]);
     raise Exception.Create(nStr);
   end;
+
+  {$IFDEF SyncDataByWSDL}
+  nWorker := nil;
+  try
+    nStr := 'Select U_CID,U_Url,U_Password, U_DefWhere From %s ';
+    nStr := Format(nStr, [sTable_HHJYUrl]);
+
+    with gDBConnManager.SQLQuery(nStr, nWorker) do
+    if RecordCount > 0 then
+    begin
+      SetLength(gSysParam.FHHJYUrl, RecordCount);
+
+      nIdx := 0;
+      First;
+
+      while not Eof do
+      begin
+        with gSysParam.FHHJYUrl[nIdx] do
+        begin
+          FCID      := Fields[0].AsInteger;
+          FUrl      := Fields[1].AsString;
+          FPassword := Fields[2].AsString;
+          FDefWhere := Fields[3].AsString;
+        end;
+
+        Inc(nIdx);
+        Next;
+      end;
+    end;
+  finally
+    gDBConnManager.ReleaseConnection(nWorker); 
+  end;
+  {$ENDIF}
 end;
 
 procedure TMainEventWorker.BeforeStartServer;

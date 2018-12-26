@@ -297,7 +297,11 @@ begin
     Result := EditLading.ItemIndex > -1;
     nHint := '请选择提货方式';
   end else
-
+  if Sender = EditWT then
+  begin
+    Result := Length(EditWT.Text) > 0;
+    nHint := '请选择委托单';
+  end else
   if Sender = EditValue then
   begin
     Result := IsNumber(EditValue.Text, True) and
@@ -312,7 +316,7 @@ end;
 procedure TfFormBill.BtnOKClick(Sender: TObject);
 var nPrint: Boolean;
     nList,nStocks: TStrings;
-    nHint: string;
+    nHint,nStr,nHYDan: string;
 begin
   if not OnVerifyCtrl(EditMaxMValue, nHint) then
   begin
@@ -334,6 +338,27 @@ begin
     ShowMsg(nHint,sHint);
     Exit;
   end;
+  if not OnVerifyCtrl(EditWT, nHint) then
+  begin
+    ShowMsg(nHint,sHint);
+    Exit;
+  end;
+  if not CheckTruckCard(EditTruck.Text,nHint) then
+  begin
+    nStr := '车辆[ %s ]存在未注销磁卡的交货单[ %s ],需先处理.';
+    nStr := Format(nStr, [EditTruck.Text, nHint]);
+    ShowMsg(nStr,sHint);
+    Exit;
+  end;
+
+  {$IFDEF SyncDataByWSDL}
+  nHYDan := GetHhSaleWareNumberWSDL(gBillItem.FZhiKa, EditValue.Text, nHint);
+  if nHYDan = '' then
+  begin
+    ShowMsg('获取批次号失败:' + nHint,sHint);
+    Exit;
+  end;
+  {$ENDIF}
 
   nStocks := TStringList.Create;
   nList := TStringList.Create;
@@ -377,6 +402,14 @@ begin
       Values['WT']           := Trim(EditWT.Text);
 
       Values['MsgNo']        := IntToStr(FMsgNo);
+
+      {$IFDEF SyncDataByWSDL}
+        {$IFDEF BatchInHYOfBill}
+        Values['HYDan'] := nHYDan;
+        {$ELSE}
+        Values['Seal'] := nHYDan;
+        {$ENDIF}
+      {$ENDIF}
     end;
 
     ShowWaitForm(Self, '正在保存数据', True);
@@ -401,7 +434,7 @@ begin
   if nPrint then
     PrintBillReport(gBillItem.FID, True);
   //print report
-  
+
   ModalResult := mrOk;
   ShowMsg('提货单保存成功', sHint);
 end;

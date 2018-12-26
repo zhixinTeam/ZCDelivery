@@ -84,6 +84,14 @@ begin
     gSysParam.FWechatURL := Fields[0].AsString;
   end;
 
+  nStr := 'select d_value from %s where d_Memo=''%s''';
+  nStr := Format(nStr, [sTable_SysDict,sFlag_HHJYServiceMIT]);
+  with FDM.QueryTemp(nStr) do
+  if RecordCount > 0 then
+  begin
+    gSysParam.FHHJYURL := Fields[0].AsString;
+  end;
+
   //----------------------------------------------------------------------------
   with gSysParam do
   begin

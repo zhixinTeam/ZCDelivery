@@ -25,16 +25,16 @@ inherited fFormOptions: TfFormOptions
     Caption = '('#35831#36755#20837#23567#25968#20540'.'#20363#22914#35823#24046'1%'#23601#26159'0.01)'
   end
   inherited dxLayout1: TdxLayoutControl
-    Width = 532
-    Height = 396
+    Width = 524
+    Height = 385
     inherited BtnOK: TButton
-      Left = 386
-      Top = 363
+      Left = 378
+      Top = 352
       TabOrder = 1
     end
     inherited BtnExit: TButton
-      Left = 456
-      Top = 363
+      Left = 448
+      Top = 352
       TabOrder = 2
     end
     object wPage: TcxPageControl [2]

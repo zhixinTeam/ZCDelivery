@@ -310,6 +310,13 @@ begin
   end;
   InitListView;
   gSysParam.FUserID := 'AICM';
+  {$IFDEF PrintHYEach}
+  PrintHY.Visible := True;
+  PrintHY.Checked := True;
+  {$ELSE}
+  PrintHY.Visible := False;
+  PrintHY.Checked := False;
+  {$ENDIF}
 end;
 
 procedure TfFormNewCard.LoadSingleOrder;
@@ -418,16 +425,19 @@ procedure TfFormNewCard.BtnOKClick(Sender: TObject);
 begin
   BtnOK.Enabled := False;
   try
-    if not SaveBillProxy then Exit;
+    if not SaveBillProxy then
+    begin
+      BtnOK.Enabled := True;
+      Exit;
+    end;
     Close;
-  finally
-    BtnOK.Enabled := True;
+  except
   end;
 end;
 
 function TfFormNewCard.SaveBillProxy: Boolean;
 var
-  nHint:string;
+  nHint, nHYDan, nWTDan:string;
   nList,nStocks: TStrings;
   nPrint,nInFact:Boolean;
   nBillData:string;
@@ -457,31 +467,24 @@ begin
     Exit;
   end;
 
-  nNewCardNo := '';
-  Fbegin := Now;
-
-  //连续三次读卡均失败，则回收卡片，重新发卡
-  for i := 0 to 3 do
+  {$IFDEF SyncDataByWSDL}
+  nHYDan := GetHhSaleWareNumberWSDL(nOrderItem.FYunTianOrderId, EditValue.Text, nHint);
+  if nHYDan = '' then
   begin
-    for nIdx:=0 to 3 do
-    begin
-      if gMgrK720Reader.ReadCard(nNewCardNo) then Break;
-      //连续三次读卡,成功则退出。
-    end;
-    if nNewCardNo<>'' then Break;
-    gMgrK720Reader.RecycleCard;
-  end;
-
-  if nNewCardNo = '' then
-  begin
-    ShowDlg('卡箱异常,请查看是否有卡.', sWarn, Self.Handle);
+    ShowMsg('获取批次号失败:' + nHint,sHint);
     Exit;
   end;
 
-  nNewCardNo := gMgrK720Reader.ParseCardNO(nNewCardNo);
-  WriteLog(nNewCardNo);
-  //解析卡片
-  writelog('TfFormNewCard.SaveBillProxy 发卡机读卡-耗时：'+InttoStr(MilliSecondsBetween(Now, FBegin))+'ms');
+  nWTDan := NewHhWTDetailWSDL(nOrderItem.FYunTianOrderId, EditTruck.Text,
+                                    EditValue.Text, nHint);
+  if nWTDan = '' then
+  begin
+    ShowMsg('生成派车单失败:' + nHint,sHint);
+    Exit;
+  end;
+  {$ENDIF}
+
+  nNewCardNo := '';
 
   //保存提货单
   nStocks := TStringList.Create;
@@ -507,6 +510,15 @@ begin
       Values['HYDan'] := '';
       Values['MaxMValue']    := '0';
       Values['WebOrderID'] := nWebOrderID;
+
+      {$IFDEF SyncDataByWSDL}
+        {$IFDEF BatchInHYOfBill}
+        Values['HYDan'] := nHYDan;
+        {$ELSE}
+        Values['Seal'] := nHYDan;
+        {$ENDIF}
+      Values['WT'] := nWTDan;
+      {$ENDIF}
     end;
     nBillData := PackerEncodeStr(nList.Text);
     FBegin := Now;
@@ -523,38 +535,22 @@ begin
 
   ShowMsg('提货单保存成功', sHint);
 
-  FBegin := Now;
-  nRet := SaveBillCard(nBillID,nNewCardNo);
-  if nRet then
+  //发卡
+  if not FSzttceApi.IssueOneCard(nNewCardNo) then
   begin
-    nRet := False;
-    for nIdx := 0 to 3 do
-    begin
-      nRet := gMgrK720Reader.SendReaderCmd('FC0');
-      if nRet then Break;
-    end;
-    //发卡
-  end;
-  if nRet then
-  begin
-    nHint := '商城订单号['+editWebOrderNo.Text+']发卡成功,卡号['+nNewCardNo+'],请收好您的卡片';
-    WriteLog(nHint);
-    ShowMsg(nHint,sWarn);
+    nHint := '出卡失败,请到开票窗口补办磁卡：[errorcode=%d,errormsg=%s]';
+    nHint := Format(nHint,[FSzttceApi.ErrorCode,FSzttceApi.ErrorMsg]);
+    ShowMsg(nHint,sHint);
   end
   else begin
-    gMgrK720Reader.RecycleCard;
-
-    nHint := '商城订单号['+editWebOrderNo.Text+'],卡号['+nNewCardNo+']关联订单失败，请到开票窗口重新关联。';
-    WriteLog(nHint);
-    ShowDlg(nHint,sHint,Self.Handle);
+    ShowMsg('发卡成功,卡号['+nNewCardNo+'],请收好您的卡片',sHint);
+    SaveBillCard(nBillID,nNewCardNo);
   end;
-  writelog('TfFormNewCard.SaveBillProxy 发卡机出卡并关联磁卡号-耗时：'+InttoStr(MilliSecondsBetween(Now, FBegin))+'ms');
 
   if nPrint then
     PrintBillReport(nBillID, True);
   //print report
-
-  if nRet then Close;
+  Result := True;
 end;
 
 function TfFormNewCard.SaveWebOrderMatch(const nBillID,

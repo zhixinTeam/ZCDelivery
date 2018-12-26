@@ -4,6 +4,7 @@
 *******************************************************************************}
 unit UFramePurchaseOrder;
 
+{$I Link.inc}
 interface
 
 uses
@@ -44,6 +45,8 @@ type
     N8: TMenuItem;
     N9: TMenuItem;
     N10: TMenuItem;
+    N11: TMenuItem;
+    N12: TMenuItem;
     procedure EditDatePropertiesButtonClick(Sender: TObject;
       AButtonIndex: Integer);
     procedure EditIDPropertiesButtonClick(Sender: TObject;
@@ -60,6 +63,8 @@ type
     procedure N7Click(Sender: TObject);
     procedure N9Click(Sender: TObject);
     procedure N10Click(Sender: TObject);
+    procedure N12Click(Sender: TObject);
+    procedure N11Click(Sender: TObject);
   private
     { Private declarations }
   protected
@@ -82,7 +87,8 @@ implementation
 {$R *.dfm}
 uses
   ULibFun, UMgrControl,UDataModule, UFrameBase, UFormBase, USysBusiness,
-  USysConst, USysDB, UFormDateFilter, UFormInputbox, ShellAPI, UFormWait;
+  USysConst, USysDB, UFormDateFilter, UFormInputbox, ShellAPI, UFormWait,
+  USysPopedom;
 
 //------------------------------------------------------------------------------
 class function TfFramePurchaseOrder.FrameID: integer;
@@ -97,6 +103,14 @@ begin
   FTimeE := Str2DateTime(Date2Str(Now) + ' 00:00:00');
 
   InitDateRange(Name, FStart, FEnd);
+
+  {$IFDEF SyncDataByDataBase}
+  N9.Visible := True;
+  N11.Visible := False;
+  N12.Visible := False;
+  {$ELSE}
+  N9.Visible := False;
+  {$ENDIF}
 end;
 
 procedure TfFramePurchaseOrder.OnDestroyFrame;
@@ -108,6 +122,18 @@ end;
 //Desc: 数据查询SQL
 function TfFramePurchaseOrder.InitFormDataSQL(const nWhere: string): string;
 begin
+  {$IFDEF SyncDataByWSDL}
+  if gPopedomManager.HasPopedom(PopedomItem, sPopedom_Edit) then
+  begin
+    N11.Visible := True;
+    N12.Visible := True;
+  end
+  else
+  begin
+    N11.Visible := False;
+    N12.Visible := False;
+  end;
+  {$ENDIF}
   EditDate.Text := Format('%s 至 %s', [Date2Str(FStart), Date2Str(FEnd)]);
 
   Result := 'Select oo.* From $OO oo ' ;
@@ -314,6 +340,10 @@ begin
         SQL.Text:=nSQL;
         Open;
       end;
+      nStr := '修改车牌号[ %s -> %s ].';
+      nStr := Format(nStr, [SQLQuery.FieldByName('O_Truck').AsString, nTruck]);
+      FDM.WriteSysLog(sFlag_BillItem, SQLQuery.FieldByName('O_ID').AsString, nStr, False);
+
       InitFormData(FWhere);
       ShowMsg('车牌号修改成功', sHint);
     end;
@@ -502,9 +532,84 @@ begin
     nSQL := Format(nSQL,[sTable_Order, nTruck, nStr]);
 
     FDM.ExecuteSQL(nSQL);
-    
+
+    nStr := '修改船号[ %s -> %s ].';
+    nStr := Format(nStr, [SQLQuery.FieldByName('O_Ship').AsString, nTruck]);
+    FDM.WriteSysLog(sFlag_BillItem, SQLQuery.FieldByName('O_ID').AsString, nStr, False);
+
     InitFormData(FWhere);
     ShowMsg('船号修改成功', sHint);
+  end;
+end;
+
+procedure TfFramePurchaseOrder.N12Click(Sender: TObject);
+var nStr: string;
+    nIdx: Integer;
+    nList: TStrings;
+    nP: TFormCommandParam;
+begin
+  if cxView1.DataController.GetSelectedCount < 1 then
+  begin
+    ShowMsg('请选择要编辑的记录', sHint); Exit;
+  end;
+
+  nList := TStringList.Create;
+  try
+    for nIdx := 0 to cxView1.DataController.RowCount - 1  do
+    begin
+      if GetVal(nIdx,'O_CType') <> sFlag_OrderCardG then
+      begin
+        ShowMsg('选择的记录中存在临时卡,请重新选择', sHint); Exit;
+      end;
+
+      nStr := GetVal(nIdx,'O_ID');
+      if nStr = '' then
+        Continue;
+
+      nList.Add(nStr);
+    end;
+
+    nP.FCommand := cCmd_EditData;
+    nP.FParamA := nList.Text;
+    CreateBaseFormItem(cFI_FormModifyStock, '', @nP);
+
+    if (nP.FCommand = cCmd_ModalResult) and (nP.FParamA = mrOK) then
+    begin
+      InitFormData(FWhere);
+    end;
+
+  finally
+    nList.Free;
+  end;
+end;
+
+procedure TfFramePurchaseOrder.N11Click(Sender: TObject);
+var nStr: string;
+    nList: TStrings;
+    nP: TFormCommandParam;
+begin
+  if cxView1.DataController.GetSelectedCount < 1 then
+  begin
+    ShowMsg('请选择要编辑的记录', sHint); Exit;
+  end;
+
+  nList := TStringList.Create;
+  try
+    nStr := SQLQuery.FieldByName('O_ID').AsString;
+
+    nList.Add(nStr);
+
+    nP.FCommand := cCmd_EditData;
+    nP.FParamA := nList.Text;
+    CreateBaseFormItem(cFI_FormModifyStock, '', @nP);
+
+    if (nP.FCommand = cCmd_ModalResult) and (nP.FParamA = mrOK) then
+    begin
+      InitFormData(FWhere);
+    end;
+
+  finally
+    nList.Free;
   end;
 end;
 

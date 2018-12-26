@@ -53,7 +53,7 @@ type
     //上次查询
     FTimeCounter: Integer;
     //计时
-
+    FSzttceApi:TSzttceApi;
     FHotKeyMgr: THotKeyManager;
     FHotKey: Cardinal;
 
@@ -153,6 +153,15 @@ begin
   except
   end;
 
+  FSzttceApi := TSzttceApi.Create;
+  if FSzttceApi.ErrorCode<>0 then
+  begin
+    nStr := '初始化自助发卡机失败，[ErrorCode=%d,ErrorMsg=%s]';
+    nStr := Format(nStr,[FSzttceApi.ErrorCode,FSzttceApi.ErrorMsg]);
+    ShowMsg(nStr,sHint);
+  end;
+  FSzttceApi.ParentWnd := Self.Handle;
+
   FHotKeyMgr := THotKeyManager.Create(Self);
   FHotKeyMgr.OnHotKeyPressed := DoHotKeyHotKeyPressed;
 
@@ -172,6 +181,7 @@ begin
     ActionComPort(True);
   except
   end;
+  FSzttceApi.Free;
   FHotKeyMgr.Free;
 end;
 
@@ -257,6 +267,7 @@ begin
     LabelNum.Caption := '开放道数:';
     LabelTon.Caption := '提货数量:';
     LabelHint.Caption := '请您刷卡';
+    if FCardType=ctttce then FSzttceApi.ResetMachine;
   end else
   begin
     LabelDec.Caption := IntToStr(FTimeCounter) + ' ';
@@ -575,6 +586,7 @@ begin
     if not Assigned(fFormNewCard) then
     begin
       fFormNewCard := TfFormNewCard.Create(nil);
+      fFormNewCard.SzttceApi := FSzttceApi;
       fFormNewCard.SetControlsClear;
     end;
     fFormNewCard.BringToFront;
@@ -589,6 +601,7 @@ begin
    if not Assigned(fFormNewPurchaseCard) then
     begin
       fFormNewPurchaseCard := TfFormNewPurchaseCard.Create(nil);
+      fFormNewPurchaseCard.SzttceApi := FSzttceApi;
       fFormNewPurchaseCard.SetControlsClear;
     end;
     fFormNewPurchaseCard.BringToFront;
@@ -657,7 +670,7 @@ begin
     Exit;
   end;
 
-  {try
+  try
     FTimeCounter := 10;
     TimerReadCard.Enabled := True;
 
@@ -676,7 +689,7 @@ begin
       LabelOrder.Caption := '采购订单: ' + FieldByName('o_bid').AsString;
       LabelTruck.Caption := '车牌号码: ' + FieldByName('o_Truck').AsString;
       LabelStock.Caption := '品种名称: ' + FieldByName('o_StockName').AsString;
-      LabelTon.Caption := '提货数量: ';
+      LabelTon.Caption := '采购数量: 以实际过磅为准';
     end;
     WriteLog('TfFormMain.QueryPorderinfo(nCard='''+nCard+''')查询采购单['+nStr+']-耗时：'+InttoStr(MilliSecondsBetween(Now, FBegin))+'ms');
     FLastQuery := GetTickCount;
@@ -687,7 +700,7 @@ begin
       ShowMsg('查询失败', sHint);
       WriteLog(E.Message);
     end;
-  end;}
+  end;
 end;
 
 end.

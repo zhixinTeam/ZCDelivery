@@ -423,6 +423,7 @@ begin
       Clear;
       Values['Order']      := FieldByName('O_Order').AsString;
       Values['StockName']  := Trim(FieldByName('O_StockName').AsString);
+      Values['CusID']  := Trim(FieldByName('O_CusID').AsString);
       Values['CusName']  := Trim(FieldByName('O_CusName').AsString);
       Values['O_CusPY']    := FieldByName('O_CusPY').AsString;
       Values['Company']      := FieldByName('O_Company').AsString;
@@ -432,6 +433,9 @@ begin
            Values['Type'] := sFlag_Dai
       else Values['Type'] := sFlag_San;
 
+      {$IFDEF SyncDataByWSDL}
+      Values['ConsignCusName']       := FieldByName('O_ConsignCusName').AsString;
+      {$ENDIF}
     end;
   end;
 
@@ -480,6 +484,7 @@ begin
 
   if Pos(nPreFix,FListB.Values['Order']) <= 0 then
   begin
+    {$IFDEF SyncDataByDataBase}
     if not TWorkerBusinessCommander.CallMe(cBC_GetStockBatcode,
        FListB.Text, FListA.Values['Value'], @nOut) then
       raise Exception.Create(nOut.FData);
@@ -501,6 +506,7 @@ begin
     if nOut.FData <> '' then
       FListA.Values['Seal'] := nOut.FData;
     //auto batcode
+    {$ENDIF}
     {$ENDIF}
   end
   else
@@ -528,7 +534,7 @@ begin
             SF('L_ZhiKa',      FListA.Values['ZhiKa']),
             SF('L_Order',      FListA.Values['ZhiKa']),
             SF('L_Area',       FListA.Values['Area']),
-            SF('L_CusID',      ''),
+            SF('L_CusID',      FListB.Values['CusID']),
             SF('L_CusName',    FListB.Values['CusName']),
             SF('L_CusPY',      FListB.Values['O_CusPY']),
 
@@ -545,6 +551,10 @@ begin
             {$IFDEF PrintHYEach}
             SF('L_PrintHY',     FListA.Values['PrintHY']),
             {$ENDIF} //随车打印化验单
+
+            {$IFDEF SyncDataByWSDL}
+            SF('L_ConsignCusName',    FListB.Values['ConsignCusName']),
+            {$ENDIF}
 
             SF('L_Truck',       FListA.Values['Truck']),
             SF('L_Phone',       FListA.Values['Phone']),
@@ -641,6 +651,14 @@ begin
       gDBConnManager.WorkerExec(FDBConn, nStr);
       //freeze
     end;
+
+    nSQL := MakeSQLByStr([
+          SF('H_ID'   , FOut.FData),
+          SF('H_Order' , FListA.Values['ZhiKa']),
+          SF('H_Status' , '0'),
+          SF('H_BillType'   , sFlag_Sale)
+          ], sTable_HHJYSync, '', True);
+    gDBConnManager.WorkerExec(FDBConn, nSQL);
 
     FDBConn.FConn.CommitTrans;
     Result := True;
@@ -2129,6 +2147,20 @@ begin
     nSQL := 'Delete From %s Where T_Bill In (%s)';
     nSQL := Format(nSQL, [sTable_ZTTrucks, nStr]);
     FListA.Add(nSQL); //清理装车队列
+
+    {$IFDEF SyncDataByWSDL}
+    for nIdx:=Low(nBills) to High(nBills) do
+    with nBills[nIdx] do
+    begin
+      nSQL := MakeSQLByStr([
+            SF('H_ID'   , FID),
+            SF('H_Order' , FZhiKa),
+            SF('H_Status' , '1'),
+            SF('H_BillType'   , sFlag_Sale)
+            ], sTable_HHJYSync, '', True);
+      FListA.Add(nSQL);
+    end;
+    {$ENDIF}
   end;
 
   //----------------------------------------------------------------------------
@@ -2192,6 +2224,7 @@ begin
     end;
   end;
 
+  {$IFDEF SyncDataByDataBase}
   if FIn.FExtParam = sFlag_TruckOut then //出厂上传明细
   begin
     for nIdx:=Low(nBills) to High(nBills) do
@@ -2201,7 +2234,7 @@ begin
         Continue;
       if FYSValid = sFlag_Yes then//空车出厂不上传
         Continue;
-      if not TWorkerBusinessCommander.CallMe(cBC_SyncHhSaleDetai,
+      if not TWorkerBusinessCommander.CallMe(cBC_SyncHhSaleDetail,
               FID, '', @nOut) then
       begin
         nStr := '销售提货单号[ %s ]上传失败.';
@@ -2210,7 +2243,7 @@ begin
       end;
     end;
   end;
-
+  {$ENDIF}
 end;
 
 initialization

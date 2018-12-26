@@ -306,6 +306,48 @@ function GetSaleOrderDoneValue(const nOID: string): string;
 //查询外运业务完成量
 function GetSaleOrderFreezeValue(const nOID: string): string;
 //查询外运业务冻结量
+function CheckTruckCard(const nTruck: string; var nLID: string): Boolean;
+//检查车辆是否存在未注销磁卡的提货单(针对外运业务)
+function IsOtherOrder(const nItem: TLadingBillItem): Boolean;
+ //检查是否为临时订单
+function IsTruckTimeOut(const nLID: string): Boolean;
+//验证车辆是否出厂超时
+function GetEventDept: string;
+//获取过磅事件推送部门
+
+//=====================================================================
+function SyncPProviderWSDL(const nProID: string): Boolean;
+//同步ERP采购供应商
+function GetHhOrderPlanWSDL(const nStr: string): string;
+//获取ERP采购进厂计划
+function GetHhSaleWTTruckWSDL(const nStr: string): string;
+//获取ERP委托车辆
+function SyncHhOrderDataWSDL(const nDID: string): Boolean;
+//同步ERP采购磅单
+function GetHhNeiDaoOrderPlanWSDL(const nStr: string): string;
+//获取ERP采购内倒进厂计划
+function SyncHhNdOrderDataWSDL(const nDID: string): Boolean;
+//同步ERP内倒采购磅单
+function SyncHhOtherOrderDataWSDL(const nDID: string): Boolean;
+//同步ERP备品备件采购磅单
+function GetHhSalePlanWSDL(const nWhere, nFactoryName: string): Boolean;
+//获取ERP销售计划
+function SyncSMaterailWSDL(const nMID: string): Boolean;
+//获取ERP销售物料
+function SyncSCustomerWSDL(const nCusID: string): Boolean;
+//Desc: 同步ERP销售客户
+function SyncHhSaleDetailWSDL(const nDID: string): Boolean;
+//Desc: 同步ERP销售明细
+function GetHhSaleWareNumberWSDL(const nOrder, nValue: string;
+                                 var nHint: string): string;
+//Desc: 获取批次号
+function PoundVerifyHhSalePlanWSDL(const nLID: string; nValue: Double;
+                                   nPriceDate:string; var nHint: string): Boolean;
+//===================================================================
+function GetCusID(const nCusName :string): string;
+function IsMulMaoStock(const nStockNo :string): Boolean;
+function IsAsternStock(const nStockName :string): Boolean;
+
 implementation
 
 //Desc: 记录日志
@@ -501,6 +543,41 @@ begin
     //close hint param
     
     nWorker := gBusinessWorkerManager.LockWorker(sCLI_BusinessWebchat);
+    //get worker
+    Result := nWorker.WorkActive(@nIn, nOut);
+
+    if not Result then
+      WriteLog(nOut.FBase.FErrDesc);
+    //xxxxx
+  finally
+    gBusinessWorkerManager.RelaseWorker(nWorker);
+  end;
+end;
+
+//Date: 2017-10-26
+//Parm: 命令;数据;参数;服务地址;输出
+//Desc: 调用中间件上的销售单据对象
+function CallBusinessHHJY(const nCmd: Integer; const nData,nExt,nSrvURL: string;
+  const nOut: PWorkerHHJYData; const nWarn: Boolean = True): Boolean;
+var nIn: TWorkerHHJYData;
+    nWorker: TBusinessWorkerBase;
+begin
+  nWorker := nil;
+  try
+    nIn.FCommand := nCmd;
+    nIn.FData := nData;
+    nIn.FExtParam := nExt;
+    nIn.FRemoteUL := nSrvURL;
+
+    if nWarn then
+         nIn.FBase.FParam := ''
+    else nIn.FBase.FParam := sParam_NoHintOnError;
+
+    if gSysParam.FAutoPound and (not gSysParam.FIsManual) then
+      nIn.FBase.FParam := sParam_NoHintOnError;
+    //close hint param
+
+    nWorker := gBusinessWorkerManager.LockWorker(sCLI_BusinessHHJY);
     //get worker
     Result := nWorker.WorkActive(@nIn, nOut);
 
@@ -856,7 +933,7 @@ begin
 
   nStr := 'Select * From %s Where E_ID=''%s''';
   nStr := Format(nStr, [sTable_ManualEvent, nEID]);
-  
+
   with FDM.QuerySQL(nStr) do
   if RecordCount > 0 then
   begin
@@ -903,7 +980,7 @@ begin
     nStr := Trim(FieldByName('E_Result').AsString);
     if nStr = '' then
     begin
-      nHint := FieldByName('E_Event').AsString;
+//      nHint := FieldByName('E_Event').AsString;
       Exit;
     end;
 
@@ -1450,7 +1527,7 @@ end;
 //------------------------------------------------------------------------------
 //获取客户注册信息
 function getCustomerInfo(const nData: string): string;
-var nOut: TWorkerBusinessCommand;
+var nOut: TWorkerWebChatData;
 begin
   if CallBusinessWechat(cBC_WX_getCustomerInfo, nData, '', '', @nOut) then
        Result := nOut.FData
@@ -1477,7 +1554,7 @@ end;
 
 //新增商城用户
 function edit_shopclients(const nData: string): string;
-var nOut: TWorkerBusinessCommand;
+var nOut: TWorkerWebChatData;
 begin
   if CallBusinessWechat(cBC_WX_edit_shopclients, nData, '', '', @nOut) then
        Result := nOut.FData
@@ -2499,7 +2576,7 @@ end;
 function SyncHhSaleDetail(const nDID: string): Boolean;
 var nOut: TWorkerBusinessCommand;
 begin
-  Result := CallBusinessCommand(cBC_SyncHhSaleDetai, nDID, '', @nOut);
+  Result := CallBusinessCommand(cBC_SyncHhSaleDetail, nDID, '', @nOut);
 end;
 
 //Desc: 获取毛重限值
@@ -2633,26 +2710,20 @@ begin
   with FDM.QueryTemp(nStr) do
   begin
     if RecordCount <= 0 then
+    begin
+      WriteLog('查询商城申请单失败:' + nStr);
       Exit;
+    end;
     //手工单
     nWebOrderID := Fields[0].AsString;
   end;
 
-  nBool := FDM.ADOConn.InTransaction;
-  if not nBool then FDM.ADOConn.BeginTrans;
-  try
-    nStr := 'Insert Into %s(WOM_WebOrderID,WOM_LID,WOM_StatusType,' +
-            'WOM_MsgType,WOM_BillType) Values(''%s'',''%s'',%d,' +
-            '%d,''%s'')';
-    nStr := Format(nStr, [sTable_WebOrderMatch, nWebOrderID, nLID, c_WeChatStatusDeleted,
-            cSendWeChatMsgType_DelBill, nBillType]);
-    FDM.ExecuteSQL(nStr);
-
-    if not nBool then
-      FDM.ADOConn.CommitTrans;
-  except
-    if not nBool then FDM.ADOConn.RollbackTrans;
-  end;
+  nStr := 'Insert Into %s(WOM_WebOrderID,WOM_LID,WOM_StatusType,' +
+          'WOM_MsgType,WOM_BillType) Values(''%s'',''%s'',%d,' +
+          '%d,''%s'')';
+  nStr := Format(nStr, [sTable_WebOrderMatch, nWebOrderID, nLID, c_WeChatStatusDeleted,
+          cSendWeChatMsgType_DelBill, nBillType]);
+  FDM.ExecuteSQL(nStr);
 end;
 
 function GetMinNetValue: Double;
@@ -2737,6 +2808,370 @@ begin
   begin
     Result := Fields[0].AsString;
   end;
+end;
+
+//Desc: 检查车辆是否存在未注销磁卡的提货单(针对外运业务)
+function CheckTruckCard(const nTruck: string; var nLID: string): Boolean;
+var nStr: string;
+begin
+  Result := True;
+
+  nStr := 'Select L_Card, L_ID From %s Where L_Truck=''%s''';
+  nStr := Format(nStr, [sTable_Bill, nTruck]);
+
+  with FDM.QueryTemp(nStr) do
+  if RecordCount > 0 then
+  begin
+
+    First;
+
+    while not Eof do
+    begin
+      if Length(Fields[0].AsString) > 0 then
+      begin
+        nLID := Fields[1].AsString;
+        Result := False;
+        Exit;
+      end;
+      Next;
+    end;
+  end;
+end;
+
+//Desc: 检查是否为临时订单
+function IsOtherOrder(const nItem: TLadingBillItem): Boolean;
+var nStr,nPreFix: string;
+begin
+  Result := False;
+
+  nPreFix := 'WY';
+  nStr := 'Select B_Prefix From %s ' +
+          'Where B_Group=''%s'' And B_Object=''%s''';
+  nStr := Format(nStr, [sTable_SerialBase, sFlag_BusGroup, sFlag_SaleOrderOther]);
+
+  with FDM.QueryTemp(nStr) do
+  if RecordCount > 0 then
+  begin
+    nPreFix := Fields[0].AsString;
+  end;
+
+  if Pos(nPreFix,nItem.FZhiKa) <= 0 then
+    Exit;
+
+  Result := True;
+end;
+
+//Date: 2018-04-03
+//Parm: 提货单号
+//Desc: 验证车辆是否出厂超时
+function IsTruckTimeOut(const nLID: string): Boolean;
+var nOut: TWorkerBusinessCommand;
+begin
+  Result := CallBusinessCommand(cBC_TruckTimeOut, nLID, '', @nOut);
+  //xxxxx
+end;
+
+function GetEventDept: string;
+var nStr: string;
+begin
+  Result := sFlag_DepDaTing;//init
+
+  nStr := 'Select D_Value From $Table ' +
+          'Where D_Name=''$Name'' and D_Memo=''$Memo''';
+  nStr := MacroValue(nStr, [MI('$Table', sTable_SysDict),
+                            MI('$Name', sFlag_SysParam),
+                            MI('$Memo', sFlag_EventDept)]);
+  //xxxxx
+
+  with FDM.QueryTemp(nStr) do
+  begin
+    if RecordCount > 0 then
+      Result := Fields[0].AsString;
+  end;
+end;
+
+
+//Date: 2018-02-06
+//Parm: 供应商ID
+//Desc: 同步ERP采购供应商
+function SyncPProviderWSDL(const nProID: string): Boolean;
+var nOut: TWorkerHHJYData;
+begin
+  Result := CallBusinessHHJY(cBC_SyncHhProvider, nProID, '', '', @nOut, False);
+end;
+
+//Date: 2018-02-06
+//Parm: 供应商,物料,计划年月
+//Desc: 获取ERP采购进厂计划
+function GetHhOrderPlanWSDL(const nStr: string): string;
+var nOut: TWorkerHHJYData;
+begin
+  if CallBusinessHHJY(cBC_GetHhOrderPlan, nStr, '', '', @nOut) then
+    Result := nOut.FData
+  else Result := '';
+end;
+
+//Date: 2018-03-23
+//Parm: 客户ID,公司ID,物料ID,包装类型ID
+//Desc: 获取ERP委托车辆
+function GetHhSaleWTTruckWSDL(const nStr: string): string;
+var nOut: TWorkerHHJYData;
+begin
+  if CallBusinessHHJY(cBC_SyncHhSaleWTTruck, nStr, '', '', @nOut) then
+    Result := nOut.FData
+  else Result := '';
+end;
+
+//Date: 2018-02-08
+//Parm: 物料,计划年月
+//Desc: 获取ERP采购内倒进厂计划
+function GetHhNeiDaoOrderPlanWSDL(const nStr: string): string;
+var nOut: TWorkerHHJYData;
+begin
+  if CallBusinessHHJY(cBC_GetHhNeiDaoOrderPlan, nStr, '', '', @nOut) then
+    Result := nOut.FData
+  else Result := '';
+end;
+
+//Date: 2018-02-06
+//Parm: 采购明细ID
+//Desc: 同步ERP采购磅单
+function SyncHhOrderDataWSDL(const nDID: string): Boolean;
+var nOut: TWorkerHHJYData;
+begin
+  Result := CallBusinessHHJY(cBC_SyncHhOrderPoundData, nDID, '', '', @nOut);
+end;
+
+//Date: 2018-02-08
+//Parm: 磅单ID
+//Desc: 同步ERP内倒采购磅单
+function SyncHhNdOrderDataWSDL(const nDID: string): Boolean;
+var nOut: TWorkerHHJYData;
+begin
+  Result := CallBusinessHHJY(cBC_SyncHhNdOrderPoundData, nDID, '', '', @nOut);
+end;
+
+//Date: 2018-03-06
+//Parm: 磅单ID
+//Desc: 同步ERP备品备件采购磅单
+function SyncHhOtherOrderDataWSDL(const nDID: string): Boolean;
+var nOut: TWorkerHHJYData;
+begin
+  Result := CallBusinessHHJY(cBC_SyncHhOtOrderPoundData, nDID, '', '', @nOut);
+end;
+
+//Date: 2018-03-07
+//Parm: 生产厂名称
+//Desc: 获取ERP销售计划
+function GetHhSalePlanWSDL(const nWhere, nFactoryName: string): Boolean;
+var nOut: TWorkerHHJYData;
+begin
+  Result := CallBusinessHHJY(cBC_GetHhSalePlan, nWhere, nFactoryName, '', @nOut, False);
+end;
+
+//Date: 2018-03-07
+//Desc: 获取ERP销售物料
+function SyncSMaterailWSDL(const nMID: string): Boolean;
+var nOut: TWorkerHHJYData;
+begin
+  Result := CallBusinessHHJY(cBC_SyncHhSaleMateriel, nMID, '', '', @nOut, False);
+end;
+
+//Date: 2018-03-08
+//Parm: 客户ID
+//Desc: 同步ERP销售客户
+function SyncSCustomerWSDL(const nCusID: string): Boolean;
+var nOut: TWorkerHHJYData;
+begin
+  Result := CallBusinessHHJY(cBC_SyncHhCustomer, nCusID, '', '', @nOut, False);
+end;
+
+//Date: 2018-03-13
+//Parm: 提货ID
+//Desc: 同步ERP销售明细
+function SyncHhSaleDetailWSDL(const nDID: string): Boolean;
+var nOut: TWorkerHHJYData;
+begin
+  Result := CallBusinessHHJY(cBC_SyncHhSaleDetail, nDID, '', '', @nOut);
+end;
+
+//Date: 2018-03-13
+//Parm: 提货ID
+//Desc: 获取批次号
+function GetHhSaleWareNumberWSDL(const nOrder, nValue: string;
+                                 var nHint: string): string;
+var nOut: TWorkerHHJYData;
+    nStr: string;
+    nList: TStrings;
+    nEID, nEvent, nStockName, nStockType: string;
+begin
+  Result := '';
+  nHint := '';
+  nList := TStringList.Create;
+
+  try
+    nStr := 'Select O_FactoryID, O_StockID, O_PackingID, O_StockName,' +
+            ' O_STockType From %s Where O_Order =''%s'' ';
+    nStr := Format(nStr, [sTable_SalesOrder, nOrder]);
+
+    with FDM.QueryTemp(nStr) do
+    if RecordCount > 0 then
+    begin
+      nList.Values['FactoryID'] := Fields[0].AsString;
+      nList.Values['StockID']   := Fields[1].AsString;
+      nList.Values['PackingID'] := Fields[2].AsString;
+      nStockName := Fields[3].AsString;
+      nStockType := Fields[4].AsString;
+
+      nStr := PackerEncodeStr(nList.Text);
+      if CallBusinessHHJY(cBC_GetHhSaleWareNumber, nStr, '', '', @nOut, False) then
+      begin
+        nStr := PackerDecodeStr(nOut.FData);
+        nList.Clear;
+        nList.Text := nStr;
+        try
+          if IsNumber(nList.Values['FAmount'], True) and
+             IsNumber(nList.Values['FDeliveryAmount'], True) then
+          begin
+            if StrToFloat(nList.Values['FAmount']) -
+               StrToFloat(nList.Values['FDeliveryAmount']) -
+               StrToFloat(nValue) >= 0 then
+            begin
+              Result := nList.Values['FWareNumber'];
+            end;
+          end;
+        except
+        end;
+      end
+      else
+      begin
+        nHint := PackerDecodeStr(nOut.FData);
+      end;
+    end
+    else
+    begin
+      nHint := '订单[ %s ]不存在';
+      nHint := Format(nHint,[nOrder]);
+      Exit;
+    end;
+
+    if Result = '' then
+    begin
+      nEID := nList.Values['FactoryID'] +
+              nList.Values['StockID'] +
+              nList.Values['PackingID'];
+
+      nStr := 'Delete From %s Where E_ID=''%s''';
+      nStr := Format(nStr, [sTable_ManualEvent, nEID]);
+
+      FDM.ExecuteSQL(nStr);
+
+      nEvent := '水泥品种[ %s ]的批次编号已用尽,请化验室尽快补录';
+      nEvent := Format(nEvent,[nStockname + nStockType]);
+
+      nStr := MakeSQLByStr([
+          SF('E_ID', nEID),
+          SF('E_Key', ''),
+          SF('E_From', sFlag_DepDaTing),
+          SF('E_Event', nEvent),
+          SF('E_Solution', sFlag_Solution_OK),
+          SF('E_Departmen', sFlag_DepHauYanShi),
+          SF('E_Date', sField_SQLServer_Now, sfVal)
+          ], sTable_ManualEvent, '', True);
+      FDM.ExecuteSQL(nStr);
+    end;
+  finally
+    nList.Free;
+  end;
+end;
+
+//Date: 2018-03-13
+//Parm: 提货ID
+//Desc: 获取批次号
+function PoundVerifyHhSalePlanWSDL(const nLID: string; nValue: Double;
+                                   nPriceDate:string;
+                                 var nHint: string): Boolean;
+var nOut: TWorkerHHJYData;
+    nStr: string;
+    nList: TStrings;
+begin
+  Result := False;
+  nHint := '';
+  nList := TStringList.Create;
+
+  try
+    if not CallBusinessHHJY(cBC_IsHhSaleDetailExits
+           ,PackerEncodeStr(nLID),'','',@nOut) then
+    begin
+      nHint := '获取提货单[ %s ]提货ID失败,请尝试重新上传提货单.';
+      nHint := Format(nHint, [nLID]);
+      Exit;
+    end;
+    nList.Text := PackerDecodeStr(nOut.FData);
+
+    if not IsNumber(nList.Values['FGoodsPrice'], True) then
+    begin
+      nHint := '获取提货单[ %s ]单价[ %s ]异常,请核对.';
+      nHint := Format(nHint, [nLID, nList.Values['FGoodsPrice']]);
+      Exit;
+    end;
+
+    nList.Values['FPriceDate'] := nPriceDate;
+    nList.Values['FPoundValue'] := FloatToStr(nValue);
+    nList.Values['FMoney'] := Format('%.2f', [StrToFloat(nList.Values['FGoodsPrice'])
+                                              * nValue]);
+
+    nStr := PackerEncodeStr(nList.Text);
+    if  not CallBusinessHHJY(cBC_PoundVerifyHhSalePlan, nStr, '', '', @nOut, False) then
+    begin
+      nHint := '提货单[ %s ]重车过磅校验失败.原因为:[ 账户资金不足 ]';
+      nHint := Format(nHint, [nLID]);
+      Exit;
+    end;
+    Result := True;
+  finally
+    nList.Free;
+  end;
+end;
+
+
+function GetCusID(const nCusName :string): string;
+var nStr: string;
+begin
+  Result := '';
+  nStr := 'Select top 1 C_ID From %s Where C_Name =''%s'' order by R_ID desc ';
+  nStr := Format(nStr, [sTable_Customer, nCusName]);
+
+  with FDM.QueryTemp(nStr) do
+  if RecordCount > 0 then
+    Result := Fields[0].AsString;
+  //xxxxx
+end;
+
+function IsMulMaoStock(const nStockNo :string): Boolean;
+var nStr: string;
+begin
+  Result := False;
+  nStr := 'Select D_Value From %s Where D_Name=''%s'' and D_Value=''%s'' ';
+  nStr := Format(nStr, [sTable_SysDict, sFlag_PoundMultiM, nStockNo]);
+
+  with FDM.QueryTemp(nStr) do
+  if RecordCount > 0 then
+    Result := True;
+  //xxxxx
+end;
+
+function IsAsternStock(const nStockName :string): Boolean;
+var nStr: string;
+begin
+  Result := False;
+  nStr := 'Select D_Value From %s Where D_Name=''%s'' and D_Value=''%s'' ';
+  nStr := Format(nStr, [sTable_SysDict, sFlag_PoundAsternM, nStockName]);
+
+  with FDM.QueryTemp(nStr) do
+  if RecordCount > 0 then
+    Result := True;
+  //xxxxx
 end;
 
 end.

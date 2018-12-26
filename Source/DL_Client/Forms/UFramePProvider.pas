@@ -149,11 +149,19 @@ end;
 
 procedure TfFrameProvider.N1Click(Sender: TObject);
 begin
+  {$IFDEF SyncDataByWSDL}
+  if not SyncPProviderWSDL('') then
+  begin
+    ShowMsg('同步失败',sHint);
+    Exit;
+  end;
+  {$ELSE}
   if not SyncPProvider('') then
   begin
     ShowMsg('同步失败',sHint);
     Exit;
   end;
+  {$ENDIF}
   ShowMsg('同步完成',sHint);
   InitFormData('');
 end;

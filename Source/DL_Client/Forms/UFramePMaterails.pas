@@ -259,11 +259,13 @@ end;
 
 procedure TfFrameMaterails.N7Click(Sender: TObject);
 begin
+  {$IFDEF SyncDataByDataBase}
   if not SyncPMaterail('') then
   begin
     ShowMsg('同步失败',sHint);
     Exit;
   end;
+  {$ENDIF}
   ShowMsg('同步完成',sHint);
   InitFormData('');
 end;

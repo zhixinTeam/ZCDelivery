@@ -4,6 +4,7 @@
 *******************************************************************************}
 unit UFormHYStock;
 
+{$I Link.inc}
 interface
 
 uses
@@ -255,10 +256,17 @@ begin
     nIni.Free;
   end;
 
+  {$IFDEF SyncDataByWSDL}
+  if not SyncSMaterailWSDL('') then
+  begin
+    ShowMsg('同步ERP销售物料失败',sHint);
+  end;
+  {$ELSE}
   if not SyncSMaterail('') then
   begin
     ShowMsg('同步ERP销售物料失败',sHint);
   end;
+  {$ENDIF}
 end;
 
 procedure TfFormHYStock.FormClose(Sender: TObject;

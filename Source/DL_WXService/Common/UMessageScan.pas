@@ -327,6 +327,7 @@ begin
         FListB.Values['StockName']  := FieldByName('L_StockName').AsString;
         FListB.Values['CusName']    := FieldByName('L_CusName').AsString;
         FListB.Values['Value']      := FieldByName('L_Value').AsString;
+        FListB.Values['WOM_WebOrderID'] := nList.Values['WOM_WebOrderID'];
 
         nStr := PackerEncodeStr(FListB.Text);
 
@@ -408,6 +409,7 @@ begin
         FListB.Values['StockName']  := FieldByName('D_StockName').AsString;
         FListB.Values['CusName']    := FieldByName('D_ProName').AsString;
         FListB.Values['Value']      := FieldByName('D_Value').AsString;
+        FListB.Values['WOM_WebOrderID'] := nList.Values['WOM_WebOrderID'];
 
         nStr := PackerEncodeStr(FListB.Text);
 
