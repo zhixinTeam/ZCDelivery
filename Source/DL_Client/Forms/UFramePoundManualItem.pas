@@ -894,7 +894,7 @@ begin
       Exit;
     end;
 
-    nNet := GetTruckEmptyValue(FUIData.FTruck);
+    nNet := GetTruckEmptyValue(FUIData.FTruck, FUIData.FType);
     nVal := nNet * 1000 - FUIData.FPData.FValue * 1000;
 
     if (nNet > 0) and (Abs(nVal) > gSysParam.FPoundSanF) then

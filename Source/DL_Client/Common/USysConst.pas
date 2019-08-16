@@ -68,6 +68,9 @@ const
   cFI_FrameWXSendLog    = $0074;                     //发送日志
   cFI_FramePoundQueryOther=$0075;                    //矿山外运磅单查询
 
+  cFI_FrameTruckXz      = $0076;                     //车辆限载管理
+  cFI_FramePMaterailControl= $0077;                  //原材料进厂控制
+
   cFI_FormMemo          = $1000;                     //备注窗口
   cFI_FormBackup        = $1001;                     //数据备份
   cFI_FormRestore       = $1002;                     //数据恢复
@@ -75,6 +78,7 @@ const
   cFI_FormChangePwd     = $1005;                     //修改密码
   cFI_FormOptions       = $1006;                     //参数选项
   cFI_FormOutOverTime   = $1007;                     //出厂超时
+  cFI_FormSnapTruckSet  = $1203;                     //设置车牌识别启用停用
 
   cFI_FormBaseInfo      = $1017;                     //基本信息
   cFI_FormCustomer      = $1018;                     //客户资料
@@ -132,6 +136,10 @@ const
   cFI_FormSaleModifyStock = $1088;                   //销售修改物料
   cFI_FormSaleKwOther   = $1089;                     //销售勘误(外运业务)
   cFI_FormSaleBuDanOther= $1090;                     //销售补单(外运业务)
+
+  cFI_FormTruckXz       = $1091;                     //车辆限载管理
+  cFI_FormSaleModifyStockMul = $1092;                //矿山外运批量修改物料
+  cFI_FormPMaterailControl= $1093;                   //原材料进厂控制
 
   {*Command*}
   cCmd_RefreshData      = $0002;                     //刷新数据
@@ -294,6 +302,7 @@ begin
   AddMenuModuleItem('MAIN_A08', cFI_FormTodo, mtForm);
   AddMenuModuleItem('MAIN_A09', cFI_FrameTodo);
   AddMenuModuleItem('MAIN_A10', cFI_FormOutOverTime, mtForm);
+  AddMenuModuleItem('MAIN_A14', cFI_FormSnapTruckSet, mtForm);
 
   AddMenuModuleItem('MAIN_B01', cFI_FormBaseInfo, mtForm);
   AddMenuModuleItem('MAIN_B02', cFI_FrameCustomer);
@@ -301,6 +310,8 @@ begin
   AddMenuModuleItem('MAIN_B04', cFI_FrameTrucks);
   AddMenuModuleItem('MAIN_B05', cFI_FrameUnloading);
   AddMenuModuleItem('MAIN_B06', CFI_FormSearchCard, mtForm);
+  AddMenuModuleItem('MAIN_B07', cFI_FrameTruckXz);
+  AddMenuModuleItem('MAIN_B08', cFI_FramePMaterailControl);
 
   AddMenuModuleItem('MAIN_D02', cFI_FrameMakeCard);
   AddMenuModuleItem('MAIN_D03', cFI_FormBill, mtForm);

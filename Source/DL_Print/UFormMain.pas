@@ -259,8 +259,9 @@ begin
   nHint := '';
   Result := False;
   
-  nStr := 'Select *,%s As L_ValidMoney From %s Where L_ID=''%s''';
-  nStr := Format(nStr, [nMoney, sTable_Bill, nBill]);
+  nStr := 'Select *,%s As L_ValidMoney From %s Left Join %s on C_ID=L_CusID ' +
+          ' Where L_ID=''%s''';
+  nStr := Format(nStr, [nMoney, sTable_Bill, sTable_Customer, nBill]);
 
   nDS := FDM.SQLQuery(nStr, FDM.SQLQuery1);
   if not Assigned(nDS) then Exit;

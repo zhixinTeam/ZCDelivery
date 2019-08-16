@@ -9,7 +9,7 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, cxGraphics, cxControls, cxLookAndFeels, cxLookAndFeelPainters,
-  cxContainer, cxEdit, cxLabel, ExtCtrls, CPort, StdCtrls, Buttons,Uszttce_api,
+  cxContainer, cxEdit, cxLabel, ExtCtrls, CPort, StdCtrls, Buttons,
   UHotKeyManager,uReadCardThread;
 
 type
@@ -53,7 +53,6 @@ type
     //上次查询
     FTimeCounter: Integer;
     //计时
-    FSzttceApi:TSzttceApi;
     FHotKeyMgr: THotKeyManager;
     FHotKey: Cardinal;
 
@@ -84,7 +83,7 @@ implementation
 uses
   IniFiles, ULibFun, CPortTypes, USysLoger, USysDB, USmallFunc, UDataModule,
   UFormConn, uZXNewCard,USysConst,UClientWorker,UMITPacker,USysModule,USysBusiness,
-  UDataReport,UFormInputbox,UFormBarcodePrint,uZXNewPurchaseCard,
+  UDataReport,UFormInputbox,UFormBarcodePrint,uZXNewPurchaseCard, uZXHyPrint,
   UFormBase,DateUtils;
 
 type
@@ -153,15 +152,6 @@ begin
   except
   end;
 
-  FSzttceApi := TSzttceApi.Create;
-  if FSzttceApi.ErrorCode<>0 then
-  begin
-    nStr := '初始化自助发卡机失败，[ErrorCode=%d,ErrorMsg=%s]';
-    nStr := Format(nStr,[FSzttceApi.ErrorCode,FSzttceApi.ErrorMsg]);
-    ShowMsg(nStr,sHint);
-  end;
-  FSzttceApi.ParentWnd := Self.Handle;
-
   FHotKeyMgr := THotKeyManager.Create(Self);
   FHotKeyMgr.OnHotKeyPressed := DoHotKeyHotKeyPressed;
 
@@ -172,7 +162,6 @@ begin
   begin
     FDR := TFDR.Create(Application);
   end;
-  imgPrint.Visible := False;
 end;
 
 procedure TfFormMain.FormClose(Sender: TObject; var Action: TCloseAction);
@@ -181,7 +170,6 @@ begin
     ActionComPort(True);
   except
   end;
-  FSzttceApi.Free;
   FHotKeyMgr.Free;
 end;
 
@@ -267,7 +255,6 @@ begin
     LabelNum.Caption := '开放道数:';
     LabelTon.Caption := '提货数量:';
     LabelHint.Caption := '请您刷卡';
-    if FCardType=ctttce then FSzttceApi.ResetMachine;
   end else
   begin
     LabelDec.Caption := IntToStr(FTimeCounter) + ' ';
@@ -298,6 +285,15 @@ begin
     WriteLog('ComPort1RxChar:'+ParseCardNO(nStr, True));
     FCardType := ctRFID;
     nCardno := ParseCardNO(nStr, True);
+
+    if Assigned(fFormZXHyPrint) then
+    begin
+      gCard := nCardNo;
+      PostMessage( fFormZXHyPrint.Handle , WM_HAVE_Card , 1 , 0 ) ;
+      Exit;
+    end
+    else
+      gCard := '';
     nSql := 'select * from %s where c_card=''%s''';
     nSql := Format(nSql,[sTable_Card,nCardno]);
     with FDM.QuerySQL(nSql) do
@@ -536,47 +532,18 @@ begin
 end;
 
 procedure TfFormMain.imgPrintClick(Sender: TObject);
-var
-  nP: TFormCommandParam;
-  nHyDan,nStockname,nstockno:string;
-  nShortFileName:string;
-  nStr:string;
 begin
-  nShortFileName := '';
-  CreateBaseFormItem(cFI_FormBarCodePrint, '', @nP);
-  if (nP.FCommand = cCmd_ModalResult) and (nP.FParamA = mrOK) then
+  if not Assigned(fFormZXHyPrint) then
   begin
-    nHyDan := nP.FParamB;
-    nStockname := nP.FParamC;
-    nstockno := nP.FParamD;
-    nShortFileName := gSysParam.FQCReportFR3Map.Values[nstockno];
-    if nHyDan='' then
-    begin
-      ShowMsg('当前品种无需打印化验单。',sHint);
-      Exit;
-    end;
-
-    if (nShortFileName='') then
-    begin
-      nStr := '品种[ '+nstockno+' ]暂不支持自助打印质检单，请到开票窗口咨询';
-      ShowMsg(nStr,sHint);
-      WriteLog(nStr);
-      Exit;
-    end;
-
-    if not Assigned(FDR) then
-    begin
-      FDR := TFDR.Create(Application);
-    end;
-
-    {if PrintHuaYanReport(nHYDan, nStockName,nstockno,nShortFileName, False) then
-    begin
-      ShowMsg('打印成功，请在下方出纸口取走您的化验单',sHint);
-    end
-    else begin
-      ShowMsg('打印失败，请联系开票员补打',sHint);
-    end;}
+    fFormZXHyPrint := TfFormZXHyPrint.Create(nil);
+    fFormZXHyPrint.SetControlsClear;
   end;
+  fFormZXHyPrint.BringToFront;
+  fFormZXHyPrint.Left := self.Left;
+  fFormZXHyPrint.Top := self.Top;
+  fFormZXHyPrint.Width := self.Width;
+  fFormZXHyPrint.Height := self.Height;
+  fFormZXHyPrint.Show;
 end;
 
 procedure TfFormMain.imgCardClick(Sender: TObject);
@@ -586,7 +553,6 @@ begin
     if not Assigned(fFormNewCard) then
     begin
       fFormNewCard := TfFormNewCard.Create(nil);
-      fFormNewCard.SzttceApi := FSzttceApi;
       fFormNewCard.SetControlsClear;
     end;
     fFormNewCard.BringToFront;
@@ -601,7 +567,6 @@ begin
    if not Assigned(fFormNewPurchaseCard) then
     begin
       fFormNewPurchaseCard := TfFormNewPurchaseCard.Create(nil);
-      fFormNewPurchaseCard.SzttceApi := FSzttceApi;
       fFormNewPurchaseCard.SetControlsClear;
     end;
     fFormNewPurchaseCard.BringToFront;

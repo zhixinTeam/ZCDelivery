@@ -31,7 +31,9 @@ procedure WhenSaveJS(const nTunnel: PMultiJSTunnel);
 //保存计数结果
 function VerifySnapTruck(const nTruck,nBill,nPos: string;var nResult: string): Boolean;
 //车牌识别
-
+procedure MakeGateSound(const nText,nPost: string; const nSucc: Boolean);
+//播放门岗语音
+procedure PlayNetVoice(const nText,nPost: string);
 implementation
 
 uses
@@ -213,6 +215,15 @@ begin
   //xxxxx
 end;
 
+//Date: 2019-06-15
+//Parm: 提货单号
+//Desc: 强制顺序装车时校验前车状态
+function VerifyTruckStatus(const nLID, nNowTruck: string; var nHint: string): Boolean;
+var nOut: TWorkerBusinessCommand;
+begin
+  Result := CallBusinessCommand(cBC_VerifyTruckStatus, nLID, nNowTruck, @nOut);
+end;
+
 //Date: 2015-08-06
 //Parm: 磁卡号;岗位;采购单列表
 //Desc: 获取nPost岗位上磁卡为nCard的交货单列表
@@ -281,6 +292,26 @@ begin
     gHKSnapHelper.Display(nPost, nText, nInt);
     //小屏显示
 
+    gNetVoiceHelper.PlayVoice(nText, nPost);
+    //播发语音
+    WriteHardHelperLog(nText);
+  except
+    on nErr: Exception do
+    begin
+      nStr := '播放[ %s ]语音失败,描述: %s';
+      nStr := Format(nStr, [nPost, nErr.Message]);
+      WriteHardHelperLog(nStr);
+    end;
+  end;
+end;
+
+//Date: 2019-07-09
+//Parm: 内容;岗位
+//Desc: 播放语音
+procedure PlayNetVoice(const nText,nPost: string);
+var nStr: string;
+begin
+  try
     gNetVoiceHelper.PlayVoice(nText, nPost);
     //播发语音
     WriteHardHelperLog(nText);
@@ -583,7 +614,7 @@ begin
     nStr := Format(nStr, [FTruck, TruckStatusToStr(FNextStatus)]);
     WriteHardHelperLog(nStr, sPost_Out);
 
-    nStr := '车辆[ %s ]不能进厂,应该去[ %s ]';
+    nStr := '车辆[ %s ]不能出厂,应该去[ %s ]';
     nStr := Format(nStr, [FTruck, TruckStatusToStr(FNextStatus)]);
     MakeGateSound(nStr, sPost_Out, False);
     Exit;
@@ -845,7 +876,36 @@ begin
           finally
             gDBConnManager.ReleaseConnection(nDBConn);
           end;
+        end
+        else
+        if nCType = sFlag_Mul then
+        begin
+          nDBConn := nil;
+          with gParamManager.ActiveParam^ do
+          Try
+            nDBConn := gDBConnManager.GetConnection(FDB.FID, nErrNum);
+            if not Assigned(nDBConn) then
+            begin
+              WriteHardHelperLog('连接HM数据库失败(DBConn Is Null).');
+              Exit;
+            end;
+
+            if not nDBConn.FConn.Connected then
+              nDBConn.FConn.Connected := True;
+            //conn db
+            nStr := 'select O_KeepCard from %s Where O_Card=''%s'' ';
+            nStr := Format(nStr, [sTable_CardOther, nItem.FCard]);
+            with gDBConnManager.WorkerQuery(nDBConn,nStr) do
+            if RecordCount > 0 then
+            begin
+              if FieldByName('O_KeepCard').AsString = sFlag_Yes then
+                nRetain := False;
+            end;
+          finally
+            gDBConnManager.ReleaseConnection(nDBConn);
+          end;
         end;
+
         if nRetain then
           WriteHardHelperLog('吞卡机执行状态:'+'卡类型:'+nCType+'动作:吞卡')
         else
@@ -931,6 +991,51 @@ begin
     nPTruck.FStockName := nPLine.FName;
     //同步物料名
     Result := True;
+
+    if (not nQueued) or (nIdx < 1) then Exit;
+    //不检查队列,或头车
+
+    //--------------------------------------------------------------------------
+    nHint := '通道[' + nPLine.FLineID + '][' + nPLine.FName +']当前排队车辆顺序:';
+
+    for i:= 0 to nPline.FTrucks.Count-1 do
+    begin
+      nHint := nHint + PTruckItem(nPLine.FTrucks[i]).FTruck + ',';
+    end;
+    WriteNearReaderLog(nHint);
+
+    WriteNearReaderLog('当前刷卡车辆:' + nPTruck.FTruck + '前车:' +
+                       PTruckItem(nPLine.FTrucks[nIdx-1]).FTruck +
+                       '[' + PTruckItem(nPLine.FTrucks[nIdx-1]).FBill + ']开始校验:');
+    nHint := '';
+    if not VerifyTruckStatus(PTruckItem(nPLine.FTrucks[nIdx-1]).FBill ,
+                             nPTruck.FTruck, nHint) then
+    begin
+      Result := False;
+      Exit;
+    end;
+
+//    nInt := -1;
+//    //init
+//
+//    for i:=nPline.FTrucks.Count-1 downto 0 do
+//    if PTruckItem(nPLine.FTrucks[i]).FStarted then
+//    begin
+//      nInt := i;
+//      Break;
+//    end;
+//
+//    if nInt < 0 then Exit;
+//    //没有在装车车辆,无需排队
+//
+//    if nIdx - nInt <> 1 then
+//    begin
+//      nHint := '车辆[ %s ]需要在[ %s ]排队等候.';
+//      nHint := Format(nHint, [nPTruck.FTruck, nPLine.FName]);
+//
+//      Result := False;
+//      Exit;
+//    end;
   finally
     SyncLock.Leave;
   end;
@@ -1067,6 +1172,18 @@ var nStr: string;
 begin
   try
     nIdx := nLine.FTrucks.IndexOf(nTruck);
+
+    if nIdx = nLine.FTrucks.Count - 1 then
+    begin
+      nStr := '车辆[p500]%s开始装车';
+      nStr := Format(nStr, [nTruck.FTruck]);
+
+      nStr := nStr + ',' + gTruckQueueManager.IsSafeVocie;
+      gNetVoiceHelper.PlayVoice(nStr, nPost);
+
+      WriteNearReaderLog(nStr);
+      //log content
+    end;
     if (nIdx < 0) or (nIdx = nLine.FTrucks.Count - 1) then Exit;
     //no exits or last
 
@@ -1075,6 +1192,8 @@ begin
 
     nStr := '车辆[p500]%s开始装车,请%s准备';
     nStr := Format(nStr, [nTruck.FTruck, nNext.FTruck]);
+
+    nStr := nStr + ',' + gTruckQueueManager.IsSafeVocie;
     gNetVoiceHelper.PlayVoice(nStr, nPost);
 
     WriteNearReaderLog(nStr);
@@ -1098,6 +1217,7 @@ var nStr: string;
     nPLine: PLineItem;
     nPTruck: PTruckItem;
     nTrucks: TLadingBillItems;
+    nBool: Boolean;
 
     function IsJSRun: Boolean;
     begin
@@ -1142,11 +1262,30 @@ begin
     //重新定位车辆所在车道
     if IsJSRun then Exit;
   end;
+
+  if gTruckQueueManager.IsDaiForceQueue then
+  begin
+    nBool := True;
+    for nIdx:=Low(nTrucks) to High(nTrucks) do
+    begin
+      nBool := nTrucks[nIdx].FNextStatus = sFlag_TruckZT;
+      //未装车,检查排队顺序
+      if not nBool then Break;
+    end;
+  end
+  else
+    nBool := False;
   
-  if not IsTruckInQueue(nTrucks[0].FTruck, nTunnel, False, nStr,
+  if not IsTruckInQueue(nTrucks[0].FTruck, nTunnel, nBool, nStr,
          nPTruck, nPLine, sFlag_Dai) then
   begin
     WriteNearReaderLog(nStr);
+    if nBool and (Pos('等候', nStr) > 0) then
+      nStr := nTrucks[0].FTruck + '请排队等候'
+    else
+      nStr := nTrucks[0].FTruck + '请换道装车';
+    nStr := nStr + ',' + gTruckQueueManager.IsSafeVocie;
+    gNetVoiceHelper.PlayVoice(nStr, sPost_ZT);
     Exit;
   end; //检查通道
 
@@ -1266,6 +1405,7 @@ var nStr: string;
     nPLine: PLineItem;
     nPTruck: PTruckItem;
     nTrucks: TLadingBillItems;
+    nBool: Boolean;
 begin
   {$IFDEF DEBUG}
   WriteNearReaderLog('MakeTruckLadingSan进入.');
@@ -1302,15 +1442,39 @@ begin
     Exit;
   end;
 
-  if not IsTruckInQueue(nTrucks[0].FTruck, nTunnel, False, nStr,
+  if gTruckQueueManager.IsSanForceQueue then
+  begin
+    nBool := True;
+    for nIdx:=Low(nTrucks) to High(nTrucks) do
+    begin
+      nBool := nTrucks[nIdx].FNextStatus = sFlag_TruckFH;
+      //未装车,检查排队顺序
+      if not nBool then Break;
+    end;
+  end
+  else
+    nBool := False;
+
+  if not IsTruckInQueue(nTrucks[0].FTruck, nTunnel, nBool, nStr,
          nPTruck, nPLine, sFlag_San) then
   begin 
     WriteNearReaderLog(nStr);
     //loged
 
     nIdx := Length(nTrucks[0].FTruck);
-    nStr := nTrucks[0].FTruck + StringOfChar(' ',12 - nIdx) + '请换库装车';
+    if nBool and (Pos('等候', nStr) > 0) then
+      nStr := nTrucks[0].FTruck + StringOfChar(' ',12 - nIdx) + '请排队等候'
+    else
+      nStr := nTrucks[0].FTruck + StringOfChar(' ',12 - nIdx) + '请换库装车';
     gERelayManager.ShowTxt(nTunnel, nStr);
+
+    if nBool and (Pos('等候', nStr) > 0) then
+      nStr := nTrucks[0].FTruck + '请排队等候'
+    else
+      nStr := nTrucks[0].FTruck + '请换库装车';
+    nStr := nStr + ',' + gTruckQueueManager.IsSafeVocie;
+    gNetVoiceHelper.PlayVoice(nStr, sPost_FH);
+
     Exit;
   end; //检查通道
 

@@ -42,6 +42,8 @@ type
     function GetSerialID2(const nPrefix,nTable,nKey,nField: string;
      const nFixID: Integer; const nIncLen: Integer = 3): string;
     function SQLServerNow: string;
+    function ServerNow: TDateTime;
+    {*服务器时间*}
     function QuerySQL(const nSQL: string; const nUseBackdb: Boolean = False): TDataSet;
     procedure QueryData(const nQuery: TADOQuery; const nSQL: string;
      const nUseBackdb: Boolean = False);
@@ -52,7 +54,7 @@ var
 
 implementation
 uses
-  UFormCtrl,USysLoger;
+  UFormCtrl,USysLoger,USysDB;
 {$R *.dfm}
 
 procedure WriteLog(const nEvent: string);
@@ -300,6 +302,16 @@ end;
 function TFDM.SQLServerNow: string;
 begin
 //
+end;
+
+//Date: 2010-3-19
+//Parm: 只取其日期
+//Desc: 返回服务器的时间
+function TFDM.ServerNow: TDateTime;
+var nStr: string;
+begin
+  nStr := 'Select ' + sField_SQLServer_Now;
+  Result := FDM.QueryTemp(nStr).Fields[0].AsDateTime;
 end;
 
 end.

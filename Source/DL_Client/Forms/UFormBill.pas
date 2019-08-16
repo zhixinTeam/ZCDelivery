@@ -273,6 +273,7 @@ begin
 end;
 
 function TfFormBill.OnVerifyCtrl(Sender: TObject; var nHint: string): Boolean;
+var nVal: Double;
 begin
   Result := True;
 
@@ -304,10 +305,31 @@ begin
   end else
   if Sender = EditValue then
   begin
+    {$IFDEF LadeControl}
+    nVal := GetMaxLadeValue(EditTruck.Text);
+
+    if nVal > 0 then
+    begin
+      if nVal > gBillItem.FValue then
+        nVal := gBillItem.FValue;
+      Result := IsNumber(EditValue.Text, True) and
+               (StrToFloat(EditValue.Text) > 0) and
+               (StrToFloat(EditValue.Text) <= nVal);
+      nHint := '请填写有效的办理量(必须小于' + FloatToStr(nVal) + ')';
+    end
+    else
+    begin
+      Result := IsNumber(EditValue.Text, True) and
+               (StrToFloat(EditValue.Text) > 0) and
+               (StrToFloat(EditValue.Text) <= gBillItem.FValue);
+      nHint := '请填写有效的办理量';
+    end;
+    {$ELSE}
     Result := IsNumber(EditValue.Text, True) and
              (StrToFloat(EditValue.Text) > 0) and
              (StrToFloat(EditValue.Text) <= gBillItem.FValue);
     nHint := '请填写有效的办理量';
+    {$ENDIF}
     if not Result then Exit;
   end;
 end;
@@ -338,6 +360,7 @@ begin
     ShowMsg(nHint,sHint);
     Exit;
   end;
+  if not IsOtherOrder(gBillItem) then
   if not OnVerifyCtrl(EditWT, nHint) then
   begin
     ShowMsg(nHint,sHint);
@@ -358,6 +381,11 @@ begin
     ShowMsg('获取批次号失败:' + nHint,sHint);
     Exit;
   end;
+//  if not KDVerifyHhSalePlanWSDL(gBillItem.FPrice, StrToFloat(EditValue.Text), '', nHint) then
+//  begin
+//    ShowMsg(nHint,sHint);
+//    Exit;
+//  end;
   {$ENDIF}
 
   nStocks := TStringList.Create;

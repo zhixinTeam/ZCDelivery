@@ -157,7 +157,8 @@ function PrintBillReport(nBill: string; const nAsk: Boolean): Boolean;
 //打印提货单
 function PrintPoundReport(const nPound: string; nAsk: Boolean): Boolean;
 //打印榜单
-function PrintHeGeReport(const nHID: string; const nAsk: Boolean): Boolean;
+function PrintHeGeReport(const nBill: string; var nHint: string;
+ const nPrinter: string = ''): Boolean;
 //化验单,合格证
 function PrintBillLoadReport(nBill: string; const nAsk: Boolean): Boolean;
 //打印物资发货单
@@ -189,6 +190,8 @@ function get_shopPurchaseByno(const nXmlStr:string):string;
 //根据货单号获取供货信息
 function GetStockNo(const nStockName,nStockType: string): string;
 //获取物料编号
+function GetHhSalePlan(const nFactoryName: string): Boolean;
+//获取ERP销售计划
 function GetHhOrderPlan(const nStr: string): string;
 //获取ERP采购进厂计划
 function GetHhOrderPlanWSDL(const nStr: string): string;
@@ -202,10 +205,28 @@ function GetHhSaleWareNumberWSDL(const nOrder, nValue: string;
 function NewHhWTDetailWSDL(const nOrder, nTruck, nValue: string;
                                  var nHint: string): string;
 //Desc: 生成派车单并返回单号
+function ReVerifySalePlanWSDL(const nOrder, nValue: string;
+                                 var nHint: string): string;
+//Desc: 重新同步销售订单状态
+function KDVerifyHhSalePlanWSDL(const nPrice, nValue: Double;
+                                   nPriceDate:string;
+                                 var nHint: string): Boolean;
+function SaveHYData(const nHYDan: string): Boolean;
+//Desc: 读取ERP批次记录
+function PrintHuaYanReport(const nBill: string; var nHint: string;
+ const nPrinter: string = ''): Boolean;
+//打印标识为nHID的化验单
 
 function CallBusinessCommand(const nCmd: Integer; const nData,nExt: string;
   const nOut: PWorkerBusinessCommand; const nWarn: Boolean = True): Boolean;
-
+function IsCardValid(const nCard: string): Boolean;
+function IFHasBill(const nTruck: string; var nID: string): Boolean;
+//车辆是否存在未完成提货单
+function IFHasOrder(const nTruck: string; var nID: string): Boolean;
+//车辆是否存在未完成采购单
+function IsPurOrderHasControl(nProID,nStockNo: string): Boolean;
+function GetMaxLadeValue(const nTruck: string): Double;
+function GetMinLadeValue: Double;
 implementation
 uses
   UWaitItem;
@@ -1534,35 +1555,20 @@ begin
 end;
 
 //Desc: 打印标识为nID的合格证
-function PrintHeGeReport(const nHID: string; const nAsk: Boolean): Boolean;
+function PrintHeGeReport(const nBill: string; var nHint: string;
+ const nPrinter: string = ''): Boolean;
 var nStr,nSR: string;
 begin
-  if nAsk then
-  begin
-    Result := True;
-    nStr := '是否要打印合格证?';
-    if not QueryDlg(nStr, sAsk) then Exit;
-  end else Result := False;
+  Result := False;
 
-  nSR := 'Select R_SerialNo,P_Stock,P_Name,P_QLevel From %s sr ' +
-         ' Left Join %s sp on sp.P_ID=sr.R_PID';
-  nSR := Format(nSR, [sTable_StockRecord, sTable_StockParam]);
-
-  nStr := 'Select hy.*,sr.*,C_Name From $HY hy ' +
-          ' Left Join $Cus cus on cus.C_ID=hy.H_Custom' +
-          ' Left Join ($SR) sr on sr.R_SerialNo=H_SerialNo ' +
-          'Where H_ID in ($ID)';
-  //xxxxx
-
-  nStr := MacroValue(nStr, [MI('$HY', sTable_StockHuaYan),
-          MI('$Cus', sTable_Customer), MI('$SR', nSR), MI('$ID', nHID)]);
-  //xxxxx
+  nStr := 'Select * From %s Where L_ID=''%s''';
+  nStr := Format(nStr, [sTable_Bill, nBill]);
 
   if FDM.QueryTemp(nStr).RecordCount < 1 then
   begin
-    nStr := '编号为[ %s ] 的化验单记录已无效!!';
-    nStr := Format(nStr, [nHID]);
-    ShowMsg(nStr, sHint); Exit;
+    nHint := '提货单[ %s ]没有对应的合格证';
+    nHint := Format(nHint, [nBill]);
+    Exit;
   end;
 
   nStr := gPath + sReportDir + 'HeGeZheng.fr3';
@@ -1572,8 +1578,12 @@ begin
     ShowMsg(nStr, sHint); Exit;
   end;
 
+  if nPrinter = '' then
+       FDR.Report1.PrintOptions.Printer := 'My_Default_HYPrinter'
+  else FDR.Report1.PrintOptions.Printer := nPrinter;
+
   FDR.Dataset1.DataSet := FDM.SqlTemp;
-  FDR.ShowReport;
+  FDR.PrintReport;
   Result := FDR.PrintSuccess;
 end;
 
@@ -1699,6 +1709,15 @@ begin
   else Result := '';
 end;
 
+//Date: 2018-03-07
+//Parm: 生产厂名称
+//Desc: 获取ERP销售计划
+function GetHhSalePlan(const nFactoryName: string): Boolean;
+var nOut: TWorkerBusinessCommand;
+begin
+  Result := CallBusinessCommand(cBC_GetHhSalePlan, nFactoryName, '', @nOut);
+end;
+
 //Date: 2018-02-06
 //Parm: 供应商,物料,计划年月
 //Desc: 获取ERP采购进厂计划
@@ -1718,12 +1737,42 @@ function GetOrderOtherInfo(const nID: string;
 var nStr, nData,nDate: string;
     nIdx, nOrderCount: Integer;
     nListA, nListB: TStrings;
+    nBeginDate, nEndDate : TDateTime;
 begin
   Result := False;
   nModel := '';
   nYear  := '';
   nKD    := '';
   nStockName := '';
+
+  nDate := FormatDateTime('MM',Now);
+
+  try
+    if StrToInt(nDate) = 25 then
+    begin
+      nStr := 'Select D_Value From %s Where D_Name=''%s''';
+      nStr := Format(nStr, [sTable_SysDict, sFlag_NoOrderCardTime]);
+
+      with FDM.QueryTemp(nStr) do
+      if RecordCount > 0 then
+      begin
+        nDate := FormatDateTime('YYYY-MM-DD',Now) + ' ' + Fields[0].AsString;
+      end
+      else
+        nDate := FormatDateTime('YYYY-MM-DD',Now) + ' 23:59:59';
+
+      nBeginDate := StrToDateTime(nDate);
+      nEndDate := StrToDateTime(FormatDateTime('YYYY-MM-DD',Now) + ' 23:59:59');
+
+      if (Now > nBeginDate) and (Now < nEndDate) then
+      begin
+        ShowMsg('当前时间段禁止办卡,请等待', sHint);
+        Exit;
+      end;
+    end;
+  except
+  end;
+
 
   nListA := TStringList.Create;
   nListB := TStringList.Create;
@@ -1814,11 +1863,12 @@ var nOut: TWorkerHHJYData;
     nStr: string;
     nList: TStrings;
     nEID, nEvent, nStockName, nStockType: string;
+    nRestVal, nWarnVal: Double;
 begin
   Result := '';
   nHint := '';
   nList := TStringList.Create;
-
+  nRestVal := 0;
   try
     nStr := 'Select O_FactoryID, O_StockID, O_PackingID, O_StockName,' +
             ' O_STockType From %s Where O_Order =''%s'' ';
@@ -1843,9 +1893,10 @@ begin
           if IsNumber(nList.Values['FAmount'], True) and
              IsNumber(nList.Values['FDeliveryAmount'], True) then
           begin
-            if StrToFloat(nList.Values['FAmount']) -
+            nRestVal := StrToFloat(nList.Values['FAmount']) -
                StrToFloat(nList.Values['FDeliveryAmount']) -
-               StrToFloat(nValue) >= 0 then
+               StrToFloat(nValue);
+            if nRestVal >= 0 then
             begin
               Result := nList.Values['FWareNumber'];
             end;
@@ -1889,6 +1940,55 @@ begin
           SF('E_Date', sField_SQLServer_Now, sfVal)
           ], sTable_ManualEvent, '', True);
       FDM.ExecuteSQL(nStr);
+    end
+    else
+    begin
+      nWarnVal := 200;
+      nStr := 'Select D_Value From %s Where D_Name=''%s''';
+      nStr := Format(nStr, [sTable_SysDict, sFlag_HYDanWarnVal]);
+
+      with FDM.QueryTemp(nStr) do
+      if RecordCount > 0 then
+      begin
+        nWarnVal := Fields[0].AsFloat;
+      end;
+      //xxxxx
+      if nRestVal <= nWarnVal then
+      begin
+        nEID := nList.Values['FactoryID'] +
+                nList.Values['StockID'] +
+                nList.Values['PackingID'] + 'BZ';
+
+        nStr := 'Delete From %s Where E_ID=''%s''';
+        nStr := Format(nStr, [sTable_ManualEvent, nEID]);
+
+        FDM.ExecuteSQL(nStr);
+
+        nEvent := '水泥品种[ %s ]的批次编号可用量[ %.2f ],请化验室提前准备';
+        nEvent := Format(nEvent,[nStockname + nStockType, nRestVal]);
+
+        nStr := MakeSQLByStr([
+            SF('E_ID', nEID),
+            SF('E_Key', ''),
+            SF('E_From', sFlag_DepDaTing),
+            SF('E_Event', nEvent),
+            SF('E_Solution', sFlag_Solution_OK),
+            SF('E_Departmen', sFlag_DepHauYanShi),
+            SF('E_Date', sField_SQLServer_Now, sfVal)
+            ], sTable_ManualEvent, '', True);
+        FDM.ExecuteSQL(nStr);
+
+        nStr := MakeSQLByStr([
+            SF('E_ID', nEID),
+            SF('E_Key', ''),
+            SF('E_From', sFlag_DepDaTing),
+            SF('E_Event', nEvent),
+            SF('E_Solution', sFlag_Solution_OK),
+            SF('E_Departmen', sFlag_DepDaTing),
+            SF('E_Date', sField_SQLServer_Now, sfVal)
+            ], sTable_ManualEvent, '', True);
+        FDM.ExecuteSQL(nStr);
+      end;
     end;
   finally
     nList.Free;
@@ -1923,6 +2023,351 @@ begin
     end;
   finally
     nList.Free;
+  end;
+end;
+
+//Date: 2019-01-04
+//Parm: OrderNum
+//Desc: 重新同步销售订单状态
+function ReVerifySalePlanWSDL(const nOrder, nValue: string;
+                                 var nHint: string): string;
+var nOut: TWorkerHHJYData;
+    nStr: string;
+    nList: TStrings;
+    nStatus: string;
+begin
+  Result := '';
+  nHint := '';
+
+//  nStr := 'Select O_Valid From %s Where O_Order =''%s'' ';
+//  nStr := Format(nStr, [sTable_SalesOrder, nOrder]);
+//
+//  with FDM.QueryTemp(nStr) do
+//  begin
+//    if RecordCount <= 0 then
+//      Exit;
+//    if Fields[0].AsString = sFlag_Yes then//有效
+//      Exit;
+//  end;
+
+
+  nList := TStringList.Create;
+
+  try
+    nStr := 'FBillCode = ''%s''';
+    nStr := Format(nStr, [nOrder]);
+
+    nStr := PackerEncodeStr(nStr);
+
+    if not CallBusinessHHJY(cBC_GetHhSalePlan, nStr, '', '', @nOut, False) then
+    begin
+      nHint := '获取当前订单[ %s ]信息失败.';
+      nHint := Format(nHint, [nOrder]);
+      Exit;
+    end;
+
+    nList.Text := PackerDecodeStr(nOut.FData);
+
+    if nList.Values['FStatus'] = '1' then
+      nStatus := sFlag_Yes
+    else
+      nStatus := sFlag_No;
+
+    nStr := 'Update %s Set O_Valid=''%s'' Where O_Order =''%s''';
+    nStr := Format(nStr, [sTable_SalesOrder, nStatus, nOrder]);
+
+    WriteLog('更新销售订单状态:' + nStr);
+    FDM.ExecuteSQL(nStr);
+
+    if nList.Values['FStatus'] <> '1' then
+    begin
+      nHint := '订单[ %s ]已失效,请联系管理员.';
+      nHint := Format(nHint, [nOrder]);
+      Exit;
+    end;
+
+    if not IsNumber(nList.Values['FRemainAmount'], True) then
+    begin
+      nHint := '订单[ %s ]可用量[ %s ]非法数字,请联系管理员.';
+      nHint := Format(nHint, [nOrder, nList.Values['FRemainAmount']]);
+      Exit;
+    end;
+
+    if StrToFloat(nValue) > StrToFloat(nList.Values['FRemainAmount']) then
+    begin
+      nHint := '订单[ %s ]可用量[ %s ]小于当前开单量[ %s ],无法开单.';
+      nHint := Format(nHint, [nOrder, nList.Values['FRemainAmount'], nValue]);
+      Exit;
+    end;
+    nHint := '';
+  finally
+    nList.Free;
+  end;
+end;
+
+//Date: 2019-06-13
+//Parm: 提货ID
+//Desc: 开单校验客户资金
+function KDVerifyHhSalePlanWSDL(const nPrice, nValue: Double;
+                                   nPriceDate:string;
+                                 var nHint: string): Boolean;
+var nOut: TWorkerHHJYData;
+    nStr: string;
+    nList: TStrings;
+begin
+  WriteLog('开单资金校验:价格' + FloatToStr(nPrice) + '提货量:' +
+           FloatToStr(nValue));
+  Result := False;
+  nHint := '';
+  nList := TStringList.Create;
+
+  try
+    nList.Values['FPriceDate'] := nPriceDate;
+    nList.Values['FPoundValue'] := FloatToStr(nValue);
+    nList.Values['FMoney'] := Format('%.2f', [nPrice * nValue]);
+
+    nStr := PackerEncodeStr(nList.Text);
+    if  not CallBusinessHHJY(cBC_PoundVerifyHhSalePlan, nStr, '', '', @nOut, False) then
+    begin
+      WriteLog('开单失败:' + nOut.FData);
+      nHint := '开单失败.[ 订单异常或账户资金不足 ]';
+      Exit;
+    end;
+    Result := True;
+  finally
+    nList.Free;
+  end;
+end;
+
+//Date: 2018-02-06
+//Parm: 化验单
+//Desc: 读取ERP批次记录
+function SaveHYData(const nHYDan: string): Boolean;
+var nOut: TWorkerHHJYData;
+    nlist : tstrings;
+begin
+  Result := False;
+
+  nlist := TStringList.Create;
+  try
+    nlist.Values['HYDan'] := nHYDan;
+
+    Result := CallBusinessHHJY(cBC_SaveHhHyData,
+                               PackerEncodeStr(nlist.Text), '', '', @nOut, False);
+  finally
+    nlist.Free;
+  end;
+end;
+
+//Desc: 打印标识为nHID的化验单
+function PrintHuaYanReport(const nBill: string; var nHint: string;
+ const nPrinter: string = ''): Boolean;
+var nStr: string;
+    nSPCount, nDPCount, nPCount: Integer;
+begin
+  nHint := '';
+  Result := False;
+
+  nSPCount := 5;
+  nStr := 'Select D_Value From %s ' +
+          ' Where D_Name = ''%s''';
+  nStr := Format(nStr, [sTable_SysDict, sFlag_AICMHYSanPCount]);
+
+  with FDM.QueryTemp(nStr) do
+  begin
+    if RecordCount > 0 then
+    begin
+      nSPCount := Fields[0].AsInteger;
+    end;
+  end;
+
+  nDPCount := 5;
+  nStr := 'Select D_Value From %s ' +
+          ' Where D_Name = ''%s''';
+  nStr := Format(nStr, [sTable_SysDict, sFlag_AICMHYDaiPCount]);
+
+  with FDM.QueryTemp(nStr) do
+  begin
+    if RecordCount > 0 then
+    begin
+      nDPCount := Fields[0].AsInteger;
+    end;
+  end;
+
+  nStr := 'Select sr.*,sb.* From %s sr ' +
+          ' Left Join %s sb on sr.R_SerialNo=sb.L_HYDan ' +
+          ' Where sb.L_ID = ''%s''';
+  nStr := Format(nStr, [sTable_StockRecord, sTable_Bill, nBill]);
+
+  WriteLog('化验单查询:'+nStr);
+
+  with FDM.QueryTemp(nStr) do
+  begin
+    if RecordCount < 1 then
+    begin
+      nHint := '提货单[ %s ]没有对应的化验单';
+      nHint := Format(nHint, [nBill]);
+      Exit;
+    end;
+
+    if FieldByName('L_Type').AsString = sFlag_Dai then
+      nPCount := nDPCount
+    else
+      nPCount := nSPCount;
+
+    if FieldByName('L_HyPrintCount').AsInteger >= nPCount then
+    begin
+      nHint :='超出设定打印次数,请联系管理员';
+      Exit
+    end;
+
+    nStr := FieldByName('L_StockName').AsString;
+    nStr := GetReportFileByStock(nStr);
+
+    if not FDR.LoadReportFile(nStr) then
+    begin
+      nHint := '无法正确加载报表文件: ' + nStr;
+      Exit;
+    end;
+
+    if nPrinter = '' then
+         FDR.Report1.PrintOptions.Printer := 'My_Default_HYPrinter'
+    else FDR.Report1.PrintOptions.Printer := nPrinter;
+
+    FDR.Dataset1.DataSet := FDM.SQLTemp;
+//    FDR.ShowReport;
+    FDR.PrintReport;
+    Result := FDR.PrintSuccess;
+
+    if Result then
+    begin
+      nStr := 'Update %s Set L_HyPrintCount=L_HyPrintCount + 1 ' +
+              'Where L_ID=''%s''';
+      nStr := Format(nStr, [sTable_Bill, nBill]);
+      FDM.ExecuteSQL(nStr);
+    end;
+  end;
+end;
+
+function IsCardValid(const nCard: string): Boolean;
+var
+  nSql:string;
+begin
+  Result := False;
+
+  nSql := 'select C_Card2,C_Card3 from %s where C_Card = ''%s'' ';
+  nSql := Format(nSql,[sTable_Card,nCard]);
+
+  with FDM.QueryTemp(nSql) do
+  begin
+    if recordcount>0 then
+    begin
+      if (Trim(Fields[0].AsString) <> '') or (Trim(Fields[1].AsString) <> '')then
+      begin
+        Result := True;
+      end;
+    end;
+  end;
+end;
+
+//车辆是否存在未完成提货单
+function IFHasBill(const nTruck: string; var nID: string): Boolean;
+var nStr: string;
+begin
+  Result := False;
+
+  nStr :='select L_ID from %s where L_Status <> ''%s'' and L_Truck =''%s'' ';
+  nStr := Format(nStr, [sTable_Bill, sFlag_TruckOut, nTruck]);
+  with FDM.QueryTemp(nStr) do
+  if RecordCount > 0 then
+  begin
+    nID := Fields[0].AsString;
+    Result := True;
+  end;
+end;
+
+//车辆是否存在未完成采购单
+function IFHasOrder(const nTruck: string; var nID: string): Boolean;
+var nStr: string;
+begin
+  Result      := False;
+  //采购主表有磁卡号
+  nStr :='select O_ID from %s where O_Truck =''%s'' and O_Card<> '''' and O_Card is not null ';
+  nStr := Format(nStr, [sTable_Order, nTruck]);
+  with FDM.QueryTemp(nStr) do
+  if RecordCount > 0 then
+  begin
+    nID := Fields[0].AsString;
+    Result := True;
+  end;
+end;
+
+function IsPurOrderHasControl(nProID,nStockNo: string): Boolean;
+var nStr: string;
+begin
+  Result := False;
+
+  nStr := 'Select * From %s Where C_CusName=''%s''';
+  nStr := Format(nStr, [sTable_PMaterailControl, sFlag_PMaterailControl]);
+
+  with FDM.QueryTemp(nStr) do
+  begin
+    if RecordCount <= 0 then
+      Exit;
+
+    if FieldByName('C_Valid').AsString <> sFlag_Yes then
+      Exit;
+  end;
+
+  nStr := 'Select C_Valid From %s Where C_CusID=''%s'' and C_StockNo=''%s''';
+  nStr := Format(nStr, [sTable_PMaterailControl, nProID, nStockNo]);
+
+  with FDM.QueryTemp(nStr) do
+  if RecordCount > 0 then
+  begin
+    Result := Fields[0].AsString = sFlag_Yes;
+  end;
+end;
+
+function GetMaxLadeValue(const nTruck: string): Double;
+var nStr: string;
+begin
+  Result := 0;
+
+  nStr := 'Select T_MaxLadeValue From %s ' +
+          'Where T_Truck=''%s''';
+  nStr := Format(nStr, [sTable_Truck, nTruck]);
+  //xxxxx
+
+  with FDM.QueryTemp(nStr) do
+  begin
+    if RecordCount > 0 then
+    begin
+      nStr := Fields[0].AsString;
+      if IsNumber(nStr,True) then
+        Result := StrToFloat(nStr);
+    end;
+  end;
+end;
+
+function GetMinLadeValue: Double;
+var nStr: string;
+begin
+  Result := 0;
+
+  nStr := 'Select D_Value From %s ' +
+          'Where D_Name=''%s''';
+  nStr := Format(nStr, [sTable_SysDict, sFlag_SanMinKDValue]);
+  //xxxxx
+
+  with FDM.QueryTemp(nStr) do
+  begin
+    if RecordCount > 0 then
+    begin
+      nStr := Fields[0].AsString;
+      if IsNumber(nStr,True) then
+        Result := StrToFloat(nStr);
+    end;
   end;
 end;
 

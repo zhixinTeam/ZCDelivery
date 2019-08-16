@@ -1,6 +1,6 @@
 object fFormNewCard: TfFormNewCard
-  Left = 203
-  Top = 70
+  Left = 205
+  Top = 18
   BorderStyle = bsNone
   Caption = 'e'
   ClientHeight = 597
@@ -115,8 +115,8 @@ object fFormNewCard: TfFormNewCard
       TabOrder = 0
       TabStop = False
       object BtnOK: TButton
-        Left = 487
-        Top = 285
+        Left = 511
+        Top = 328
         Width = 250
         Height = 41
         Caption = #30830#35748#26080#35823#24182#21150#21345
@@ -126,12 +126,12 @@ object fFormNewCard: TfFormNewCard
         Font.Name = 'MS Sans Serif'
         Font.Style = []
         ParentFont = False
-        TabOrder = 8
+        TabOrder = 10
         OnClick = BtnOKClick
       end
       object BtnExit: TButton
-        Left = 743
-        Top = 285
+        Left = 767
+        Top = 328
         Width = 92
         Height = 41
         Caption = #21462#28040
@@ -141,13 +141,14 @@ object fFormNewCard: TfFormNewCard
         Font.Name = 'MS Sans Serif'
         Font.Style = []
         ParentFont = False
-        TabOrder = 9
+        TabOrder = 11
         OnClick = BtnExitClick
       end
       object EditValue: TcxTextEdit
-        Left = 470
+        Left = 494
         Top = 230
         ParentFont = False
+        Properties.ReadOnly = True
         Style.BorderColor = clWindowFrame
         Style.BorderStyle = ebs3D
         Style.Font.Charset = DEFAULT_CHARSET
@@ -160,7 +161,7 @@ object fFormNewCard: TfFormNewCard
         Width = 120
       end
       object EditCus: TcxTextEdit
-        Left = 78
+        Left = 90
         Top = 28
         ParentFont = False
         Properties.ReadOnly = True
@@ -176,7 +177,7 @@ object fFormNewCard: TfFormNewCard
         Width = 339
       end
       object EditCName: TcxTextEdit
-        Left = 78
+        Left = 90
         Top = 71
         ParentFont = False
         Properties.ReadOnly = True
@@ -192,7 +193,7 @@ object fFormNewCard: TfFormNewCard
         Width = 339
       end
       object EditStock: TcxTextEdit
-        Left = 78
+        Left = 90
         Top = 144
         ParentFont = False
         Properties.ReadOnly = True
@@ -208,7 +209,7 @@ object fFormNewCard: TfFormNewCard
         Width = 330
       end
       object EditSName: TcxTextEdit
-        Left = 470
+        Left = 494
         Top = 144
         ParentFont = False
         Properties.ReadOnly = True
@@ -224,7 +225,7 @@ object fFormNewCard: TfFormNewCard
         Width = 336
       end
       object EditTruck: TcxButtonEdit
-        Left = 78
+        Left = 90
         Top = 230
         ParentFont = False
         Properties.Buttons = <
@@ -245,7 +246,7 @@ object fFormNewCard: TfFormNewCard
         Width = 330
       end
       object EditType: TcxComboBox
-        Left = 78
+        Left = 90
         Top = 187
         ParentFont = False
         Properties.DropDownListStyle = lsEditFixedList
@@ -269,7 +270,7 @@ object fFormNewCard: TfFormNewCard
         Width = 330
       end
       object EditPrice: TcxButtonEdit
-        Left = 470
+        Left = 494
         Top = 187
         ParentFont = False
         Properties.Buttons = <
@@ -288,6 +289,40 @@ object fFormNewCard: TfFormNewCard
         Style.IsFontAssigned = True
         TabOrder = 5
         Width = 353
+      end
+      object EditKDMin: TcxTextEdit
+        Left = 90
+        Top = 273
+        AutoSize = False
+        ParentFont = False
+        Properties.ReadOnly = True
+        Style.BorderStyle = ebs3D
+        Style.Font.Charset = DEFAULT_CHARSET
+        Style.Font.Color = clWindowText
+        Style.Font.Height = -24
+        Style.Font.Name = 'MS Sans Serif'
+        Style.Font.Style = []
+        Style.IsFontAssigned = True
+        TabOrder = 8
+        Height = 37
+        Width = 330
+      end
+      object EditKDMax: TcxTextEdit
+        Left = 494
+        Top = 273
+        AutoSize = False
+        ParentFont = False
+        Properties.ReadOnly = True
+        Style.BorderStyle = ebs3D
+        Style.Font.Charset = DEFAULT_CHARSET
+        Style.Font.Color = clWindowText
+        Style.Font.Height = -24
+        Style.Font.Name = 'MS Sans Serif'
+        Style.Font.Style = []
+        Style.IsFontAssigned = True
+        TabOrder = 9
+        Height = 37
+        Width = 336
       end
       object dxLayoutGroup1: TdxLayoutGroup
         AutoAligns = [aaHorizontal]
@@ -357,17 +392,38 @@ object fFormNewCard: TfFormNewCard
             object dxGroupLayout1Group6: TdxLayoutGroup
               ShowCaption = False
               Hidden = True
-              LayoutDirection = ldHorizontal
               ShowBorder = False
-              object dxlytmLayout1Item12: TdxLayoutItem
-                Caption = #25552#36135#36710#36742':'
-                Control = EditTruck
-                ControlOptions.ShowBorder = False
+              object dxLayout1Group3: TdxLayoutGroup
+                ShowCaption = False
+                Hidden = True
+                LayoutDirection = ldHorizontal
+                ShowBorder = False
+                object dxlytmLayout1Item12: TdxLayoutItem
+                  Caption = #25552#36135#36710#36742':'
+                  Control = EditTruck
+                  ControlOptions.ShowBorder = False
+                end
+                object dxLayout1Item8: TdxLayoutItem
+                  Caption = #21150#29702#21544#25968':'
+                  Control = EditValue
+                  ControlOptions.ShowBorder = False
+                end
               end
-              object dxLayout1Item8: TdxLayoutItem
-                Caption = #21150#29702#21544#25968':'
-                Control = EditValue
-                ControlOptions.ShowBorder = False
+              object dxLayout1Group4: TdxLayoutGroup
+                ShowCaption = False
+                Hidden = True
+                LayoutDirection = ldHorizontal
+                ShowBorder = False
+                object dxLayout1Item1: TdxLayoutItem
+                  Caption = #26368#23567#24320#21333#37327':'
+                  Control = EditKDMin
+                  ControlOptions.ShowBorder = False
+                end
+                object dxLayout1Item3: TdxLayoutItem
+                  Caption = #26368#22823#24320#21333#37327':'
+                  Control = EditKDMax
+                  ControlOptions.ShowBorder = False
+                end
               end
             end
           end
@@ -437,7 +493,7 @@ object fFormNewCard: TfFormNewCard
   end
   object PrintHY: TcxCheckBox
     Left = 10
-    Top = 491
+    Top = 538
     Caption = #20986#21378#25171#21360#36136#37327#25215#35834#20070
     ParentFont = False
     State = cbsChecked

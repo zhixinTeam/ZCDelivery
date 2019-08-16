@@ -1921,6 +1921,33 @@ begin
         FListB.Delete(i);
       //排除本次称重
 
+      {$IFDEF ZZZC}
+      if FYSValid = sFlag_Yes then
+      begin
+        nSQL := MakeSQLByStr([SF('L_Value', 0, sfVal),
+                SF('L_Status', sFlag_TruckBFM),
+                SF('L_Price', 0, sfVal),
+                SF('L_NextStatus', sFlag_TruckOut),
+
+                SF('L_MValue', FMData.FValue , sfVal),
+                SF('L_MDate', sField_SQLServer_Now, sfVal),
+                SF('L_MMan', FIn.FBase.FFrom.FUser)
+                ], sTable_Bill, SF('L_ID', FID), False);
+        WriteLog('空车出厂模式SQL:' + nSQL);
+      end
+      else
+      begin
+        nSQL := MakeSQLByStr([SF('L_Value', FValue, sfVal),
+                SF('L_Status', sFlag_TruckBFM),
+
+                SF('L_NextStatus', sFlag_TruckOut),
+
+                SF('L_MValue', FMData.FValue , sfVal),
+                SF('L_MDate', sField_SQLServer_Now, sfVal),
+                SF('L_MMan', FIn.FBase.FFrom.FUser)
+                ], sTable_Bill, SF('L_ID', FID), False);
+      end;
+      {$ELSE}
       nSQL := MakeSQLByStr([SF('L_Value', FValue, sfVal),
               SF('L_Status', sFlag_TruckBFM),
 
@@ -1930,6 +1957,7 @@ begin
               SF('L_MDate', sField_SQLServer_Now, sfVal),
               SF('L_MMan', FIn.FBase.FFrom.FUser)
               ], sTable_Bill, SF('L_ID', FID), False);
+      {$ENDIF}
       FListA.Add(nSQL);
     end;
 

@@ -63,6 +63,7 @@ type
     //根据水泥品种获取工厂当前装车数量
     function GetStockName(nStockNo:string):string;
     //获取物料名称
+    function IsPurOrderHasControl(nProID,nStockNo: string): Boolean;
     function GetCusName(nCusID:string):string;
     //获取客户名称
     function GetInOutValue(nBegin,nEnd,nType: string): string;
@@ -1208,6 +1209,51 @@ begin
 
   BuildDefaultXML;
 
+  {$IFDEF WaitLoadEx}
+  nStr := 'Select T_Truck, T_Stock, L_CusName From %s left join %s on L_ID = T_Bill';
+  nStr := Format(nStr, [sTable_ZTTrucks, sTable_Bill]);
+
+  with gDBConnManager.WorkerQuery(FDBConn, nStr),FPacker.XMLBuilder do
+  begin
+    if RecordCount < 1 then
+    begin
+      nData := '工厂(%s)无待装车辆信息.';
+      nData := Format(nData, [gSysParam.FFactID]);
+      with Root.NodeNew('EXMG') do
+      begin
+        NodeNew('MsgTxt').ValueAsString     := nData;
+        NodeNew('MsgResult').ValueAsString  := sFlag_No;
+        NodeNew('MsgCommand').ValueAsString := IntToStr(FIn.FCommand);
+      end;
+      nData := FPacker.XMLBuilder.WriteToString;
+
+      Exit;
+    end;
+
+    First;
+
+    nNode := Root.NodeNew('Items');
+    while not Eof do
+    begin
+      with nNode.NodeNew('Item') do
+      begin
+        NodeNew('StockName').ValueAsString  := Fields[1].AsString;
+        NodeNew('LineCount').ValueAsString  := Fields[2].AsString;
+        NodeNew('TruckCount').ValueAsString := Fields[0].AsString;
+      end;
+
+      Next;
+    end;
+
+    nNode := Root.NodeNew('EXMG');
+    with nNode do
+    begin
+      NodeNew('MsgTxt').ValueAsString     := '业务执行成功';
+      NodeNew('MsgResult').ValueAsString  := sFlag_Yes;
+      NodeNew('MsgCommand').ValueAsString := IntToStr(FIn.FCommand);
+    end;
+  end;
+  {$ELSE}
   nStr := 'Select Z_StockNo, COUNT(*) as Num From %s Where Z_Valid=''%s'' group by Z_StockNo';
   nStr := Format(nStr, [sTable_ZTLines, sFlag_Yes]);
 
@@ -1253,6 +1299,7 @@ begin
       NodeNew('MsgCommand').ValueAsString := IntToStr(FIn.FCommand);
     end;
   end;
+  {$ENDIF}
   nData := FPacker.XMLBuilder.WriteToString;
   Result := True;
 end;
@@ -1483,8 +1530,31 @@ begin
       if Length(Trim(FListB.Values['KD'])) > 0 then
         nStr := nStr +'(矿点:'+ FListB.Values['KD']+')';
 
+      {$IFDEF OrderControl}
+      if IsPurOrderHasControl(FListB.Values['ProID'], FListB.Values['StockNo']) then
+      begin
+        nStr := nStr + '(不可用)';
+
+        NodeNew('StockName').ValueAsString  := nStr;
+        NodeNew('MaxNumber').ValueAsString  := '-100';
+      end
+      else
+      begin
+        NodeNew('StockName').ValueAsString  := nStr;
+
+        if StrToFloatDef(FListB.Values['Value'],0) <= 0 then
+          NodeNew('MaxNumber').ValueAsString  := '100'
+        else
+          NodeNew('MaxNumber').ValueAsString  := FListB.Values['Value'];
+      end;
+      {$ELSE}
       NodeNew('StockName').ValueAsString  := nStr;
-      NodeNew('MaxNumber').ValueAsString  := FListB.Values['Value'];
+
+      if StrToFloatDef(FListB.Values['Value'],0) <= 0 then
+        NodeNew('MaxNumber').ValueAsString  := '100'
+      else
+        NodeNew('MaxNumber').ValueAsString  := FListB.Values['Value'];
+      {$ENDIF}
     end;
   end;
 
@@ -1687,6 +1757,44 @@ begin
     with gDBConnManager.SQLQuery(nStr, nDBWorker) do
     begin
       Result := Fields[0].AsString;
+    end;
+  finally
+    gDBConnManager.ReleaseConnection(nDBWorker);
+  end;
+end;
+
+function TBusWorkerBusinessWebchat.IsPurOrderHasControl(nProID,nStockNo: string): Boolean;
+var nStr: string;
+    nDBWorker: PDBWorker;
+begin
+  Result := False;
+
+  nDBWorker := nil;
+  try
+    nStr := 'Select * From %s Where C_CusName=''%s''';
+    nStr := Format(nStr, [sTable_PMaterailControl, sFlag_PMaterailControl]);
+
+    with gDBConnManager.SQLQuery(nStr, nDBWorker) do
+    begin
+      if RecordCount <= 0 then
+        Exit;
+
+      if FieldByName('C_Valid').AsString <> sFlag_Yes then
+        Exit;
+    end;
+  finally
+    gDBConnManager.ReleaseConnection(nDBWorker);
+  end;
+
+  nDBWorker := nil;
+  try
+    nStr := 'Select C_Valid From %s Where C_CusID=''%s'' and C_StockNo=''%s''';
+    nStr := Format(nStr, [sTable_PMaterailControl, nProID, nStockNo]);
+
+    with gDBConnManager.SQLQuery(nStr, nDBWorker) do
+    if RecordCount > 0 then
+    begin
+      Result := Fields[0].AsString = sFlag_Yes;
     end;
   finally
     gDBConnManager.ReleaseConnection(nDBWorker);

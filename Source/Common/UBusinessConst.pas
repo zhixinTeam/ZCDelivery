@@ -57,6 +57,8 @@ const
   cBC_DeleteOrderBase         = $0047;   //删除采购申请单
   cBC_GetGYOrderValue         = $0048;   //获取已收货量
 
+  cBC_RemoteSnapDisPlay       = $0051;   //抓拍小屏显示
+  cBC_GetPoundReaderInfo      = $0052;   //获取磅站读卡器岗位、部门
   cBC_GetPoundCard            = $0054;   //获取磅站卡号
   cBC_GetQueueData            = $0055;   //获取队列数据
   cBC_PrintCode               = $0056;   //喷码:发送喷码
@@ -79,6 +81,7 @@ const
 
   cBC_VerifySnapTruck         = $0081;   //车牌比对
   cBC_TruckTimeOut            = $0082;   //散装车辆出厂超时
+  cBC_VerifyTruckStatus       = $0083;   //校验车辆状态
 
   cBC_SyncHhSaleMateriel      = $0091;   //同步销售物料
   cBC_SyncHhProvideMateriel   = $0092;   //同步采购物料
@@ -111,6 +114,19 @@ const
   cBC_GetHhSaleRealPrice      = $0115;   //获取最新价格
 
   cBC_NewHhWTDetail           = $0116;   //生成派车单
+
+  cBC_SaveHhHyData            = $0117;   //获取化验单数据并保存本地
+  cBC_GetHhHyHxDetail         = $0118;   //获取化验单化学分析
+
+  cBC_GetHhHyWlDetail         = $0119;   //获取化验单物理分析
+  cBC_GetHhHyWlBZCD           = $0120;   //获取化验单物理分析标准稠度
+  cBC_GetHhHyWlNjTime         = $0121;   //获取化验单物理分析凝结时间
+  cBC_GetHhHyWlXD             = $0122;   //获取化验单物理分析细度
+  cBC_GetHhHyWlBiBiao         = $0123;   //获取化验单物理分析比表面积
+  cBC_GetHhHyWlQD             = $0124;   //获取化验单物理分析强度
+
+  cBC_GetHhHyHhcDetail        = $0125;   //获取化验单混合材
+  cBC_GetHhHyHhcRecord        = $0126;   //获取化验单混合材明细
 
   cBC_WX_VerifPrintCode       = $0501;   //微信：验证喷码信息
   cBC_WX_WaitingForloading    = $0502;   //微信：工厂待装查询

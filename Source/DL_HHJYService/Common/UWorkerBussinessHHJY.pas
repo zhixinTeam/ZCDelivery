@@ -16,7 +16,11 @@ uses
   T_SaleConsignBill_Intf, V_QControlWareNumberNoticeBill_Intf,
   T_SaleTransportForCustomer_Intf, V_SupplyMaterialEntryPlan_Intf,
   T_SupplyMaterialReceiveBill_Intf, V_SupplyMaterialTransferPlan_Intf,
-  T_SupplyMaterialTransferBill_Intf, T_SupplyWeighBill_Intf, T_SaleScheduleVan_Intf;
+  T_SupplyMaterialTransferBill_Intf, T_SupplyWeighBill_Intf, T_SaleScheduleVan_Intf,
+  V_QChemistryTestBill_Intf, V_QPhysicsRecord_Intf, V_QPhysicsWRONCRecord_Intf,
+  V_QPhysicsSettingTimeRecord_Intf,V_QPhysicsFinenessRecord_Intf,
+  V_QPhysicsSpecificSurfaceAreaRecord_Intf,V_QPhysicsIntensityRecord_Intf,
+  QAdmixtureDataBrief_WS_Intf,QAdmixtureDataDetail_WS_Intf;
 
 type
   TMITDBWorker = class(TBusinessWorkerBase)
@@ -118,6 +122,26 @@ type
     //获取内倒原材料采购单上传明细数据
     function NewHhWTDetail(var nData: string): Boolean;
     //生成派车单明细并返回派车单ID
+    function SaveHhHYData(var nData: string): Boolean;
+    //获取并保存化验单数据
+    function GetHhHYHxDetail(var nData: string): Boolean;
+    //获取化验单化学分析数据
+    function GetHhHYWlDetail(var nData: string): Boolean;
+    //获取化验单物理分析数据
+    function GetHhHYWlBZCD(var nData: string): Boolean;
+    //获取化验单物理分析数据标准稠度用水量
+    function GetHhHYWlNjTime(var nData: string): Boolean;
+    //获取化验单物理分析数据凝结时间
+    function GetHhHYWlXD(var nData: string): Boolean;
+    //获取化验单物理分析数据细度
+    function GetHhHYWlBiBiao(var nData: string): Boolean;
+    //获取化验单物理分析数据比表面积
+    function GetHhHYWlQD(var nData: string): Boolean;
+    //获取化验单物理分析数据强度
+    function GetHhHYHhcDetail(var nData: string): Boolean;
+    //获取化验单混合材
+    function GetHhHYHhcRecord(var nData: string): Boolean;
+    //获取化验单混合材明细
   public
     constructor Create; override;
     destructor destroy; override;
@@ -351,6 +375,19 @@ begin
    cBC_GetHhOtherOrderDetailID : Result := GetHhOtherOrderDetailID(nData);
 
    cBC_NewHhWTDetail           : Result := NewHhWTDetail(nData);
+
+   cBC_SaveHhHyData            : Result := SaveHhHYData(nData);
+   cBC_GetHhHyHxDetail         : Result := GetHhHYHxDetail(nData);
+
+   cBC_GetHhHyWlDetail         : Result := GetHhHYWlDetail(nData);
+   cBC_GetHhHyWlBZCD           : Result := GetHhHYWlBZCD(nData);
+   cBC_GetHhHyWlNjTime         : Result := GetHhHYWlNjTime(nData);
+   cBC_GetHhHyWlXD             : Result := GetHhHyWlXD(nData);
+   cBC_GetHhHyWlBiBiao         : Result := GetHhHyWlBiBiao(nData);
+   cBC_GetHhHyWlQD             : Result := GetHhHyWlQD(nData);
+
+   cBC_GetHhHyHhcDetail        : Result := GetHhHyHhcDetail(nData);
+   cBC_GetHhHyHhcRecord        : Result := GetHhHyHhcRecord(nData);
   else
     begin
       Result := False;
@@ -1474,6 +1511,16 @@ begin
            ,PackerEncodeStr(nLID),'',@nOut);
   if nExits then
     FListB.Text := PackerDecodeStr(nOut.FData);
+
+  if nExits and (nDelete = sFlag_Yes) then
+  begin
+    if FListB.Values['FStatus'] = '2' then
+    begin
+      Result := '提货单号[ %s ]已审核,无法删除,请在ERP先进行反审核.';
+      Result := Format(Result, [nLID]);
+      Exit;
+    end;
+  end;
 
 
   nSQL := 'select * From %s where L_ID = ''%s'' ';
@@ -3158,6 +3205,16 @@ begin
   if nExits then
     FListB.Text := PackerDecodeStr(nOut.FData);
 
+  if nExits and (nDelete = sFlag_Yes) then
+  begin
+    if FListB.Values['FStatus'] = '254' then
+    begin
+      Result := '磅单号[ %s ]已审核,无法删除,请在ERP先进行反审核.';
+      Result := Format(Result, [nLID]);
+      Exit;
+    end;
+  end;
+
 
   nSQL := 'select *,(P_MValue-P_PValue - isnull(P_KZValue,0)) as D_NetWeight From %s a,'+
   ' %s b, %s c where a.D_OID=b.O_ID and a.D_ID=c.P_OrderBak and c.P_ID = ''%s'' ';
@@ -4153,6 +4210,15 @@ begin
   if nExits then
     FListB.Text := PackerDecodeStr(nOut.FData);
 
+  if nExits and (nDelete = sFlag_Yes) then
+  begin
+    if FListB.Values['FStatus'] = '254' then
+    begin
+      Result := '磅单号[ %s ]已审核,无法删除,请在ERP先进行反审核.';
+      Result := Format(Result, [nLID]);
+      Exit;
+    end;
+  end;
 
   nSQL := 'select *,(P_MValue-P_PValue - isnull(P_KZValue,0)) as D_NetWeight From %s a,'+
   ' %s b, %s c where a.D_OID=b.O_ID and a.D_ID=c.P_OrderBak and c.P_ID = ''%s'' ';
@@ -4891,6 +4957,15 @@ begin
   if nExits then
     FListB.Text := PackerDecodeStr(nOut.FData);
 
+  if nExits and (nDelete = sFlag_Yes) then
+  begin
+    if FListB.Values['FStatus'] = '254' then
+    begin
+      Result := '磅单号[ %s ]已审核,无法删除,请在ERP先进行反审核.';
+      Result := Format(Result, [nLID]);
+      Exit;
+    end;
+  end;
 
   nSQL := 'select *,(P_MValue-P_PValue - isnull(P_KZValue,0)) as D_NetWeight From %s a,'+
   ' %s b where a.R_ID=b.P_OrderBak and b.P_ID = ''%s'' ';
@@ -5236,6 +5311,1243 @@ begin
       nJS.Free;
     if Assigned(nJSNew) then
       nJSNew.Free;
+    nSoapHeader.Free;
+  end;
+end;
+
+function TBusWorkerBusinessHHJY.SaveHhHYData(
+  var nData: string): boolean;
+var nStr, nMID, nDate, nHYDan, nHhcStr: string;
+    nOut: TWorkerBusinessCommand;
+    nIdx: Integer;
+begin
+  Result := False;
+
+  FListA.Clear;
+
+  FListA.Text := PackerDecodeStr(FIn.FData);
+  nMID   := FListA.Values['StockID'];
+  nDate  := FListA.Values['Date'];
+  nHYDan := FListA.Values['HYDan'];
+
+  FListA.Clear;
+
+  //1
+  if not TBusWorkerBusinessHHJY.CallMe(cBC_GetHhHyHxDetail
+           ,nHYDan,'',@nOut) then
+  begin
+    nData := '批次号[ %s ]获取化验单化学分析数据失败.';
+    nData := Format(nData, [nHYDan]);
+    Exit;
+  end;
+  FListA.Text := PackerDecodeStr(nOut.FData);//ALL
+
+  //2
+  if not TBusWorkerBusinessHHJY.CallMe(cBC_GetHhHyWlDetail
+           ,nHYDan,'',@nOut) then
+  begin
+    nData := '批次号[ %s ]获取化验单物理分析总记录数据失败.';
+    nData := Format(nData, [nHYDan]);
+    Exit;
+  end;
+
+  FListB.Clear;
+  FListB.Text := PackerDecodeStr(nOut.FData);
+
+  FListA.Values['WlRecord'] := FListB.Values['FRecordID'];//物理结果主键
+
+  //2.1
+  if not TBusWorkerBusinessHHJY.CallMe(cBC_GetHhHyWlBZCD
+           ,FListA.Values['WlRecord'],'',@nOut) then
+  begin
+    nData := '批次号[ %s ]获取化验单物理分析标准稠度数据失败.';
+    nData := Format(nData, [nHYDan]);
+    Exit;
+  end;
+
+  FListB.Clear;
+  FListB.Text := PackerDecodeStr(nOut.FData);
+
+  FListA.Values['FWRONC'] := FListB.Values['FWRONC'];//标准稠度
+
+  //2.2
+  if not TBusWorkerBusinessHHJY.CallMe(cBC_GetHhHyWlNjTime
+           ,FListA.Values['WlRecord'],'',@nOut) then
+  begin
+    nData := '批次号[ %s ]获取化验单物理分析凝结时间数据失败.';
+    nData := Format(nData, [nHYDan]);
+    Exit;
+  end;
+
+  FListB.Clear;
+  FListB.Text := PackerDecodeStr(nOut.FData);
+
+  FListA.Values['FInitialSetResult'] := FListB.Values['FInitialSetResult'];//初凝时间
+  FListA.Values['FFinalSetResult'] := FListB.Values['FFinalSetResult'];//终凝时间
+
+  //2.3
+  if not TBusWorkerBusinessHHJY.CallMe(cBC_GetHhHyWlXD
+           ,FListA.Values['WlRecord'],'',@nOut) then
+  begin
+    nData := '批次号[ %s ]获取化验单物理分析细度数据失败.';
+    nData := Format(nData, [nHYDan]);
+    Exit;
+  end;
+
+  FListB.Clear;
+  FListB.Text := PackerDecodeStr(nOut.FData);
+
+  FListA.Values['FXDResult'] := FListB.Values['FResult'];//细度
+
+  //2.3
+  if not TBusWorkerBusinessHHJY.CallMe(cBC_GetHhHyWlBiBiao
+           ,FListA.Values['WlRecord'],'',@nOut) then
+  begin
+    nData := '批次号[ %s ]获取化验单物理分析比表面积数据失败.';
+    nData := Format(nData, [nHYDan]);
+    Exit;
+  end;
+
+  FListB.Clear;
+  FListB.Text := PackerDecodeStr(nOut.FData);
+
+  FListA.Values['FSampleDensity'] := FListB.Values['FSampleDensity'];//密度
+  FListA.Values['FSpecificSurfaceAreaAverage']
+                                  := FListB.Values['FSpecificSurfaceAreaAverage'];//比表面积
+
+  //2.4
+  if not TBusWorkerBusinessHHJY.CallMe(cBC_GetHhHyWlQD
+           ,FListA.Values['WlRecord'],'',@nOut) then
+  begin
+    nData := '批次号[ %s ]获取化验单物理分析强度数据失败.';
+    nData := Format(nData, [nHYDan]);
+    Exit;
+  end;
+
+  FListB.Clear;
+  FListB.Text := PackerDecodeStr(nOut.FData);
+
+  FListA.Values['FFluidityAverage'] := FListB.Values['FFluidityAverage'];//流动度
+
+  FListA.Values['FRuptureStrength3D1'] := FListB.Values['FRuptureStrength3D1'];//3天抗折
+  FListA.Values['FRuptureStrength3D2'] := FListB.Values['FRuptureStrength3D2'];
+  FListA.Values['FRuptureStrength3D3'] := FListB.Values['FRuptureStrength3D3'];
+  FListA.Values['FRuptureStrength3DAverage'] := FListB.Values['FRuptureStrength3DAverage'];
+
+  FListA.Values['FRuptureStrength28D1'] := FListB.Values['FRuptureStrength28D1'];//28天抗折
+  FListA.Values['FRuptureStrength28D2'] := FListB.Values['FRuptureStrength28D2'];
+  FListA.Values['FRuptureStrength28D3'] := FListB.Values['FRuptureStrength28D3'];
+  FListA.Values['FRuptureStrength28DAverage'] := FListB.Values['FRuptureStrength28DAverage'];
+
+  FListA.Values['FCompressiveStrength3D1'] := FListB.Values['FCompressiveStrength3D1'];//3天抗压
+  FListA.Values['FCompressiveStrength3D2'] := FListB.Values['FCompressiveStrength3D2'];
+  FListA.Values['FCompressiveStrength3D3'] := FListB.Values['FCompressiveStrength3D3'];
+  FListA.Values['FCompressiveStrength3D4'] := FListB.Values['FCompressiveStrength3D4'];
+  FListA.Values['FCompressiveStrength3D5'] := FListB.Values['FCompressiveStrength3D5'];
+  FListA.Values['FCompressiveStrength3D6'] := FListB.Values['FCompressiveStrength3D6'];
+  FListA.Values['FCompressiveStrength3DAverage'] := FListB.Values['FCompressiveStrength3DAverage'];
+
+  FListA.Values['FCompressiveStrength28D1'] := FListB.Values['FCompressiveStrength28D1'];//3天抗压
+  FListA.Values['FCompressiveStrength28D2'] := FListB.Values['FCompressiveStrength28D2'];
+  FListA.Values['FCompressiveStrength28D3'] := FListB.Values['FCompressiveStrength28D3'];
+  FListA.Values['FCompressiveStrength28D4'] := FListB.Values['FCompressiveStrength28D4'];
+  FListA.Values['FCompressiveStrength28D5'] := FListB.Values['FCompressiveStrength28D5'];
+  FListA.Values['FCompressiveStrength28D6'] := FListB.Values['FCompressiveStrength28D6'];
+  FListA.Values['FCompressiveStrength28DAverage'] := FListB.Values['FCompressiveStrength28DAverage'];
+
+  //3
+  if not TBusWorkerBusinessHHJY.CallMe(cBC_GetHhHyHhcDetail
+           ,nHYDan,'',@nOut) then
+  begin
+    nData := '批次号[ %s ]获取化验单混合材总记录数据失败.';
+    nData := Format(nData, [nHYDan]);
+    Exit;
+  end;
+
+  FListB.Clear;
+  FListB.Text := PackerDecodeStr(nOut.FData);
+
+  FListA.Values['HhcRecord'] := FListB.Values['FRecordID'];//混合材结果主键
+
+  //3.1
+  if not TBusWorkerBusinessHHJY.CallMe(cBC_GetHhHyHhcRecord
+           ,FListA.Values['HhcRecord'],'',@nOut) then
+  begin
+    nData := '批次号[ %s ]获取化验单混合材明细数据失败.';
+    nData := Format(nData, [nHYDan]);
+    Exit;
+  end;
+  nHhcStr := nOut.FData;
+
+  FListB.Clear;
+  FListC.Clear;
+
+
+  nStr := SF('R_SerialNo', nHYDan);
+  nStr := MakeSQLByStr([
+          SF('R_SGType', ''),
+          SF('R_SGValue', ''),
+          SF('R_HHCType', ''),
+          SF('R_HHCValue', ''),
+          SF('R_MgO', FListA.Values['FMgO']),
+          SF('R_SO3', FListA.Values['FSO3']),
+          SF('R_ShaoShi', FListA.Values['FLOSS']),
+          SF('R_CL', FListA.Values['FCL_Ion']),
+          SF('R_BiBiao', FListA.Values['FSpecificSurfaceAreaAverage']),
+          SF('R_ChuNing', FListA.Values['FInitialSetResult']),
+          SF('R_ZhongNing', FListA.Values['FFinalSetResult']),
+          SF('R_AnDing', ''),
+          SF('R_XiDu', FListA.Values['FXDResult']),
+          SF('R_MIDu', FListA.Values['FSampleDensity']),
+          SF('R_Jian', FListA.Values['FR2O']),
+          SF('R_ChouDu', FListA.Values['FWRONC']),
+          SF('R_BuRong', ''),
+          SF('R_YLiGai', FListA.Values['FF_CaO']),
+          SF('R_FC3A', FListA.Values['FC3A']),
+          SF('R_Water', ''),
+          SF('R_KuangWu', ''),
+          SF('R_GaiGui', ''),
+          SF('R_Liudong', FListA.Values['FFluidityAverage']),
+          SF('R_3DZhe1', FListA.Values['FRuptureStrength3D1']),
+          SF('R_3DZhe2', FListA.Values['FRuptureStrength3D2']),
+          SF('R_3DZhe3', FListA.Values['FRuptureStrength3D3']),
+          SF('R_28Zhe1', FListA.Values['FRuptureStrength28D1']),
+          SF('R_28Zhe2', FListA.Values['FRuptureStrength28D2']),
+          SF('R_28Zhe3', FListA.Values['FRuptureStrength28D3']),
+          SF('R_3DZheAve', FListA.Values['FRuptureStrength3DAverage']),
+          SF('R_28DZheAve', FListA.Values['FRuptureStrength28DAverage']),
+          SF('R_3DYa1', FListA.Values['FCompressiveStrength3D1']),
+          SF('R_3DYa2', FListA.Values['FCompressiveStrength3D2']),
+          SF('R_3DYa3', FListA.Values['FCompressiveStrength3D3']),
+          SF('R_3DYa4', FListA.Values['FCompressiveStrength3D4']),
+          SF('R_3DYa5', FListA.Values['FCompressiveStrength3D5']),
+          SF('R_3DYa6', FListA.Values['FCompressiveStrength3D6']),
+          SF('R_28Ya1', FListA.Values['FCompressiveStrength28D1']),
+          SF('R_28Ya2', FListA.Values['FCompressiveStrength28D2']),
+          SF('R_28Ya3', FListA.Values['FCompressiveStrength28D3']),
+          SF('R_28Ya4', FListA.Values['FCompressiveStrength28D4']),
+          SF('R_28Ya5', FListA.Values['FCompressiveStrength28D5']),
+          SF('R_28Ya6', FListA.Values['FCompressiveStrength28D6']),
+          SF('R_3DYaAve', FListA.Values['FCompressiveStrength3DAverage']),
+          SF('R_28DYaAve', FListA.Values['FCompressiveStrength28DAverage']),
+          SF('R_Date', StrToDateDef(FListA.Values['FTestTime'],Now),sfDateTime),
+          SF('R_Man', FListA.Values['FTester'])
+          ], sTable_StockRecord, nStr, False);
+  FListB.Add(nStr);
+
+  nStr := MakeSQLByStr([SF('R_SerialNo', nHYDan),
+          SF('R_SGType', ''),
+          SF('R_SGValue', ''),
+          SF('R_HHCType', ''),
+          SF('R_HHCValue', ''),
+          SF('R_MgO', FListA.Values['FMgO']),
+          SF('R_SO3', FListA.Values['FSO3']),
+          SF('R_ShaoShi', FListA.Values['FLOSS']),
+          SF('R_CL', FListA.Values['FCL_Ion']),
+          SF('R_BiBiao', FListA.Values['FSpecificSurfaceAreaAverage']),
+          SF('R_ChuNing', FListA.Values['FInitialSetResult']),
+          SF('R_ZhongNing', FListA.Values['FFinalSetResult']),
+          SF('R_AnDing', ''),
+          SF('R_XiDu', FListA.Values['FXDResult']),
+          SF('R_MIDu', FListA.Values['FSampleDensity']),
+          SF('R_Jian', FListA.Values['FR2O']),
+          SF('R_ChouDu', FListA.Values['FWRONC']),
+          SF('R_BuRong', ''),
+          SF('R_YLiGai', FListA.Values['FF_CaO']),
+          SF('R_FC3A', FListA.Values['FC3A']),
+          SF('R_Water', ''),
+          SF('R_KuangWu', ''),
+          SF('R_GaiGui', ''),
+          SF('R_Liudong', FListA.Values['FFluidityAverage']),
+          SF('R_3DZhe1', FListA.Values['FRuptureStrength3D1']),
+          SF('R_3DZhe2', FListA.Values['FRuptureStrength3D2']),
+          SF('R_3DZhe3', FListA.Values['FRuptureStrength3D3']),
+          SF('R_28Zhe1', FListA.Values['FRuptureStrength28D1']),
+          SF('R_28Zhe2', FListA.Values['FRuptureStrength28D2']),
+          SF('R_28Zhe3', FListA.Values['FRuptureStrength28D3']),
+          SF('R_3DZheAve', FListA.Values['FRuptureStrength3DAverage']),
+          SF('R_28DZheAve', FListA.Values['FRuptureStrength28DAverage']),
+          SF('R_3DYa1', FListA.Values['FCompressiveStrength3D1']),
+          SF('R_3DYa2', FListA.Values['FCompressiveStrength3D2']),
+          SF('R_3DYa3', FListA.Values['FCompressiveStrength3D3']),
+          SF('R_3DYa4', FListA.Values['FCompressiveStrength3D4']),
+          SF('R_3DYa5', FListA.Values['FCompressiveStrength3D5']),
+          SF('R_3DYa6', FListA.Values['FCompressiveStrength3D6']),
+          SF('R_28Ya1', FListA.Values['FCompressiveStrength28D1']),
+          SF('R_28Ya2', FListA.Values['FCompressiveStrength28D2']),
+          SF('R_28Ya3', FListA.Values['FCompressiveStrength28D3']),
+          SF('R_28Ya4', FListA.Values['FCompressiveStrength28D4']),
+          SF('R_28Ya5', FListA.Values['FCompressiveStrength28D5']),
+          SF('R_28Ya6', FListA.Values['FCompressiveStrength28D6']),
+          SF('R_3DYaAve', FListA.Values['FCompressiveStrength3DAverage']),
+          SF('R_28DYaAve', FListA.Values['FCompressiveStrength28DAverage']),
+          SF('R_Date', StrToDateDef(FListA.Values['FTestTime'],Now),sfDateTime),
+          SF('R_Man', FListA.Values['FTester'])
+          ], sTable_StockRecord, '', True);
+  FListC.Add(nStr);
+
+  if FListB.Count > 0 then
+  try
+    FDBConn.FConn.BeginTrans;
+
+    for nIdx:=0 to FListB.Count - 1 do
+    begin
+      if gDBConnManager.WorkerExec(FDBConn,FListB[nIdx]) <= 0 then
+      begin
+        gDBConnManager.WorkerExec(FDBConn, FListC[nIdx]);
+      end;
+    end;
+
+    if nHhcStr <> '' then
+    begin
+      nStr := 'Update %s Set %s where R_SerialNo =''%s''';
+      nStr := Format(nStr, [sTable_StockRecord, nHhcStr, nHYDan]);
+      WriteLog('混合单更新Sql:' + nStr);
+      gDBConnManager.WorkerExec(FDBConn, nStr);
+    end;
+
+    FDBConn.FConn.CommitTrans;
+  except
+    if FDBConn.FConn.InTransaction then
+      FDBConn.FConn.RollbackTrans;
+    raise;
+  end;
+
+  Result := True;
+  FOut.FData := nData;
+  FOut.FBase.FResult := True;
+end;
+
+function TBusWorkerBusinessHHJY.GetHhHYHxDetail(
+  var nData: string): Boolean;
+var nStr, nUrl: string;
+    nNode, nRoot: TXmlNode;
+    nInt, nIdx: Integer;
+    nSoapHeader: MySoapHeader;
+    nJS: TlkJSONobject;
+    nJSRow: TlkJSONlist;
+    nJSCol: TlkJSONobject;
+    nHHJYChannel: PChannelItem;
+begin
+  Result := False;
+  nUrl := '';
+
+  nSoapHeader := MySoapHeader.Create;
+
+  try
+    for nInt := Low(gSysParam.FHHJYUrl) to High(gSysParam.FHHJYUrl) do
+    with gSysParam.FHHJYUrl[nInt] do
+    begin
+      if FIn.FCommand = FCID then
+      begin
+        nSoapHeader.Password := FPassword;
+        nUrl := FURL;
+        Break;
+      end;
+    end;
+
+    nStr := 'FTestSampleCode = ''%s'' ';
+    nStr := Format(nStr, [FIn.FData]);
+
+    WriteLog('获取化验单化学分析入参:' + nStr);
+
+    nHHJYChannel := gChannelManager.LockChannel(cBus_Channel_Business, mtSoap);
+    if not Assigned(nHHJYChannel) then
+    begin
+      nData := '连接恒河久远服务失败(HHJY Web Service No Channel).';
+      Exit;
+    end;
+
+    with nHHJYChannel^ do
+    begin
+      if Assigned(FChannel) then
+        FChannel := nil;
+
+      FChannel := CoV_QChemistryTestBill.Create(FMsg, FHttp);
+      FHttp.TargetUrl := nUrl;
+    end; //config web service channel
+
+
+    nStr := IV_QChemistryTestBill(nHHJYChannel^.FChannel).RetrieveList(nSoapHeader,
+                                  nStr, '');
+
+    WriteLog('获取化验单化学分析出参'+nStr);
+
+    nStr := UTF8Encode(nStr);
+    nJS := TlkJSON.ParseText(nStr) as TlkJSONobject;
+
+    nStr := VarToStr(nJS.Field['IsSuccess'].Value);
+
+    if Pos('TRUE', UpperCase(VarToStr(nJS.Field['IsSuccess'].Value))) <= 0 then
+    begin
+      nData := '获取化验单化学分析调用异常.' + VarToStr(nJS.Field['Message'].Value);
+      WriteLog(nData);
+      Exit;
+    end;
+
+    if nJS.Field['Data'] is TlkJSONlist then
+    begin
+      nJSRow := nJS.Field['Data'] as TlkJSONlist;
+
+      if nJSRow.Count <= 0 then
+      begin
+        nData := '获取化验单化学分析调用异常.Data节点为空';
+        Exit;
+      end;
+
+      for nIdx := 0 to nJSRow.Count - 1 do
+      begin
+        FListB.Clear;
+        nJSCol:= nJSRow.Child[nIdx] as TlkJSONobject;
+
+        for nInt := 0 to nJSCol.Count - 1 do
+        begin
+          FListB.Values[nJSCol.NameOf[nInt]] := VarToStr(nJSCol.Field[nJSCol.NameOf[nInt]].Value);
+        end;
+        nData := PackerEncodeStr(FListB.Text);
+      end;
+    end;
+
+    Result := True;
+    FOut.FData := nData;
+    FOut.FBase.FResult := True;
+  finally
+    gChannelManager.ReleaseChannel(nHHJYChannel);
+    if Assigned(nJS) then
+      nJS.Free;
+    nSoapHeader.Free;
+  end;
+end;
+
+function TBusWorkerBusinessHHJY.GetHhHYWlDetail(
+  var nData: string): Boolean;
+var nStr, nUrl: string;
+    nNode, nRoot: TXmlNode;
+    nInt, nIdx: Integer;
+    nSoapHeader: MySoapHeader;
+    nJS: TlkJSONobject;
+    nJSRow: TlkJSONlist;
+    nJSCol: TlkJSONobject;
+    nHHJYChannel: PChannelItem;
+begin
+  Result := False;
+  nUrl := '';
+
+  nSoapHeader := MySoapHeader.Create;
+
+  try
+    for nInt := Low(gSysParam.FHHJYUrl) to High(gSysParam.FHHJYUrl) do
+    with gSysParam.FHHJYUrl[nInt] do
+    begin
+      if FIn.FCommand = FCID then
+      begin
+        nSoapHeader.Password := FPassword;
+        nUrl := FURL;
+        Break;
+      end;
+    end;
+
+    nStr := 'FTestSampleCode = ''%s'' ';
+    nStr := Format(nStr, [FIn.FData]);
+
+    WriteLog('获取化验单物理分析入参:' + nStr);
+
+    nHHJYChannel := gChannelManager.LockChannel(cBus_Channel_Business, mtSoap);
+    if not Assigned(nHHJYChannel) then
+    begin
+      nData := '连接恒河久远服务失败(HHJY Web Service No Channel).';
+      Exit;
+    end;
+
+    with nHHJYChannel^ do
+    begin
+      if Assigned(FChannel) then
+        FChannel := nil;
+
+      FChannel := CoV_QPhysicsRecord.Create(FMsg, FHttp);
+      FHttp.TargetUrl := nUrl;
+    end; //config web service channel
+
+
+    nStr := IV_QPhysicsRecord(nHHJYChannel^.FChannel).RetrieveList(nSoapHeader,
+                                  nStr, '');
+
+    WriteLog('获取化验单物理分析出参'+nStr);
+
+    nStr := UTF8Encode(nStr);
+    nJS := TlkJSON.ParseText(nStr) as TlkJSONobject;
+
+    nStr := VarToStr(nJS.Field['IsSuccess'].Value);
+
+    if Pos('TRUE', UpperCase(VarToStr(nJS.Field['IsSuccess'].Value))) <= 0 then
+    begin
+      nData := '获取化验单物理分析调用异常.' + VarToStr(nJS.Field['Message'].Value);
+      WriteLog(nData);
+      Exit;
+    end;
+
+    if nJS.Field['Data'] is TlkJSONlist then
+    begin
+      nJSRow := nJS.Field['Data'] as TlkJSONlist;
+
+      if nJSRow.Count <= 0 then
+      begin
+        nData := '获取化验单物理分析调用异常.Data节点为空';
+        Exit;
+      end;
+
+      for nIdx := 0 to nJSRow.Count - 1 do
+      begin
+        FListB.Clear;
+        nJSCol:= nJSRow.Child[nIdx] as TlkJSONobject;
+
+        for nInt := 0 to nJSCol.Count - 1 do
+        begin
+          FListB.Values[nJSCol.NameOf[nInt]] := VarToStr(nJSCol.Field[nJSCol.NameOf[nInt]].Value);
+        end;
+        nData := PackerEncodeStr(FListB.Text);
+      end;
+    end;
+
+    Result := True;
+    FOut.FData := nData;
+    FOut.FBase.FResult := True;
+  finally
+    gChannelManager.ReleaseChannel(nHHJYChannel);
+    if Assigned(nJS) then
+      nJS.Free;
+    nSoapHeader.Free;
+  end;
+end;
+
+function TBusWorkerBusinessHHJY.GetHhHYWlBZCD(
+  var nData: string): Boolean;
+var nStr, nUrl: string;
+    nNode, nRoot: TXmlNode;
+    nInt, nIdx: Integer;
+    nSoapHeader: MySoapHeader;
+    nJS: TlkJSONobject;
+    nJSRow: TlkJSONlist;
+    nJSCol: TlkJSONobject;
+    nHHJYChannel: PChannelItem;
+begin
+  Result := False;
+  nUrl := '';
+
+  nSoapHeader := MySoapHeader.Create;
+
+  try
+    for nInt := Low(gSysParam.FHHJYUrl) to High(gSysParam.FHHJYUrl) do
+    with gSysParam.FHHJYUrl[nInt] do
+    begin
+      if FIn.FCommand = FCID then
+      begin
+        nSoapHeader.Password := FPassword;
+        nUrl := FURL;
+        Break;
+      end;
+    end;
+
+    nStr := 'FRecordID = ''%s'' ';
+    nStr := Format(nStr, [FIn.FData]);
+
+    WriteLog('获取化验单物理分析标准稠度入参:' + nStr);
+
+    nHHJYChannel := gChannelManager.LockChannel(cBus_Channel_Business, mtSoap);
+    if not Assigned(nHHJYChannel) then
+    begin
+      nData := '连接恒河久远服务失败(HHJY Web Service No Channel).';
+      Exit;
+    end;
+
+    with nHHJYChannel^ do
+    begin
+      if Assigned(FChannel) then
+        FChannel := nil;
+
+      FChannel := CoV_QPhysicsWRONCRecord.Create(FMsg, FHttp);
+      FHttp.TargetUrl := nUrl;
+    end; //config web service channel
+
+
+    nStr := IV_QPhysicsWRONCRecord(nHHJYChannel^.FChannel).RetrieveList(nSoapHeader,
+                                  nStr, '');
+
+    WriteLog('获取化验单物理分析标准稠度出参'+nStr);
+
+    nStr := UTF8Encode(nStr);
+    nJS := TlkJSON.ParseText(nStr) as TlkJSONobject;
+
+    nStr := VarToStr(nJS.Field['IsSuccess'].Value);
+
+    if Pos('TRUE', UpperCase(VarToStr(nJS.Field['IsSuccess'].Value))) <= 0 then
+    begin
+      nData := '获取化验单物理分析标准稠度调用异常.' + VarToStr(nJS.Field['Message'].Value);
+      WriteLog(nData);
+      Exit;
+    end;
+
+    if nJS.Field['Data'] is TlkJSONlist then
+    begin
+      nJSRow := nJS.Field['Data'] as TlkJSONlist;
+
+      if nJSRow.Count <= 0 then
+      begin
+        nData := '获取化验单物理分析标准稠度调用异常.Data节点为空';
+        Exit;
+      end;
+
+      for nIdx := 0 to nJSRow.Count - 1 do
+      begin
+        FListB.Clear;
+        nJSCol:= nJSRow.Child[nIdx] as TlkJSONobject;
+
+        for nInt := 0 to nJSCol.Count - 1 do
+        begin
+          FListB.Values[nJSCol.NameOf[nInt]] := VarToStr(nJSCol.Field[nJSCol.NameOf[nInt]].Value);
+        end;
+        nData := PackerEncodeStr(FListB.Text);
+      end;
+    end;
+
+    Result := True;
+    FOut.FData := nData;
+    FOut.FBase.FResult := True;
+  finally
+    gChannelManager.ReleaseChannel(nHHJYChannel);
+    if Assigned(nJS) then
+      nJS.Free;
+    nSoapHeader.Free;
+  end;
+end;
+
+function TBusWorkerBusinessHHJY.GetHhHYWlNjTime(
+  var nData: string): Boolean;
+var nStr, nUrl: string;
+    nNode, nRoot: TXmlNode;
+    nInt, nIdx: Integer;
+    nSoapHeader: MySoapHeader;
+    nJS: TlkJSONobject;
+    nJSRow: TlkJSONlist;
+    nJSCol: TlkJSONobject;
+    nHHJYChannel: PChannelItem;
+begin
+  Result := False;
+  nUrl := '';
+
+  nSoapHeader := MySoapHeader.Create;
+
+  try
+    for nInt := Low(gSysParam.FHHJYUrl) to High(gSysParam.FHHJYUrl) do
+    with gSysParam.FHHJYUrl[nInt] do
+    begin
+      if FIn.FCommand = FCID then
+      begin
+        nSoapHeader.Password := FPassword;
+        nUrl := FURL;
+        Break;
+      end;
+    end;
+
+    nStr := 'FRecordID = ''%s'' ';
+    nStr := Format(nStr, [FIn.FData]);
+
+    WriteLog('获取化验单物理分析凝结时间入参:' + nStr);
+
+    nHHJYChannel := gChannelManager.LockChannel(cBus_Channel_Business, mtSoap);
+    if not Assigned(nHHJYChannel) then
+    begin
+      nData := '连接恒河久远服务失败(HHJY Web Service No Channel).';
+      Exit;
+    end;
+
+    with nHHJYChannel^ do
+    begin
+      if Assigned(FChannel) then
+        FChannel := nil;
+
+      FChannel := CoV_QPhysicsSettingTimeRecord.Create(FMsg, FHttp);
+      FHttp.TargetUrl := nUrl;
+    end; //config web service channel
+
+
+    nStr := IV_QPhysicsSettingTimeRecord(nHHJYChannel^.FChannel).RetrieveList(nSoapHeader,
+                                  nStr, '');
+
+    WriteLog('获取化验单物理分析凝结时间出参'+nStr);
+
+    nStr := UTF8Encode(nStr);
+    nJS := TlkJSON.ParseText(nStr) as TlkJSONobject;
+
+    nStr := VarToStr(nJS.Field['IsSuccess'].Value);
+
+    if Pos('TRUE', UpperCase(VarToStr(nJS.Field['IsSuccess'].Value))) <= 0 then
+    begin
+      nData := '获取化验单物理分析凝结时间调用异常.' + VarToStr(nJS.Field['Message'].Value);
+      WriteLog(nData);
+      Exit;
+    end;
+
+    if nJS.Field['Data'] is TlkJSONlist then
+    begin
+      nJSRow := nJS.Field['Data'] as TlkJSONlist;
+
+      if nJSRow.Count <= 0 then
+      begin
+        nData := '获取化验单物理分析凝结时间调用异常.Data节点为空';
+        Exit;
+      end;
+
+      for nIdx := 0 to nJSRow.Count - 1 do
+      begin
+        FListB.Clear;
+        nJSCol:= nJSRow.Child[nIdx] as TlkJSONobject;
+
+        for nInt := 0 to nJSCol.Count - 1 do
+        begin
+          FListB.Values[nJSCol.NameOf[nInt]] := VarToStr(nJSCol.Field[nJSCol.NameOf[nInt]].Value);
+        end;
+        nData := PackerEncodeStr(FListB.Text);
+      end;
+    end;
+
+    Result := True;
+    FOut.FData := nData;
+    FOut.FBase.FResult := True;
+  finally
+    gChannelManager.ReleaseChannel(nHHJYChannel);
+    if Assigned(nJS) then
+      nJS.Free;
+    nSoapHeader.Free;
+  end;
+end;
+
+function TBusWorkerBusinessHHJY.GetHhHYWlXD(
+  var nData: string): Boolean;
+var nStr, nUrl: string;
+    nNode, nRoot: TXmlNode;
+    nInt, nIdx: Integer;
+    nSoapHeader: MySoapHeader;
+    nJS: TlkJSONobject;
+    nJSRow: TlkJSONlist;
+    nJSCol: TlkJSONobject;
+    nHHJYChannel: PChannelItem;
+begin
+  Result := False;
+  nUrl := '';
+
+  nSoapHeader := MySoapHeader.Create;
+
+  try
+    for nInt := Low(gSysParam.FHHJYUrl) to High(gSysParam.FHHJYUrl) do
+    with gSysParam.FHHJYUrl[nInt] do
+    begin
+      if FIn.FCommand = FCID then
+      begin
+        nSoapHeader.Password := FPassword;
+        nUrl := FURL;
+        Break;
+      end;
+    end;
+
+    nStr := 'FRecordID = ''%s'' ';
+    nStr := Format(nStr, [FIn.FData]);
+
+    WriteLog('获取化验单物理分析细度入参:' + nStr);
+
+    nHHJYChannel := gChannelManager.LockChannel(cBus_Channel_Business, mtSoap);
+    if not Assigned(nHHJYChannel) then
+    begin
+      nData := '连接恒河久远服务失败(HHJY Web Service No Channel).';
+      Exit;
+    end;
+
+    with nHHJYChannel^ do
+    begin
+      if Assigned(FChannel) then
+        FChannel := nil;
+
+      FChannel := CoV_QPhysicsFinenessRecord.Create(FMsg, FHttp);
+      FHttp.TargetUrl := nUrl;
+    end; //config web service channel
+
+
+    nStr := IV_QPhysicsFinenessRecord(nHHJYChannel^.FChannel).RetrieveList(nSoapHeader,
+                                  nStr, '');
+
+    WriteLog('获取化验单物理分析细度出参'+nStr);
+
+    nStr := UTF8Encode(nStr);
+    nJS := TlkJSON.ParseText(nStr) as TlkJSONobject;
+
+    nStr := VarToStr(nJS.Field['IsSuccess'].Value);
+
+    if Pos('TRUE', UpperCase(VarToStr(nJS.Field['IsSuccess'].Value))) <= 0 then
+    begin
+      nData := '获取化验单物理分析细度调用异常.' + VarToStr(nJS.Field['Message'].Value);
+      WriteLog(nData);
+      Exit;
+    end;
+
+    if nJS.Field['Data'] is TlkJSONlist then
+    begin
+      nJSRow := nJS.Field['Data'] as TlkJSONlist;
+
+      if nJSRow.Count <= 0 then
+      begin
+        nData := '获取化验单物理分析细度调用异常.Data节点为空';
+        Exit;
+      end;
+
+      for nIdx := 0 to nJSRow.Count - 1 do
+      begin
+        FListB.Clear;
+        nJSCol:= nJSRow.Child[nIdx] as TlkJSONobject;
+
+        for nInt := 0 to nJSCol.Count - 1 do
+        begin
+          FListB.Values[nJSCol.NameOf[nInt]] := VarToStr(nJSCol.Field[nJSCol.NameOf[nInt]].Value);
+        end;
+        nData := PackerEncodeStr(FListB.Text);
+      end;
+    end;
+
+    Result := True;
+    FOut.FData := nData;
+    FOut.FBase.FResult := True;
+  finally
+    gChannelManager.ReleaseChannel(nHHJYChannel);
+    if Assigned(nJS) then
+      nJS.Free;
+    nSoapHeader.Free;
+  end;
+end;
+
+function TBusWorkerBusinessHHJY.GetHhHYWlBiBiao(
+  var nData: string): Boolean;
+var nStr, nUrl: string;
+    nNode, nRoot: TXmlNode;
+    nInt, nIdx: Integer;
+    nSoapHeader: MySoapHeader;
+    nJS: TlkJSONobject;
+    nJSRow: TlkJSONlist;
+    nJSCol: TlkJSONobject;
+    nHHJYChannel: PChannelItem;
+begin
+  Result := False;
+  nUrl := '';
+
+  nSoapHeader := MySoapHeader.Create;
+
+  try
+    for nInt := Low(gSysParam.FHHJYUrl) to High(gSysParam.FHHJYUrl) do
+    with gSysParam.FHHJYUrl[nInt] do
+    begin
+      if FIn.FCommand = FCID then
+      begin
+        nSoapHeader.Password := FPassword;
+        nUrl := FURL;
+        Break;
+      end;
+    end;
+
+    nStr := 'FRecordID = ''%s'' ';
+    nStr := Format(nStr, [FIn.FData]);
+
+    WriteLog('获取化验单物理分析比表面积入参:' + nStr);
+
+    nHHJYChannel := gChannelManager.LockChannel(cBus_Channel_Business, mtSoap);
+    if not Assigned(nHHJYChannel) then
+    begin
+      nData := '连接恒河久远服务失败(HHJY Web Service No Channel).';
+      Exit;
+    end;
+
+    with nHHJYChannel^ do
+    begin
+      if Assigned(FChannel) then
+        FChannel := nil;
+
+      FChannel := CoV_QPhysicsSpecificSurfaceAreaRecord.Create(FMsg, FHttp);
+      FHttp.TargetUrl := nUrl;
+    end; //config web service channel
+
+
+    nStr := IV_QPhysicsSpecificSurfaceAreaRecord(nHHJYChannel^.FChannel).RetrieveList(nSoapHeader,
+                                  nStr, '');
+
+    WriteLog('获取化验单物理分析比表面积出参'+nStr);
+
+    nStr := UTF8Encode(nStr);
+    nJS := TlkJSON.ParseText(nStr) as TlkJSONobject;
+
+    nStr := VarToStr(nJS.Field['IsSuccess'].Value);
+
+    if Pos('TRUE', UpperCase(VarToStr(nJS.Field['IsSuccess'].Value))) <= 0 then
+    begin
+      nData := '获取化验单物理分析比表面积调用异常.' + VarToStr(nJS.Field['Message'].Value);
+      WriteLog(nData);
+      Exit;
+    end;
+
+    if nJS.Field['Data'] is TlkJSONlist then
+    begin
+      nJSRow := nJS.Field['Data'] as TlkJSONlist;
+
+      if nJSRow.Count <= 0 then
+      begin
+        nData := '获取化验单物理分析比表面积调用异常.Data节点为空';
+        Exit;
+      end;
+
+      for nIdx := 0 to nJSRow.Count - 1 do
+      begin
+        FListB.Clear;
+        nJSCol:= nJSRow.Child[nIdx] as TlkJSONobject;
+
+        for nInt := 0 to nJSCol.Count - 1 do
+        begin
+          FListB.Values[nJSCol.NameOf[nInt]] := VarToStr(nJSCol.Field[nJSCol.NameOf[nInt]].Value);
+        end;
+        nData := PackerEncodeStr(FListB.Text);
+      end;
+    end;
+
+    Result := True;
+    FOut.FData := nData;
+    FOut.FBase.FResult := True;
+  finally
+    gChannelManager.ReleaseChannel(nHHJYChannel);
+    if Assigned(nJS) then
+      nJS.Free;
+    nSoapHeader.Free;
+  end;
+end;
+
+function TBusWorkerBusinessHHJY.GetHhHYWlQD(
+  var nData: string): Boolean;
+var nStr, nUrl: string;
+    nNode, nRoot: TXmlNode;
+    nInt, nIdx: Integer;
+    nSoapHeader: MySoapHeader;
+    nJS: TlkJSONobject;
+    nJSRow: TlkJSONlist;
+    nJSCol: TlkJSONobject;
+    nHHJYChannel: PChannelItem;
+begin
+  Result := False;
+  nUrl := '';
+
+  nSoapHeader := MySoapHeader.Create;
+
+  try
+    for nInt := Low(gSysParam.FHHJYUrl) to High(gSysParam.FHHJYUrl) do
+    with gSysParam.FHHJYUrl[nInt] do
+    begin
+      if FIn.FCommand = FCID then
+      begin
+        nSoapHeader.Password := FPassword;
+        nUrl := FURL;
+        Break;
+      end;
+    end;
+
+    nStr := 'FRecordID = ''%s'' ';
+    nStr := Format(nStr, [FIn.FData]);
+
+    WriteLog('获取化验单物理分析强度入参:' + nStr);
+
+    nHHJYChannel := gChannelManager.LockChannel(cBus_Channel_Business, mtSoap);
+    if not Assigned(nHHJYChannel) then
+    begin
+      nData := '连接恒河久远服务失败(HHJY Web Service No Channel).';
+      Exit;
+    end;
+
+    with nHHJYChannel^ do
+    begin
+      if Assigned(FChannel) then
+        FChannel := nil;
+
+      FChannel := CoV_QPhysicsSpecificSurfaceAreaRecord.Create(FMsg, FHttp);
+      FHttp.TargetUrl := nUrl;
+    end; //config web service channel
+
+
+    nStr := IV_QPhysicsSpecificSurfaceAreaRecord(nHHJYChannel^.FChannel).RetrieveList(nSoapHeader,
+                                  nStr, '');
+
+    WriteLog('获取化验单物理分析强度出参'+nStr);
+
+    nStr := UTF8Encode(nStr);
+    nJS := TlkJSON.ParseText(nStr) as TlkJSONobject;
+
+    nStr := VarToStr(nJS.Field['IsSuccess'].Value);
+
+    if Pos('TRUE', UpperCase(VarToStr(nJS.Field['IsSuccess'].Value))) <= 0 then
+    begin
+      nData := '获取化验单物理分析强度调用异常.' + VarToStr(nJS.Field['Message'].Value);
+      WriteLog(nData);
+      Exit;
+    end;
+
+    if nJS.Field['Data'] is TlkJSONlist then
+    begin
+      nJSRow := nJS.Field['Data'] as TlkJSONlist;
+
+      if nJSRow.Count <= 0 then
+      begin
+        nData := '获取化验单物理分析强度调用异常.Data节点为空';
+        Exit;
+      end;
+
+      for nIdx := 0 to nJSRow.Count - 1 do
+      begin
+        FListB.Clear;
+        nJSCol:= nJSRow.Child[nIdx] as TlkJSONobject;
+
+        for nInt := 0 to nJSCol.Count - 1 do
+        begin
+          FListB.Values[nJSCol.NameOf[nInt]] := VarToStr(nJSCol.Field[nJSCol.NameOf[nInt]].Value);
+        end;
+        nData := PackerEncodeStr(FListB.Text);
+      end;
+    end;
+
+    Result := True;
+    FOut.FData := nData;
+    FOut.FBase.FResult := True;
+  finally
+    gChannelManager.ReleaseChannel(nHHJYChannel);
+    if Assigned(nJS) then
+      nJS.Free;
+    nSoapHeader.Free;
+  end;
+end;
+
+function TBusWorkerBusinessHHJY.GetHhHYHhcDetail(
+  var nData: string): Boolean;
+var nStr, nUrl: string;
+    nNode, nRoot: TXmlNode;
+    nInt, nIdx: Integer;
+    nSoapHeader: MySoapHeader;
+    nJS: TlkJSONobject;
+    nJSRow: TlkJSONlist;
+    nJSCol: TlkJSONobject;
+    nHHJYChannel: PChannelItem;
+begin
+  Result := False;
+  nUrl := '';
+
+  nSoapHeader := MySoapHeader.Create;
+
+  try
+    for nInt := Low(gSysParam.FHHJYUrl) to High(gSysParam.FHHJYUrl) do
+    with gSysParam.FHHJYUrl[nInt] do
+    begin
+      if FIn.FCommand = FCID then
+      begin
+        nSoapHeader.Password := FPassword;
+        nUrl := FURL;
+        Break;
+      end;
+    end;
+
+    nStr := 'FTestSampleCode = ''%s'' ';
+    nStr := Format(nStr, [FIn.FData]);
+
+    WriteLog('获取化验单混合材入参:' + nStr);
+
+    nHHJYChannel := gChannelManager.LockChannel(cBus_Channel_Business, mtSoap);
+    if not Assigned(nHHJYChannel) then
+    begin
+      nData := '连接恒河久远服务失败(HHJY Web Service No Channel).';
+      Exit;
+    end;
+
+    with nHHJYChannel^ do
+    begin
+      if Assigned(FChannel) then
+        FChannel := nil;
+
+      FChannel := CoQAdmixtureDataBrief_WS.Create(FMsg, FHttp);
+      FHttp.TargetUrl := nUrl;
+    end; //config web service channel
+
+
+    nStr := IQAdmixtureDataBrief_WS(nHHJYChannel^.FChannel).RetrieveList(nSoapHeader,
+                                  nStr, '');
+
+    WriteLog('获取化验单混合材出参'+nStr);
+
+    nStr := UTF8Encode(nStr);
+    nJS := TlkJSON.ParseText(nStr) as TlkJSONobject;
+
+    nStr := VarToStr(nJS.Field['IsSuccess'].Value);
+
+    if Pos('TRUE', UpperCase(VarToStr(nJS.Field['IsSuccess'].Value))) <= 0 then
+    begin
+      nData := '获取化验单混合材调用异常.' + VarToStr(nJS.Field['Message'].Value);
+      WriteLog(nData);
+      Exit;
+    end;
+
+    if nJS.Field['Data'] is TlkJSONlist then
+    begin
+      nJSRow := nJS.Field['Data'] as TlkJSONlist;
+
+      if nJSRow.Count <= 0 then
+      begin
+        nData := '获取化验单混合材调用异常.Data节点为空';
+        Exit;
+      end;
+
+      for nIdx := 0 to nJSRow.Count - 1 do
+      begin
+        FListB.Clear;
+        nJSCol:= nJSRow.Child[nIdx] as TlkJSONobject;
+
+        for nInt := 0 to nJSCol.Count - 1 do
+        begin
+          FListB.Values[nJSCol.NameOf[nInt]] := VarToStr(nJSCol.Field[nJSCol.NameOf[nInt]].Value);
+        end;
+        nData := PackerEncodeStr(FListB.Text);
+      end;
+    end;
+
+    Result := True;
+    FOut.FData := nData;
+    FOut.FBase.FResult := True;
+  finally
+    gChannelManager.ReleaseChannel(nHHJYChannel);
+    if Assigned(nJS) then
+      nJS.Free;
+    nSoapHeader.Free;
+  end;
+end;
+
+function TBusWorkerBusinessHHJY.GetHhHYHhcRecord(
+  var nData: string): Boolean;
+var nStr, nUrl, nUpDate: string;
+    nNode, nRoot: TXmlNode;
+    nInt, nIdx: Integer;
+    nSoapHeader: MySoapHeader;
+    nJS: TlkJSONobject;
+    nJSRow: TlkJSONlist;
+    nJSCol: TlkJSONobject;
+    nHHJYChannel: PChannelItem;
+begin
+  Result := False;
+  nUrl := '';
+
+  nSoapHeader := MySoapHeader.Create;
+
+  try
+    for nInt := Low(gSysParam.FHHJYUrl) to High(gSysParam.FHHJYUrl) do
+    with gSysParam.FHHJYUrl[nInt] do
+    begin
+      if FIn.FCommand = FCID then
+      begin
+        nSoapHeader.Password := FPassword;
+        nUrl := FURL;
+        Break;
+      end;
+    end;
+
+    nStr := 'FRecordID = ''%s'' ';
+    nStr := Format(nStr, [FIn.FData]);
+
+    WriteLog('获取化验单混合材明细入参:' + nStr);
+
+    nHHJYChannel := gChannelManager.LockChannel(cBus_Channel_Business, mtSoap);
+    if not Assigned(nHHJYChannel) then
+    begin
+      nData := '连接恒河久远服务失败(HHJY Web Service No Channel).';
+      Exit;
+    end;
+
+    with nHHJYChannel^ do
+    begin
+      if Assigned(FChannel) then
+        FChannel := nil;
+
+      FChannel := CoQAdmixtureDataDetail_WS.Create(FMsg, FHttp);
+      FHttp.TargetUrl := nUrl;
+    end; //config web service channel
+
+
+    nStr := IQAdmixtureDataDetail_WS(nHHJYChannel^.FChannel).RetrieveList(nSoapHeader,
+                                  nStr, '');
+
+    WriteLog('获取化验单混合材明细出参'+nStr);
+
+    nStr := UTF8Encode(nStr);
+    nJS := TlkJSON.ParseText(nStr) as TlkJSONobject;
+
+    nStr := VarToStr(nJS.Field['IsSuccess'].Value);
+
+    if Pos('TRUE', UpperCase(VarToStr(nJS.Field['IsSuccess'].Value))) <= 0 then
+    begin
+      nData := '获取化验单混合材明细调用异常.' + VarToStr(nJS.Field['Message'].Value);
+      WriteLog(nData);
+      Exit;
+    end;
+
+    if nJS.Field['Data'] is TlkJSONlist then
+    begin
+      nJSRow := nJS.Field['Data'] as TlkJSONlist;
+
+      if nJSRow.Count <= 0 then
+      begin
+        nData := '获取化验单混合材明细调用异常.Data节点为空';
+        Exit;
+      end;
+
+      FListB.Clear;
+      nUpDate := '';
+
+      for nIdx := 0 to nJSRow.Count - 1 do
+      begin
+        FListC.Clear;
+        nJSCol:= nJSRow.Child[nIdx] as TlkJSONobject;
+
+        for nInt := 0 to nJSCol.Count - 1 do
+        begin
+          FListC.Values[nJSCol.NameOf[nInt]] := VarToStr(nJSCol.Field[nJSCol.NameOf[nInt]].Value);
+        end;
+
+        if FListC.Values['FMaterielNumber'] = '' then
+          Continue;
+
+        nStr := 'Select D_Value From %s ' +
+                'Where D_Name=''%s'' And D_Memo=''%s''';
+        nStr := Format(nStr, [sTable_SysDict, sFlag_HhcField,
+                              FListC.Values['FMaterielNumber']]);
+
+        with gDBConnManager.WorkerQuery(FDBConn, nStr) do
+        if RecordCount > 0 then
+        begin
+          nStr := '%s=''%s'',';
+          nStr := Format(nStr,[Fields[0].AsString,FListC.Values['FPercent']]);
+          nUpDate := nUpDate + nStr;
+        end;
+      end;
+      nData := '';
+      if nUpDate <> '' then
+      begin
+        if Copy(nUpDate, Length(nUpDate), 1) = ',' then
+          System.Delete(nUpDate, Length(nUpDate), 1);
+        nData := nUpDate;
+      end;
+    end;
+
+    Result := True;
+    FOut.FData := nData;
+    FOut.FBase.FResult := True;
+  finally
+    gChannelManager.ReleaseChannel(nHHJYChannel);
+    if Assigned(nJS) then
+      nJS.Free;
     nSoapHeader.Free;
   end;
 end;

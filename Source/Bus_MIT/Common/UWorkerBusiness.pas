@@ -111,6 +111,11 @@ type
     //同步销售发货明细
     function GetHhSaleWTTruck(var nData: string): Boolean;
     //获取委托车辆
+    procedure SaveHyDanEvent(const nStockno,nEvent,
+          nFrom,nSolution,nDepartment: string);
+    //生成化验单推送事件
+    function VerifyTruckStatus(var nData: string): Boolean;
+    //校验车辆状态
   public
     constructor Create; override;
     destructor destroy; override;
@@ -168,6 +173,8 @@ const HhOrderNdPoundAuditMenu = '原燃材料厂内倒料单审核';
 const HhCompanyID     = '100000104';
 
 implementation
+
+uses UHardBusiness;
 
 class function TBusWorkerQueryField.FunctionName: string;
 begin
@@ -390,6 +397,7 @@ begin
    cBC_UserLogOut          : Result := LogOut(nData);
    cBC_GetStockBatcode     : Result := GetStockBatcode(nData);
    cBC_TruckTimeOut        : Result := IsTruckTimeOut(nData);
+   cBC_VerifyTruckStatus   : Result := VerifyTruckStatus(nData);
    //ERP
    cBC_SyncHhSaleMateriel  : Result := SyncHhSaleMateriel(nData);
    cBC_SyncHhProvideMateriel : Result := SyncHhProvideMateriel(nData);
@@ -436,6 +444,78 @@ begin
 
     FOut.FData := Fields[0].AsString;
     Result := True;
+  end;
+end;
+
+//Date: 2019-06-15
+//Desc: 获取车辆状态
+function TWorkerBusinessCommander.VerifyTruckStatus(var nData: string): Boolean;
+var nStr: string;
+    nHint: string;
+    nEID:string;
+begin
+  Result := True;
+
+  nStr := 'Select T_Valid,T_Truck, L_NextStatus From %s left join %s on T_Bill = L_ID Where T_Bill=''%s'' ';
+  nStr := Format(nStr, [sTable_ZTTrucks, sTable_Bill, FIn.FData]);
+
+  with gDBConnManager.WorkerQuery(FDBConn, nStr) do
+  begin
+    if RecordCount<1 then
+    begin
+      nHint := '排队顺序查询提货单号[ %s ]信息不存在,允许[ %s ]刷卡.';
+      nHint := Format(nHint, [FIn.FData, FIn.FExtParam]);
+      WriteLog(nHint);
+      Exit;
+    end;
+
+    if FieldByName('T_Valid').AsString = sFlag_No then
+    begin
+      nHint := '排队顺序查询提货单号[ %s ]车辆[ %s ]已出队,允许[ %s ]刷卡.';
+      nHint := Format(nHint, [FIn.FData, FieldByName('T_Truck').AsString,
+                              FIn.FExtParam]);
+      WriteLog(nHint);
+      Exit;
+    end;
+
+    if (FieldByName('L_NextStatus').AsString = sFlag_TruckBFM) or
+       (FieldByName('L_NextStatus').AsString = sFlag_TruckOut) then
+    begin
+      nHint := '排队顺序查询提货单号[ %s ]车辆[ %s ]已刷卡,允许[ %s ]刷卡.';
+      nHint := Format(nHint, [FIn.FData, FieldByName('T_Truck').AsString,
+                              FIn.FExtParam]);
+      WriteLog(nHint);
+      Exit;
+    end;
+
+    nData := '排队顺序查询提货单号[ %s ]车辆[ %s ]未装车,请[ %s ]等待.';
+    nData := Format(nData, [FIn.FData, FieldByName('T_Truck').AsString,
+                              FIn.FExtParam]);
+    WriteLog(nData);
+    try
+      nEID := FIn.FExtParam + sFlag_ManualG;
+      nStr := 'Delete From %s Where E_ID=''%s''';
+      nStr := Format(nStr, [sTable_ManualEvent, nEID]);
+
+      gDBConnManager.WorkerExec(FDBConn, nStr);
+
+      nStr := MakeSQLByStr([
+          SF('E_ID', nEID),
+          SF('E_Key', FIn.FExtParam),
+          SF('E_From', sFlag_DepJianZhuang),
+          SF('E_Event', nData),
+          SF('E_Solution', sFlag_Solution_OK),
+          SF('E_Departmen', sFlag_DepJianZhuang),
+          SF('E_Date', sField_SQLServer_Now, sfVal)
+          ], sTable_ManualEvent, '', True);
+      gDBConnManager.WorkerExec(FDBConn, nStr);
+    except
+      on E: Exception do
+      begin
+        WriteLog(e.message);
+      end;
+    end;
+    Result := False;
   end;
 end;
 
@@ -980,6 +1060,7 @@ begin
     begin
       nData := '物料[ %s ]未配置批次号规则.';
       nData := Format(nData, [FIn.FData]);
+      SaveHyDanEvent(FIn.FData,nData,sFlag_DepDaTing,sFlag_Solution_OK,sFlag_DepDaTing);
       Exit;
     end;
 
@@ -1082,7 +1163,11 @@ begin
   if FOut.FData = '' then
     FOut.FData := NewBatCode(nRID);
   //xxxxx
-
+  if FOut.FBase.FErrCode = sFlag_ForceHint then
+  begin
+    SaveHyDanEvent(FIn.FData,FOut.FBase.FErrDesc,
+                   sFlag_DepDaTing,sFlag_Solution_OK,sFlag_DepDaTing);
+  end;
   Result := True;
   FOut.FBase.FResult := True;
 end;
@@ -1180,7 +1265,7 @@ end;
 //Date: 2015-8-5
 //Desc: 保存采购单
 function TWorkerBusinessOrders.SaveOrder(var nData: string): Boolean;
-var nStr: string;
+var nStr,nPost: string;
     nIdx: Integer;
     nVal,nOppositeValue: Double;
     nOut,nOutTemp: TWorkerBusinessCommand;
@@ -1268,13 +1353,33 @@ begin
     FDBConn.FConn.RollbackTrans;
     raise;
   end;
-//  if gSysParam.FGPWSURL <> '' then
-//  begin
-//    //修改商城订单状态
-//    ModifyWebOrderStatus(nOut.FData,c_WeChatStatusCreateCard);
-//    //发送微信消息
-//    SendMsgToWebMall(nOut.FData,cSendWeChatMsgType_AddBill,sFlag_Provide);
-//  end;
+  nStr := 'Select D_Value From %s ' +
+          'Where D_Name=''%s'' and D_Memo=''%s''';
+  nStr := Format(nStr, [sTable_SysDict, sFlag_SysParam, sFlag_OrderCardID]);
+
+  with gDBConnManager.WorkerQuery(FDBConn, nStr) do
+  if RecordCount > 0 then
+  begin
+    nPost := Fields[0].AsString;
+  end;
+
+  if nPost <> '' then
+  begin
+    nStr := 'Select D_Value From %s ' +
+            'Where D_Name=''%s'' and D_Memo=''%s''';
+    nStr := Format(nStr, [sTable_SysDict, sFlag_PlayVoiceStock, FListA.Values['StockNo']]);
+
+    with gDBConnManager.WorkerQuery(FDBConn, nStr) do
+    if RecordCount > 0 then
+    begin
+      if Fields[0].AsString = sFlag_Yes then
+      begin
+        nStr := '原材料' + FListA.Values['StockName'] + '供应商' +
+                FListA.Values['ProviderName'] + '已开卡,请化验室注意取样';
+        PlayNetVoice(nStr,nPost);
+      end;
+    end;
+  end;
 end;
 
 //Date: 2015-8-5
@@ -1818,12 +1923,23 @@ begin
         Values['O_PoundIdx']   := FieldByName('O_PoundIdx').AsString;
         Values['O_Status']     := FieldByName('O_Status').AsString;
         Values['O_NextStatus'] := FieldByName('O_NextStatus').AsString;
+        Values['O_KeepCard']   := FieldByName('O_KeepCard').AsString;
 	    end;
 	  end;
 
-	  nStr := 'Select * From $PD Where ' +
-	          '(P_Order =''$OID'' or P_OrderBak =''$OID'') And P_PoundIdx=''$PI''';
-	  //xxxxx
+    if FListA.Values['O_KeepCard'] = sFlag_Yes then
+    begin
+      nStr := 'Select top 1 * From $PD Where ' +
+              '(P_Order =''$OID'' or P_OrderBak =''$OID'') And P_PoundIdx=''$PI'''
+              + ' Order by R_ID Desc';
+      //xxxxx
+    end
+    else
+    begin
+      nStr := 'Select * From $PD Where ' +
+              '(P_Order =''$OID'' or P_OrderBak =''$OID'') And P_PoundIdx=''$PI''';
+      //xxxxx
+    end;
 
 	  nStr := MacroValue(nStr, [MI('$PI', FListA.Values['O_PoundIdx']),
 	                            MI('$PD', sTable_PoundLog),
@@ -1851,6 +1967,11 @@ begin
 	          FCusName    := nProNameList.Strings[nPoundIdx-1];
             FTruck      := Values['O_Truck'];
 
+            if Values['O_KeepCard'] = sFlag_Yes then
+              FCType       := sFlag_CardGuDing
+            else
+              FCType       := sFlag_CardLinShi;
+
             FType       := Values['O_Type'];
 	          FStockName  := nMNameList.Strings[nPoundIdx-1];
 
@@ -1874,7 +1995,7 @@ begin
           begin
             FZhiKa      := Values['O_ID'];
             FID         := Values['O_ID'];
-            FPoundID    := '';
+            FPoundID    := FieldByName('P_ID').AsString;
 
             FCusID      := '';
             FCusName    := nProNameList.Strings[nPoundIdx-1];
@@ -1895,26 +2016,55 @@ begin
               FNextStatus := sFlag_TruckNone;
             end;
 
-            with FPData do
-            begin
-              FStation  := FieldByName('P_PStation').AsString;
-              FValue    := FieldByName('P_PValue').AsFloat;
-              FDate     := FieldByName('P_PDate').AsDateTime;
-              FOperator := FieldByName('P_PMan').AsString;
-            end;
+            if Values['O_KeepCard'] = sFlag_Yes then
+              FCType       := sFlag_CardGuDing
+            else
+              FCType       := sFlag_CardLinShi;
 
-            with FMData do
+            if FCtype = sFlag_CardGuDing then
             begin
-              FStation  := FieldByName('P_MStation').AsString;
-              FValue    := FieldByName('P_MValue').AsFloat;
-              FDate     := FieldByName('P_MDate').AsDateTime;
-              FOperator := FieldByName('P_MMan').AsString;
-            end;
-            FKZValue  := FieldByName('P_KZValue').AsFloat;
+              if FNextStatus = sFlag_TruckBFM then
+              begin
+                with FPData do
+                begin
+                  FStation  := FieldByName('P_PStation').AsString;
+                  FValue    := FieldByName('P_PValue').AsFloat;
+                  FDate     := FieldByName('P_PDate').AsDateTime;
+                  FOperator := FieldByName('P_PMan').AsString;
+                end;
 
+                with FMData do
+                begin
+                  FStation  := FieldByName('P_MStation').AsString;
+                  FValue    := FieldByName('P_MValue').AsFloat;
+                  FDate     := FieldByName('P_MDate').AsDateTime;
+                  FOperator := FieldByName('P_MMan').AsString;
+                end;
+                FKZValue  := FieldByName('P_KZValue').AsFloat;
+              end;
+            end
+            else
+            begin
+              with FPData do
+              begin
+                FStation  := FieldByName('P_PStation').AsString;
+                FValue    := FieldByName('P_PValue').AsFloat;
+                FDate     := FieldByName('P_PDate').AsDateTime;
+                FOperator := FieldByName('P_PMan').AsString;
+              end;
+
+              with FMData do
+              begin
+                FStation  := FieldByName('P_MStation').AsString;
+                FValue    := FieldByName('P_MValue').AsFloat;
+                FDate     := FieldByName('P_MDate').AsDateTime;
+                FOperator := FieldByName('P_MMan').AsString;
+              end;
+              FKZValue  := FieldByName('P_KZValue').AsFloat;
+            end;
 
             FNeiDao     := sFlag_No;
-            FCtype  := sFlag_OrderCardL;
+            //FCtype  := sFlag_OrderCardL;
             FPoundIdx   := nPoundIdx;
             FPoundMax  := nProNameList.Count;
             FPrintBD   := True;
@@ -2247,6 +2397,39 @@ begin
         FListA.Add(nSQL);
       end
       else
+      if (nCardType=sFlag_Mul) and (FCtype = sFlag_CardGuDing) then
+      begin
+        nPrePMan := '';
+        nPrePTime := Now;
+
+        nSQL := 'Select top 1 P_ID,P_PValue,P_PMan,P_PDate From %s Where P_Order=''%s'' order by R_ID desc ';
+        nSQL := Format(nSQL, [sTable_PoundLog, FID]);
+        with gDBConnManager.WorkerQuery(FDBConn, nSQL) do
+        if RecordCount > 0 then
+        begin
+          nStr := Fields[0].AsString;
+          nPrePTime := FieldByName('P_PDate').asDateTime;
+          nPrePMan := FieldByName('P_PMan').asString;
+        end;
+
+        getLastPInfo(FID,nPrePValue,nPrePMan,nPrePTime);
+
+        nStr := SF('P_ID', nStr);
+        nSQL := MakeSQLByStr([
+                SF('P_PValue', FPData.FValue, sfVal),
+//                SF('P_PDate', nPrePTime, sfDateTime),
+//                SF('P_PMan', nPrePMan),
+                SF('P_PStation', FPData.FStation),
+                SF('P_MValue', FMData.FValue, sfVal),
+                SF('P_MDate', sField_SQLServer_Now, sfVal),
+                SF('P_MMan', FIn.FBase.FFrom.FUser),
+                SF('P_MStation', FMData.FStation)
+                ], sTable_PoundLog, nStr, False);
+        //xxxxx
+        WriteLog('临时业务固定卡保存毛重SQL:' + nSQL);
+        FListA.Add(nSQL);
+      end
+      else
       if (FStatus=sFlag_TruckBFM) and (FNextStatus=sFlag_TruckBFM) then
       begin
         FListC.Clear;
@@ -2337,8 +2520,8 @@ begin
                 SF('D_Value', nVal, sfVal)
                 ], sTable_OrderDtl, SF('D_ID', FID), False);
         FListA.Add(nSQL);
-
-      end else
+      end
+      else
       begin
         nSQL := MakeSQLByStr([
                 SF('P_PValue', FPData.FValue, sfVal),
@@ -2417,13 +2600,26 @@ begin
 //      FListA.Add(nSQL);
       //调整已收货；
 
-      nSQL := 'Select P_ID From %s Where P_Order=''%s'' ';
-      nSQL := Format(nSQL, [sTable_PoundLog, FID]);
-      //未称毛重记录
-      with gDBConnManager.WorkerQuery(FDBConn, nSQL) do
-      if RecordCount > 0 then
+      if (nCardType=sFlag_Mul) and (FCtype = sFlag_CardGuDing) then
       begin
-        FOut.FData := Fields[0].AsString;
+        nSQL := 'Select top 1 P_ID From %s Where P_Order=''%s'' order by R_ID desc ';
+        nSQL := Format(nSQL, [sTable_PoundLog, FID]);
+        with gDBConnManager.WorkerQuery(FDBConn, nSQL) do
+        if RecordCount > 0 then
+        begin
+          FOut.FData := Fields[0].AsString;
+        end;
+      end
+      else
+      begin
+        nSQL := 'Select P_ID From %s Where P_Order=''%s'' ';
+        nSQL := Format(nSQL, [sTable_PoundLog, FID]);
+        //未称毛重记录
+        with gDBConnManager.WorkerQuery(FDBConn, nSQL) do
+        if RecordCount > 0 then
+        begin
+          FOut.FData := Fields[0].AsString;
+        end;
       end;
     end;
   end else
@@ -2433,19 +2629,32 @@ begin
   begin
     if nCardType=sFlag_Mul then
     begin
-      nSQL := MakeSQLByStr([
-              SF('O_Status', sFlag_TruckOut),
-              SF('O_NextStatus', ''),
-              SF('O_Card', ''),
-              SF('O_OutTime', sField_SQLServer_Now, sfVal),
-              SF('O_OutMan', FIn.FBase.FFrom.FUser)
-              ], sTable_CardOther, SF('R_ID', nPound[0].FID), False);
-      FListA.Add(nSQL);
-
-      if not CallMe(cBC_LogOffOrderCard, nPound[0].FCard, '', @nOut) then
+      if nPound[0].FCtype = sFlag_CardGuDing then
       begin
-        nData := nOut.FData;
-        Exit;
+        nSQL := 'Update %s Set O_InTime=NULL,O_InMan=NULL,' +
+                'O_BFPTime=NULL,O_BFPMan=NULL,O_BFPValue=0,' +
+                'O_Status=''%s'', O_NextStatus=''%s'' ' +
+                'Where R_ID=''%s''';
+        nSQL := Format(nSQL, [sTable_CardOther, sFlag_TruckNone,
+                sFlag_TruckIn, nPound[0].FID]);
+        FListA.Add(nSQL);
+      end
+      else
+      begin
+        nSQL := MakeSQLByStr([
+                SF('O_Status', sFlag_TruckOut),
+                SF('O_NextStatus', ''),
+                SF('O_Card', ''),
+                SF('O_OutTime', sField_SQLServer_Now, sfVal),
+                SF('O_OutMan', FIn.FBase.FFrom.FUser)
+                ], sTable_CardOther, SF('R_ID', nPound[0].FID), False);
+        FListA.Add(nSQL);
+
+        if not CallMe(cBC_LogOffOrderCard, nPound[0].FCard, '', @nOut) then
+        begin
+          nData := nOut.FData;
+          Exit;
+        end;
       end;
     end
     else
@@ -4380,6 +4589,7 @@ begin
               'and FStatus = 1 and FFactoryName like ''%%%s%%'' ';
       nStr := Format(nStr, [sTable_HH_SalePlan, FIn.Fdata]);
     end;
+
     //xxxxx
     WriteLog('获取销售计划SQL:'+nStr);
     with gDBConnManager.SQLQuery(nStr, nDBWorker, sFlag_DB_HH) do
@@ -4559,13 +4769,13 @@ begin
 
     FListA.Values['FShopID']                := '100015004';
     try
-      nDate := FormatDateTime('DD',FieldByName('L_Date').AsDateTime);
+      nDate := FormatDateTime('DD',FieldByName('L_OutFact').AsDateTime);
       if StrToIntDef(nDate,0) > 25 then
-       nDate := FormatDateTime('YYYY-MM',IncMonth(FieldByName('L_Date').AsDateTime))
+       nDate := FormatDateTime('YYYY-MM',IncMonth(FieldByName('L_OutFact').AsDateTime))
       else
-       nDate := FormatDateTime('YYYY-MM',FieldByName('L_Date').AsDateTime);
+       nDate := FormatDateTime('YYYY-MM',FieldByName('L_OutFact').AsDateTime);
     except
-       nDate := FormatDateTime('YYYY-MM',FieldByName('L_Date').AsDateTime);
+       nDate := FormatDateTime('YYYY-MM',FieldByName('L_OutFact').AsDateTime);
     end;
     FListA.Values['FYearPeriod']            := nDate;
 
@@ -4903,6 +5113,37 @@ begin
     Result := True;
   finally
     gDBConnManager.ReleaseConnection(nDBWorker);
+  end;
+end;
+
+procedure TWorkerBusinessCommander.SaveHyDanEvent(const nStockno,nEvent,
+          nFrom,nSolution,nDepartment: string);
+var
+  nStr:string;
+  nEID:string;
+begin
+  try
+    nEID := nStockno + FormatDateTime('YYYYMMDD',Now);
+    nStr := 'Delete From %s Where E_ID=''%s''';
+    nStr := Format(nStr, [sTable_ManualEvent, nEID]);
+
+    gDBConnManager.WorkerExec(FDBConn, nStr);
+
+    nStr := MakeSQLByStr([
+        SF('E_ID', nEID),
+        SF('E_Key', ''),
+        SF('E_From', nFrom),
+        SF('E_Event', nEvent),
+        SF('E_Solution', nSolution),
+        SF('E_Departmen', nDepartment),
+        SF('E_Date', sField_SQLServer_Now, sfVal)
+        ], sTable_ManualEvent, '', True);
+    gDBConnManager.WorkerExec(FDBConn, nStr);
+  except
+    on E: Exception do
+    begin
+      WriteLog(e.message);
+    end;
   end;
 end;
 

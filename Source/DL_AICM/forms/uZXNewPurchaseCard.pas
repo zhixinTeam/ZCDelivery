@@ -4,6 +4,7 @@
 *******************************************************************************}
 unit uZXNewPurchaseCard;
 
+{$I Link.Inc}
 interface
 
 uses
@@ -12,7 +13,7 @@ uses
   cxContainer, cxEdit, cxLabel, Menus, StdCtrls, cxButtons, cxGroupBox,
   cxRadioGroup, cxTextEdit, cxCheckBox, ExtCtrls, dxLayoutcxEditAdapters,
   dxLayoutControl, cxDropDownEdit, cxMaskEdit, cxButtonEdit,
-  USysConst, cxListBox, ComCtrls,Uszttce_api,Contnrs,UFormCtrl;
+  USysConst, cxListBox, ComCtrls,Contnrs,UFormCtrl;
 
 type
   TfFormNewPurchaseCard = class(TForm)
@@ -68,7 +69,6 @@ type
     procedure editWebOrderNoKeyPress(Sender: TObject; var Key: Char);
   private
     { Private declarations }
-    FSzttceApi:TSzttceApi; //发卡机驱动
     FAutoClose:Integer; //窗口自动关闭倒计时（分钟）
     FWebOrderIndex:Integer; //商城订单索引
     FWebOrderItems:array of stMallPurchaseItem; //商城订单数组
@@ -89,7 +89,6 @@ type
   public
     { Public declarations }
     procedure SetControlsClear;
-    property SzttceApi:TSzttceApi read FSzttceApi write FSzttceApi;
   end;
 
 var
@@ -98,7 +97,7 @@ var
 implementation
 uses
   ULibFun,UBusinessPacker,USysLoger,UBusinessConst,UFormMain,USysBusiness,USysDB,
-  UAdjustForm,UFormBase,UDataReport,UDataModule,NativeXml,UMgrK720Reader,UFormWait,
+  UAdjustForm,UFormBase,UDataReport,UDataModule,NativeXml,UMgrTTCEDispenser,UFormWait,
   DateUtils;
 {$R *.dfm}
 
@@ -353,13 +352,13 @@ begin
   if not GetOrderOtherInfo(EditID.Text,nModel,nYear,nKD,FProID,nProName,nStockName) then
   begin
     ShowMsg('查询订单附加信息失败',sHint);
-    nRepeat := False;
+    nRepeat := True;
   end;
 
   if nYear = '' then
   begin
     ShowMsg('查询订单附加信息失败',sHint);
-    nRepeat := False;
+    nRepeat := True;
   end;
 
   if nStockName <> '' then
@@ -451,25 +450,60 @@ end;
 
 function TfFormNewPurchaseCard.SaveBillProxy: Boolean;
 var
-  nHint:string;
+  nHint, nMsg, nDate, nData, nYear:string;
   nWebOrderID:string;
   nList: TStrings;
   nOrderItem:stMallPurchaseItem;
   nOrder:string;
-  nNewCardNo:string;
+  nCard:string;
   nidx:Integer;
   i:Integer;
   nRet:Boolean;
+  nDateNow: TDateTime;
 begin
   Result := False;
   nOrderItem := FWebOrderItems[FWebOrderIndex];
-  nWebOrderID := editWebOrderNo.Text;
+  nWebOrderID := nOrderItem.FOrder_id;
 
   if EditID.Text='' then
   begin
     ShowMsg('未查询网上货单',sHint);
     Writelog('未查询网上货单');
     Exit;
+  end;
+
+  if Trim(EditYear.Text)='' then
+  begin
+    ShowMsg('订单异常,申请单可能已过期',sHint);
+    Writelog('订单异常,申请单可能已过期');
+    Exit;
+  end
+  else
+  begin
+    nYear := Trim(EditYear.Text);
+    try
+      nDateNow := FDM.ServerNow;
+      nDate := FormatDateTime('YYYY-MM-',nDateNow) + '26';
+      if nDateNow > StrToDate(nDate) then
+       nDate := FormatDateTime('YYYY-MM',IncMonth(nDateNow))
+      else
+       nDate := FormatDateTime('YYYY-MM',nDateNow);
+    except
+       nDate := FormatDateTime('YYYY-MM',nDateNow);
+    end;
+
+    nData := '当前记账年月[ %s ]采购订单[ %s ]所属计划年月[ %s ]';
+    nData := Format(nData,[nDate, EditID.Text, nYear]);
+    WriteLog(nData);
+    
+    if nYear <> nDate then
+    begin
+      nData := '当前记账年月[ %s ]与采购订单[ %s ]所属计划年月[ %s ]不一致,采购订单可能已失效';
+      nData := Format(nData,[nDate, EditID.Text, nYear]);
+      Writelog(nData);
+      ShowMsg(nData, sHint);
+      Exit;
+    end;
   end;
 
   if not VerifyCtrl(EditTruck,nHint) then
@@ -486,7 +520,50 @@ begin
     Exit;
   end;
 
-  nNewCardNo := '';
+  if IFHasOrder(EditTruck.Text, nHint) then
+  begin
+    ShowMsg('车辆存在未完成的采购单[' + nHint + '],无法开单,请联系管理员',sHint);
+    Exit;
+  end;
+
+  nCard := '';
+
+  for nIdx:=0 to 3 do
+  begin
+    nCard := gDispenserManager.GetCardNo(gSysParam.FTTCEK720ID, nHint, False);
+    if nCard <> '' then
+      Break;
+    Sleep(500);
+  end;
+  //连续三次读卡,成功则退出。
+
+  if nCard = '' then
+  begin
+    nMsg := '卡箱异常,请查看是否有卡.';
+    ShowMsg(nMsg, sWarn);
+    Exit;
+  end;
+
+  WriteLog('读取到卡片: ' + nCard);
+  //解析卡片
+  if not IsCardValid(nCard) then
+  begin
+    gDispenserManager.RecoveryCard(gSysParam.FTTCEK720ID, nHint);
+    nMsg := '卡号' + nCard + '非法,回收中,请稍后重新取卡';
+    WriteLog(nMsg);
+    ShowMsg(nMsg, sWarn);
+    Exit;
+  end;
+
+  {$IFDEF OrderControl}
+  if IsPurOrderHasControl(FProID, nOrderItem.FGoodsID) then
+  begin
+    nMsg := '供应商' + EditProv.Text + '物料' + Trim(EditProduct.Text)
+            + '被限制取卡, 请联系管理员';
+    ShowMsg(nMsg, sWarn);
+    Exit;
+  end;
+  {$ENDIF}
 
   nList := TStringList.Create;
   try
@@ -522,6 +599,9 @@ begin
       Writelog(nHint);
       Exit;
     end;
+
+    nRet := SaveOrderCard(nOrder, nCard);
+
     writelog('TfFormNewPurchaseCard.SaveBillProxy 保存采购单-耗时：'+InttoStr(MilliSecondsBetween(Now, FBegin))+'ms');
 
     FBegin := Now;
@@ -531,18 +611,32 @@ begin
     nList.Free;
   end;
 
-  ShowMsg('采购单保存成功', sHint);
-
-    //发卡
-  if not FSzttceApi.IssueOneCard(nNewCardNo) then
+  if not nRet then
   begin
-    nHint := '出卡失败,请到开票窗口补办磁卡：[errorcode=%d,errormsg=%s]';
-    nHint := Format(nHint,[FSzttceApi.ErrorCode,FSzttceApi.ErrorMsg]);
-    ShowMsg(nHint,sHint);
+    nMsg := '办理磁卡失败,请重试.';
+    ShowMsg(nMsg, sHint);
+    Exit;
+  end;
+
+  nRet := gDispenserManager.SendCardOut(gSysParam.FTTCEK720ID, nHint);
+  //发卡
+
+  if nRet then
+  begin
+    nMsg := '采购单[ %s ]发卡成功,卡号[ %s ],请收好您的卡片';
+    nMsg := Format(nMsg, [nOrder, nCard]);
+
+    WriteLog(nMsg);
+    ShowMsg(nMsg,sWarn);
   end
   else begin
-    ShowMsg('发卡成功,卡号['+nNewCardNo+'],请收好您的卡片',sHint);
-    SaveOrderCard(nOrder,nNewCardNo);
+    gDispenserManager.RecoveryCard(gSysParam.FTTCEK720ID, nHint);
+
+    nMsg := '卡号[ %s ]关联订单失败,请到开票窗口重新关联.';
+    nMsg := Format(nMsg, [nCard]);
+
+    WriteLog(nMsg);
+    ShowMsg(nMsg,sWarn);
   end;
   Result := True;
 end;

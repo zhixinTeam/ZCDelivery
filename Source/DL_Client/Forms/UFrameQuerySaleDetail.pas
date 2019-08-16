@@ -137,7 +137,9 @@ begin
   EditDate.Text := Format('%s 至 %s', [Date2Str(FStart), Date2Str(FEnd)]);
 
   Result := 'Select * From $Bill b' +
-            ' Left Join $ZK on O_Order=L_ZhiKa ';
+            ' Left Join $ZK on O_Order=L_ZhiKa ' +
+            ' Left Join $C on C_ID=L_CusID ' +
+            ' Left Join $Truck on T_Truck=L_Truck ';
   //提货单
 
   if FJBWhere = '' then
@@ -157,6 +159,8 @@ begin
 
   Result := MacroValue(Result, [MI('$Bill', sTable_Bill),
             MI('$ZK', sTable_SalesOrder),
+            MI('$Truck', sTable_Truck),
+            MI('$C', sTable_Customer),
             MI('$S', Date2Str(FStart)), MI('$End', Date2Str(FEnd + 1))]);
   //xxxxx
 end;

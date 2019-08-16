@@ -37,6 +37,16 @@ type
     dxLayout1Group4: TdxLayoutGroup;
     EditValue: TcxTextEdit;
     dxLayout1Item11: TdxLayoutItem;
+    EditMaxXz: TcxTextEdit;
+    dxLayout1Item12: TdxLayoutItem;
+    EditType: TcxComboBox;
+    dxLayout1Item13: TdxLayoutItem;
+    EditMaxLadeValue: TcxTextEdit;
+    dxLayout1Item14: TdxLayoutItem;
+    EditMemo: TcxTextEdit;
+    dxLayout1Item15: TdxLayoutItem;
+    SnapTruck: TcxCheckBox;
+    dxLayout1Item16: TdxLayoutItem;
     procedure BtnOKClick(Sender: TObject);
   protected
     { Protected declarations }
@@ -53,7 +63,7 @@ implementation
 
 {$R *.dfm}
 uses
-  ULibFun, UMgrControl, UDataModule, UFormCtrl, USysDB, USysConst;
+  ULibFun, UMgrControl, UDataModule, UFormCtrl, USysDB, USysConst, UAdjustForm;
 
 class function TfFormTruck.CreateForm(const nPopedom: string;
   const nParam: Pointer): TWinControl;
@@ -94,6 +104,28 @@ end;
 procedure TfFormTruck.LoadFormData(const nID: string);
 var nStr: string;
 begin
+  {$IFDEF LadeControl}
+  dxLayout1Item14.Visible := True;
+  {$ELSE}
+  dxLayout1Item14.Visible := False;
+  {$ENDIF}
+  nStr := 'Select D_Value From %s Where D_Name=''%s''';
+  nStr := Format(nStr, [sTable_SysDict, sFlag_TruckType]);
+
+  EditType.Properties.Items.Clear;
+
+  with FDM.QueryTemp(nStr) do
+  begin
+
+    First;
+
+    while not Eof do
+    begin
+      EditType.Properties.Items.Add(Fields[0].AsString);
+      Next;
+    end;
+  end;
+
   if nID <> '' then
   begin
     nStr := 'Select * From %s Where R_ID=%s';
@@ -116,20 +148,31 @@ begin
     
     EditValue.Enabled := gSysParam.FIsAdmin;
     EditValue.Text := FieldByName('T_PrePValue').AsString;
-    
+
     CheckVerify.Checked := FieldByName('T_NoVerify').AsString = sFlag_No;
     CheckValid.Checked := FieldByName('T_Valid').AsString = sFlag_Yes;
     CheckUserP.Checked := FieldByName('T_PrePUse').AsString = sFlag_Yes;
 
     CheckVip.Checked   := FieldByName('T_VIPTruck').AsString = sFlag_TypeVIP;
     CheckGPS.Checked   := FieldByName('T_HasGPS').AsString = sFlag_Yes;
+
+    nStr := FieldByName('T_TruckType').AsString;
+    SetCtrlData(EditType, nStr);
+    EditMaxXz.Text := FieldByName('T_MaxXz').AsString;
+    {$IFDEF LadeControl}
+    EditMaxLadeValue.Text := FieldByName('T_MaxLadeValue').AsString;
+    {$ENDIF}
+    {$IFDEF RemoteSnap}
+    SnapTruck.Checked   := FieldByName('T_SnapTruck').AsString = sFlag_Yes;
+    {$ENDIF}
+    EditMemo.Text := FieldByName('T_Memo').AsString;
   end;
 end;
 
 //Desc: 保存
 procedure TfFormTruck.BtnOKClick(Sender: TObject);
-var nStr,nTruck,nU,nV,nP,nVip,nGps,nEvent: string;
-    nVal: Double;
+var nStr,nTruck,nU,nV,nP,nVip,nGps,nEvent,nSnapTruck: string;
+    nVal, nValMaxXz: Double;
 begin
   nTruck := UpperCase(Trim(EditTruck.Text));
   if nTruck = '' then
@@ -138,6 +181,15 @@ begin
     ShowMsg('请输入车牌号码', sHint);
     Exit;
   end;
+
+  {$IFDEF LadeControl}
+  if not IsNumber(EditMaxLadeValue.Text, True) then
+  begin
+    ActiveControl := EditMaxLadeValue;
+    ShowMsg('开单限值非法,请重新输入', sHint);
+    Exit;
+  end;
+  {$ENDIF}
 
   if CheckValid.Checked then
        nV := sFlag_Yes
@@ -159,11 +211,16 @@ begin
        nGps := sFlag_Yes
   else nGps := sFlag_No;
 
+  if SnapTruck.Checked then
+       nSnapTruck := sFlag_Yes
+  else nSnapTruck := sFlag_No;
+
   if FTruckID = '' then
        nStr := ''
   else nStr := SF('R_ID', FTruckID, sfVal);
 
   nVal := StrToFloatDef(Trim(EditValue.Text), 0);
+  nValMaxXz := StrToFloatDef(Trim(EditMaxXz.Text), 0);
 
   nStr := MakeSQLByStr([SF('T_Truck', nTruck),
           SF('T_Owner', EditOwner.Text),
@@ -174,6 +231,15 @@ begin
           SF('T_VIPTruck', nVip),
           SF('T_HasGPS', nGps),
           SF('T_PrePValue', nVal, sfVal),
+          SF('T_TruckType', EditType.Text),
+          SF('T_MaxXz', nValMaxXz, sfVal),
+          {$IFDEF LadeControl}
+          SF('T_MaxLadeValue', StrToFloat(Trim(EditMaxLadeValue.Text)), sfVal),
+          {$ENDIF}
+          {$IFDEF RemoteSnap}
+          SF('T_SnapTruck', nSnapTruck),
+          {$ENDIF}
+          SF('T_Memo', EditMemo.Text),
           SF('T_LastTime', sField_SQLServer_Now, sfVal)
           ], sTable_Truck, nStr, FTruckID = '');
   FDM.ExecuteSQL(nStr);

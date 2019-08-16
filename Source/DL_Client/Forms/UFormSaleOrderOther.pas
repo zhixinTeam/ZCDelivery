@@ -338,7 +338,7 @@ begin
     Exit;
   end;
 
-  nValue := GetSaleOrderDoneValue(EditOID.Text);
+  nValue := GetSaleOrderDoneValue(EditOID.Text, EditCName.Text, EditMName.Text);
 
   if nValue = '' then
   begin

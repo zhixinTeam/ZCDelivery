@@ -7,7 +7,7 @@ unit USysConst;
 interface
 
 uses
-  SysUtils, Classes, ComCtrls,UBusinessPacker;
+  SysUtils, Classes, ComCtrls,UBusinessPacker, Messages;
 
 const
   cSBar_Date            = 0;                         //日期面板索引
@@ -25,7 +25,7 @@ const
 
   c_WeChatStatusCreateCard       = 0; //订单已办卡
   c_WeChatStatusFinished         = 1; //订单已完成
-
+  WM_HAVE_CARD          = WM_USER + 1 ;
 const
   {*Frame ID*}
   cFI_FrameSysLog       = $0001;                     //系统日志
@@ -246,6 +246,7 @@ type
     FShuLiaoNeedBatchCode:Boolean;                   //熟料是否需要出厂编号
     FReadInsertCard:Boolean;                         //插入磁卡查询
     FEnablePurchaseMultipleCard:Boolean;             //采购允许办理多卡
+    FTTCEK720ID : string;                            //指定发卡机
   end;
   //系统参数
 
@@ -293,7 +294,7 @@ var
   gSysParam:TSysParam;                               //程序环境参数
   gStatusBar: TStatusBar;                            //全局使用状态栏
   gMenuModule: TList = nil;                          //菜单模块映射表
-
+  gCard: string;
 //------------------------------------------------------------------------------
 ResourceString
   sProgID             = 'DMZN';                      //默认标识

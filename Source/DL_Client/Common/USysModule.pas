@@ -30,7 +30,9 @@ uses
   UFormSaleOrderOther, UFrameSaleOrderOther, UFormModifySaleStock, UFormSaleKwOther,
   UFormGetWechartAccount,UFramePoundQueryOther, uFormSaleBuDanOther,
   UFormCardSearch, UFormTruckOutOverTime,
-
+  UFrameTruckXz, UFormTruckXz, UFormModifySaleStockMul,
+  UFramePMaterailControl, UFormPMaterailControl,
+  UFormSnapTruckSet,
   UFrameHYData, UFormHYData, UFrameBatcodeJ, UFormBatcodeJ, UFormGetStockNo,
   UFrameHYRecord, UFormHYRecord, UFrameHYStock, UFormHYStock,
   UFrameBatcodeRecord,

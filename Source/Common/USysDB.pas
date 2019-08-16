@@ -157,6 +157,7 @@ const
   sFlag_ManualD       = 'D';                         //空车出厂
   sFlag_ManualE       = 'E';                         //车牌识别
   sFlag_ManualF       = 'F';                         //出厂超时
+  sFlag_ManualG       = 'G';                         //排队顺序
 
   sFlag_PurPT         = 'PPT';                       //普通原材料
   sFlag_PurND         = 'PND';                       //内倒原材料
@@ -201,6 +202,9 @@ const
   sFlag_PTruckPWuCha  = 'PoundTruckPValue';          //空车皮误差
   sFlag_PoundMultiM   = 'PoundMultiM';               //允许多次过重
   sFlag_PoundAsternM  = 'PoundAsternM';              //倒车下磅物料
+  sFlag_HhcField      = 'HhcField';                  //混合材字段
+  sFlag_OrderCardID   = 'OrderCardID';               //原材料开单语音播报
+  sFlag_PlayVoiceStock= 'PlayVoiceStock';            //原材料语音播报物料
 
   sFlag_CommonItem    = 'CommonItem';                //公共信息
   sFlag_AreaItem      = 'AreaItem';                  //区域信息项
@@ -236,6 +240,17 @@ const
   sFlag_MinNetValue   = 'MinNetValue';               //销售过磅净重限值
   sFlag_TimeOutValue  = 'TimeOutValue';              //销售出厂超时时间
   sFlag_EventDept     = 'PoundEventDept';            //销售过磅事件推送部门
+  sFlag_TruckType     = 'TruckType';                 //车辆类型
+  sFlag_TruckXzTotal  = 'TruckXzTotal';              //限载总控制
+  sFlag_PMaterailControl= 'PMaterailControl';        //原材料进厂总控制
+  sFlag_SanMinKDValue = 'SanMinKDValue';             //散装最小开单量
+  sFlag_DaiForceQueue = 'DaiForceQueue';             //袋装强制排队
+  sFlag_SanForceQueue = 'SanForceQueue';             //散装强制排队
+  sFlag_HYDanWarnVal  = 'HYDanWarnVal';              //化验单预警量
+  sFlag_AICMHYSanPCount= 'AICMHYSanPCount';          //自助机散装化验单打印次数
+  sFlag_AICMHYDaiPCount= 'AICMHYDaiPCount';          //自助机袋装化验单打印次数
+  sFlag_SafeVoice     = 'SafeVoice';                 //安全语音
+  sFlag_NoOrderCardTime= 'NoOrderCardTime';          //禁止办卡时间
 
   sFlag_BusGroup      = 'BusFunction';               //业务编码组
   sFlag_BillNo        = 'Bus_Bill';                  //交货单号
@@ -308,6 +323,9 @@ const
   sTable_Provider     = 'P_Provider';                //客户表
   sTable_Materails    = 'P_Materails';               //物料表
 
+  sTable_TruckXz      = 'Sys_TruckXz';               //车辆限载表
+  sTable_PMaterailControl = 'Sys_PMaterailControl';  //原材料进厂控制表
+
   sTable_DataTemp     = 'Sys_DataTemp';              //临时数据  
   sTable_PoundLog     = 'Sys_PoundLog';              //过磅数据
   sTable_PoundBak     = 'Sys_PoundBak';              //过磅作废
@@ -362,8 +380,10 @@ const
   sTable_CardOther     = 'S_CardOther';              //临时称重
   sTable_OrderBaseMain = 'P_OrderBaseMain';          //采购申请订单主表
 
-    sFlag_Order         = 'Bus_Order';                 //采购单号
-    sFlag_OrderDtl      = 'Bus_OrderDtl';              //采购单号
+  sFlag_Order         = 'Bus_Order';                 //采购单号
+  sFlag_OrderDtl      = 'Bus_OrderDtl';              //采购单号
+
+  sTable_SnapTruck    = 'Sys_SnapTruck';             //车辆抓拍记录
 
   {*新建表*}
   sSQL_NewSysDict = 'Create Table $Table(D_ID $Inc, D_Name varChar(15),' +
@@ -753,7 +773,7 @@ const
        'T_PoundLastTime DateTime, T_PoundValue $Float Default 0,' +
        'T_Card varChar(32), T_CardUse Char(1), T_NoVerify Char(1),' +
        'T_MatePID varChar(32), T_MateID varChar(32), T_MateName varChar(80),' +
-       'T_SrcAddr varChar(150), T_DestAddr varChar(150),' +
+       'T_SrcAddr varChar(150), T_DestAddr varChar(150),T_MaxLadeValue $Float Default 0,' +
        'T_Valid Char(1), T_VIPTruck Char(1), T_HasGPS Char(1))';
   {-----------------------------------------------------------------------------
    车辆信息:Truck
@@ -779,7 +799,7 @@ const
    *.T_Valid: 是否有效
    *.T_VIPTruck:是否VIP
    *.T_HasGPS:安装GPS(Y/N)
-
+   *.T_MaxLadeValue: 最大提货量
    //---------------------------短倒业务数据信息--------------------------------
    *.T_MatePID:上个物料编号
    *.T_MateID:物料编号
@@ -1383,6 +1403,48 @@ const
    *.H_PurType: 采购流程类型 普通 内倒 临时
   -----------------------------------------------------------------------------}
 
+  sSQL_NewXzInfo = 'Create Table $Table(R_ID $Inc, X_CusID varChar(32),' +
+       'X_CusName varChar(150), X_XzValue $Float Default 0, X_BeginTime varChar(10),' +
+       'X_TruckType varChar(15),' +
+       'X_EndTime varChar(10), X_Valid char(1) default ''Y'', X_Memo varchar(200))';
+  {-----------------------------------------------------------------------------
+   基本信息表: BaseInfo
+   *.R_ID: 编号
+   *.X_CusID: 客户编号
+   *.X_CusName: 客户名称
+   *.X_XzValue: 限载设定
+   *.X_BeginTime: 起始时间
+   *.X_EndTime: 结束时间
+   *.X_Valid: 是否有效
+   *.X_Memo: 备注
+   *.X_TruckType: 车辆类型
+  -----------------------------------------------------------------------------}
+
+  sSQL_NewPMControlInfo = 'Create Table $Table(R_ID $Inc, C_CusID varChar(32),' +
+       'C_CusName varChar(150), C_StockNo varChar(32), C_StockName varChar(150),' +
+       'C_Valid char(1) default ''Y'', C_Memo varchar(200))';
+  {-----------------------------------------------------------------------------
+   原材料进厂控制表:
+   *.R_ID: 编号
+   *.C_CusID: 客户编号
+   *.C_CusName: 客户名称
+   *.C_StockNo: 物料编号
+   *.C_StockName: 物料名称
+   *.C_Valid: 是否有效
+   *.C_Memo: 备注
+  -----------------------------------------------------------------------------}
+
+  sSQL_SnapTruck = 'Create Table $Table(R_ID $Inc, S_ID varChar(20), ' +
+       'S_Truck varChar(20), S_Date DateTime, S_PicName varChar(80))';
+  {-----------------------------------------------------------------------------
+   车牌识别:
+   *.R_ID:记录编号
+   *.S_ID: 抓拍岗位
+   *.S_Truck:抓拍车牌号
+   *.S_Date: 抓拍时间
+   *.S_PicName: 抓拍图片路径
+  -----------------------------------------------------------------------------}
+
 function CardStatusToStr(const nStatus: string): string;
 //磁卡状态
 function TruckStatusToStr(const nStatus: string): string;
@@ -1502,6 +1564,11 @@ begin
   AddSysTableItem(sTable_HHJYUrl,sSQL_NewHHJYURL);
   AddSysTableItem(sTable_HHJYUrlBak,sSQL_NewHHJYURL);
   AddSysTableItem(sTable_HHJYSync,sSQL_NewHHJYSync);
+
+  AddSysTableItem(sTable_TruckXz,sSQL_NewXzInfo);
+  AddSysTableItem(sTable_PMaterailControl,sSQL_NewPMControlInfo);
+
+  AddSysTableItem(sTable_SnapTruck,sSQL_SnapTruck);
 end;
 
 //Desc: 清理系统表

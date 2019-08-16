@@ -56,6 +56,9 @@ type
     N13: TMenuItem;
     N16: TMenuItem;
     N17: TMenuItem;
+    N14: TMenuItem;
+    N18: TMenuItem;
+    N19: TMenuItem;
     procedure EditIDPropertiesButtonClick(Sender: TObject;
       AButtonIndex: Integer);
     procedure BtnDelClick(Sender: TObject);
@@ -76,6 +79,9 @@ type
     procedure N13Click(Sender: TObject);
     procedure N16Click(Sender: TObject);
     procedure N17Click(Sender: TObject);
+    procedure N14Click(Sender: TObject);
+    procedure N18Click(Sender: TObject);
+    procedure N19Click(Sender: TObject);
   protected
     FStart,FEnd: TDate;
     //时间区间
@@ -90,6 +96,8 @@ type
     {*查询SQL*}
     procedure SendMsgToWebMall(const nBillno:string);
     function ModifyWebOrderStatus(const nLId:string) : Boolean;
+    function GetVal(const nRow: Integer; const nField: string): string;
+    //获取指定字段
   public
     { Public declarations }
     class function FrameID: integer; override;
@@ -120,12 +128,14 @@ begin
   N15.Visible := True;
   N16.Visible := False;
   N17.Visible := False;
+  N14.Visible := True;
   {$ELSE}
   N10.Visible := False;
   N12.Visible := False;
   N13.Visible := False;
   N15.Visible := False;
   N16.Visible := True;
+  N14.Visible := False;
   {$ENDIF}
   FPreFix := 'WY';
   nStr := 'Select B_Prefix From %s ' +
@@ -167,9 +177,10 @@ begin
   EditDate.Text := Format('%s 至 %s', [Date2Str(FStart), Date2Str(FEnd)]);
 
   Result := 'Select * From $Bill ' +
-            ' Left Join $ZK on O_Order=L_ZhiKa ';
+            ' Left Join $ZK on O_Order=L_ZhiKa ' +
+            ' Left Join $C on C_ID=L_CusID ' +
+            ' Left Join $Truck on T_Truck=L_Truck ';
   //提货单
-
   if (nWhere = '') or FUseDate then
   begin
     Result := Result + 'Where (L_Date>=''$ST'' and L_Date <''$End'')';
@@ -181,6 +192,8 @@ begin
   //xxxxx
 
   Result := MacroValue(Result, [MI('$ZK', sTable_SalesOrder),
+            MI('$Truck', sTable_Truck),
+            MI('$C', sTable_Customer),
             MI('$ST', Date2Str(FStart)), MI('$End', Date2Str(FEnd + 1))]);
   //xxxxx
 
@@ -219,7 +232,9 @@ begin
   begin
     EditCus.Text := Trim(EditCus.Text);
     if EditCus.Text = '' then Exit;
-
+    {$IFDEF AHZC}
+    FUseDate := True;
+    {$ENDIF}
     FWhere := 'L_CusPY like ''%%%s%%'' Or L_CusName like ''%%%s%%''';
     FWhere := Format(FWhere, [EditCus.Text, EditCus.Text]);
     InitFormData(FWhere);
@@ -231,6 +246,9 @@ begin
     if EditCard.Text = '' then Exit;
 
     FUseDate := Length(EditCard.Text) <= 3;
+    {$IFDEF AHZC}
+    FUseDate := True;
+    {$ENDIF}
     FWhere := Format('L_Truck like ''%%%s%%''', [EditCard.Text]);
     InitFormData(FWhere);
   end;
@@ -742,6 +760,98 @@ begin
   finally
     nList.Free;
   end;
+end;
+
+procedure TfFrameBill.N14Click(Sender: TObject);
+var nStr: string;
+    nIdx: Integer;
+    nList: TStrings;
+    nP: TFormCommandParam;
+begin
+  if cxView1.DataController.GetSelectedCount < 1 then
+  begin
+    ShowMsg('请选择要编辑的记录', sHint); Exit;
+  end;
+
+  nList := TStringList.Create;
+  try
+    for nIdx := 0 to cxView1.DataController.RowCount - 1  do
+    begin
+      if Pos(FPreFix,SQLQuery.FieldByName('L_ZhiKa').AsString) <= 0 then
+      begin
+        ShowMsg('选择的记录中存在非矿山外运提货单,不能进行修改', sHint);
+        Exit;
+      end;
+
+      nStr := GetVal(nIdx,'L_ID');
+      if nStr = '' then
+        Continue;
+
+      nList.Add(nStr);
+    end;
+
+    nP.FCommand := cCmd_EditData;
+    nP.FParamA := nList.Text;
+    CreateBaseFormItem(cFI_FormSaleModifyStockMul, '', @nP);
+
+    if (nP.FCommand = cCmd_ModalResult) and (nP.FParamA = mrOK) then
+    begin
+      InitFormData(FWhere);
+    end;
+
+  finally
+    nList.Free;
+  end;
+end;
+
+//Desc: 获取nRow行nField字段的内容
+function TfFrameBill.GetVal(const nRow: Integer;
+ const nField: string): string;
+var nVal: Variant;
+begin
+  nVal := cxView1.ViewData.Rows[nRow].Values[
+            cxView1.GetColumnByFieldName(nField).Index];
+  //xxxxx
+
+  if VarIsNull(nVal) then
+       Result := ''
+  else Result := nVal;
+end;
+
+procedure TfFrameBill.N18Click(Sender: TObject);
+var nID,nMsg: string;
+begin
+  if cxView1.DataController.GetSelectedCount < 1 then
+  begin
+    ShowMsg('请选择要打印的记录', sHint);
+    Exit;
+  end;
+
+  nID := SQLQuery.FieldByName('L_ID').AsString;
+  PrintHuaYanReportEx(nID, nMsg);
+  if nMsg <> '' then
+  begin
+    ShowMsg(nMsg, sHint);
+    Exit;
+  end;
+end;
+
+procedure TfFrameBill.N19Click(Sender: TObject);
+var nStr,nBill: string;
+begin
+    if cxView1.DataController.GetSelectedCount < 1 then
+  begin
+    ShowMsg('请选择要打印的记录', sHint);
+    Exit;
+  end;
+
+  nBill := SQLQuery.FieldByName('L_ID').AsString;
+
+  nStr := 'Update %s Set L_HyPrintCount=0' +
+          'Where L_ID=''%s''';
+  nStr := Format(nStr, [sTable_Bill, nBill]);
+  FDM.ExecuteSQL(nStr);
+  ShowMsg('重置完成', sHint);
 end;
 
 initialization

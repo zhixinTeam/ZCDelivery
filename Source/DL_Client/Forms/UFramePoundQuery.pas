@@ -168,7 +168,7 @@ begin
 
 //  Result := 'Select pl.*,(P_MValue-P_PValue) As P_NetWeight,' +
 //            'ABS((P_MValue-P_PValue)-P_LimValue) As P_Wucha From $PL pl';
-  Result := 'Select pl.*,bl.*,so.*,od.*,po.*,(P_MValue-P_PValue) As P_NetWeight,' +
+  Result := 'Select pl.*,bl.*,so.*,od.*,po.*,(P_MValue-P_PValue - isnull(P_KZValue,0)) As P_NetWeight,' +
             'case when (pl.P_PDate IS not null) and (pl.P_PDate IS not null)'+
             ' then (case when pl.P_PDate > pl.P_MDate then pl.P_PDate else'+
             ' pl.P_MDate end) else null end as P_NetDate,'+

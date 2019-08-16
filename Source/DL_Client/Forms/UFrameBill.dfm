@@ -219,6 +219,10 @@ inherited fFrameBill: TfFrameBill
       Caption = #25171#21360#20132#36135#21333
       OnClick = N1Click
     end
+    object N18: TMenuItem
+      Caption = #25171#21360#21270#39564#21333
+      OnClick = N18Click
+    end
     object N8: TMenuItem
       Caption = #25171#21360#36136#37327#25215#35834#20070
       OnClick = N8Click
@@ -226,6 +230,10 @@ inherited fFrameBill: TfFrameBill
     object N7: TMenuItem
       Caption = #36828#31243#25171#21360
       OnClick = N7Click
+    end
+    object N19: TMenuItem
+      Caption = #37325#32622#21270#39564#21333#25171#21360#27425#25968
+      OnClick = N19Click
     end
     object N6: TMenuItem
       Caption = #20462#25913#21368#36135#28857
@@ -267,6 +275,10 @@ inherited fFrameBill: TfFrameBill
     end
     object N11: TMenuItem
       Caption = '-'
+    end
+    object N14: TMenuItem
+      Caption = #25209#37327#20462#25913#30719#23665#22806#36816#25552#36135#21333
+      OnClick = N14Click
     end
     object N12: TMenuItem
       Caption = #30719#23665#22806#36816#34917#21333

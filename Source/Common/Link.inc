@@ -131,5 +131,13 @@
   //车辆自动进厂
   {$DEFINE SaleOpenBackWhenError}
   //销售异常过磅抬后杆
+  {$DEFINE OrderControl}
+  //原材料进厂控制
+  {$DEFINE LadeControl}
+  //销售开单量控制
+  {$DEFINE WaitLoadEx}
+  //袋装车辆查询EX
+  {$DEFINE RemoteSnap}
+  //车牌识别
 {$ENDIF}
 

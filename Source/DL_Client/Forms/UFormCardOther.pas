@@ -111,7 +111,7 @@ begin
   try
     dxLayout1Group2.Visible := False;
     dxLayout1Item16.Visible := False;
-    dxLayout1Item11.Visible := False;
+    //dxLayout1Item11.Visible := False;
     FYSTDList := TStringList.Create;
     FParam := nParam;
     InitFormData;
@@ -366,6 +366,17 @@ begin
 
     ShowMsg('请添加过磅物料', sHint);
     Exit;
+  end;
+
+  if Check1.Checked then
+  begin
+    if ListQuery.Items.Count > 1  then
+    begin
+      ActiveControl := EditCName;
+
+      ShowMsg('固定卡不支持添加多种过磅物料', sHint);
+      Exit;
+    end;
   end;
 
   try

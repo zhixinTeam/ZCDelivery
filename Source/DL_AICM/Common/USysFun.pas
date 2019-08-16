@@ -90,7 +90,7 @@ begin
       FShuLiaoNeedBatchCode := ReadBool(FProgID,'ShuLiaoNeedBatchCode',True);
       FReadInsertCard := ReadBool(FProgID,'ReadInsertCard',False);
       FEnablePurchaseMultipleCard := ReadBool(FProgID,'PurchaseMultipleCard',True);
-      
+      FTTCEK720ID   := ReadString(FProgID,'TTCEK720ID','FK001');
       FProberUser := 0;
       FVoiceUser := 0;
 

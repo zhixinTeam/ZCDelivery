@@ -73,6 +73,10 @@ type
     //车辆检测控制器业务
     function OpenDoorByReader(var nData: string): Boolean;
     //通过读卡器打开道闸
+    function RemoteSnap_DisPlay(var nData: string): Boolean;
+    //抓拍小屏显示
+    function PoundReaderInfo(var nData: string): Boolean;
+    //读取磅站读卡器岗位、部门
   public
     constructor Create; override;
     destructor destroy; override;
@@ -87,7 +91,7 @@ implementation
 uses
 	{$IFDEF MultiReplay}UMultiJS_Reply, {$ELSE}UMultiJS, {$ENDIF}
   UMgrHardHelper, UMgrCodePrinter, UMgrQueue, UTaskMonitor,
-  UMgrTruckProbe;
+  UMgrTruckProbe, UMgrRemoteSnap;
 
 //Date: 2012-3-13
 //Parm: 如参数护具
@@ -233,6 +237,7 @@ begin
   case FIn.FCommand of
    cBC_ChangeDispatchMode   : Result := ChangeDispatchMode(nData);
    cBC_GetPoundCard         : Result := PoundCardNo(nData);
+   cBC_GetPoundReaderInfo   : Result := PoundReaderInfo(nData);
    cBC_GetQueueData         : Result := LoadQueue(nData);
    cBC_SaveCountData        : Result := SaveDaiNum(nData);
    cBC_RemoteExecSQL        : Result := ExecuteSQL(nData);
@@ -250,6 +255,7 @@ begin
    cBC_ShowTxt              : Result := TruckProbe_ShowTxt(nData);
 
    cBC_OpenDoorByReader     : Result := OpenDoorByReader(nData);
+   cBC_RemoteSnapDisPlay    : Result := RemoteSnap_DisPlay(nData);
    //xxxxxx
    else
     begin
@@ -724,6 +730,43 @@ begin
   gProberManager.ShowTxt(FIn.FData,FIn.FExtParam);
 
   nData := Format('ShowTxt -> %s:%s', [FIn.FData, FIn.FExtParam]);
+  WriteLog(nData);
+end;
+
+//Date: 2018-08-03
+//Parm: 读卡器ID[FIn.FData];
+//Desc: 获取指定磅站读卡器上的岗位、部门
+function THardwareCommander.PoundReaderInfo(var nData: string): Boolean;
+var nStr, nPoundID: string;
+    nIdx: Integer;
+begin
+  Result := True;
+
+  FOut.FData := gHardwareHelper.GetReaderInfo(FIn.FData, FOut.FExtParam);
+end;
+
+
+//Date: 2018-08-14
+//Parm: 岗位[FIn.FData] 发送内容[FIn.FExt]
+//Desc: 向指定通道的显示屏发送内容
+function THardwareCommander.RemoteSnap_DisPlay(var nData: string): Boolean;
+var nInt: Integer;
+begin
+  Result := True;
+  if not Assigned(gHKSnapHelper) then Exit;
+
+  FListA.Clear;
+  FListA.Text := PackerDecodeStr(FIn.FExtParam);
+
+  if FListA.Values['succ'] = sFlag_No then
+         nInt := 3
+  else nInt := 2;
+
+  gHKSnapHelper.Display(FIn.FData,FListA.Values['text'], nInt);
+
+  nData := Format('RemoteSnapDisPlay -> %s:%s:%s', [FIn.FData,
+                                                    FListA.Values['text'],
+                                                    FListA.Values['succ']]);
   WriteLog(nData);
 end;
 
