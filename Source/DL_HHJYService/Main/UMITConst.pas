@@ -86,6 +86,9 @@ type
     FSrvRemote  : string;                            //微信:远程服务
     FSrvMIT     : string;                            //微信:本地服务
     FHHJYUrl    : array of THHJYUrl;                 //恒河久远接口服务
+    FWXERPUrl   : string;                            //问信服务器地址
+    FWXZhangHu  : string;                            //问信账户
+    FWXMiMa     : string;                            //问信密码
   end;
   //系统参数
 

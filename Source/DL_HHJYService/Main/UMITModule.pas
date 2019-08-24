@@ -108,6 +108,44 @@ begin
       end;
     end;
   finally
+    gDBConnManager.ReleaseConnection(nWorker);
+  end;
+end;
+
+//Desc: 读取数据库参数
+procedure LoadDBConfigEx;
+var nStr: string;
+    nWorker: PDBWorker;
+begin
+  nWorker := nil;
+  try
+    nStr := 'Select D_Value,D_Memo From %s Where D_Name=''%s''';
+    nStr := Format(nStr, [sTable_SysDict, sFlag_SysParam]);
+
+    with gDBConnManager.SQLQuery(nStr, nWorker) do
+    if RecordCount > 0 then
+    begin
+      First;
+
+      while not Eof do
+      begin
+        nStr := Fields[1].AsString;
+        if nStr = sFlag_WXErpUrl then
+          gSysParam.FWXERPUrl := Fields[0].AsString;
+         //问信服务地址
+
+        if nStr = sFlag_WXErpZhangHu then
+          gSysParam.FWXZhangHu := Fields[0].AsString;
+         //问信账户
+
+        if nStr = sFlag_WXErpMima then
+          gSysParam.FWXMiMa := Fields[0].AsString;
+         //问信账户
+        
+        Next;
+      end;
+    end;
+  finally
     gDBConnManager.ReleaseConnection(nWorker); 
   end;
 end;
@@ -141,6 +179,9 @@ begin
 
   LoadDBConfig;
   //load param in db
+
+  LoadDBConfigEx;
+  //load WXERP in db
 
   gTaskMonitor.StartMon;
   //mon task start

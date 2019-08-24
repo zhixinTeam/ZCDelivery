@@ -38,6 +38,7 @@ type
     //采购发送消息
     procedure UpdateMsgNum(const nSuccess: Boolean; nLID: string);
     //更新消息状态
+    procedure UpdateMsgNumEx(const nSuccess: Boolean; nLID: string; nPurType: string);
     procedure DoSaveOutFactMsg;
     //执行出厂消息插入
     function SaveSaleOutFactMsg(nList: TStrings):Boolean;
@@ -188,7 +189,7 @@ begin
 
     Inc(FNumOutFactMsg);
 
-    if FNumOutFactMsg >= 3 then
+    if FNumOutFactMsg >= 600 then
       FNumOutFactMsg := 0;
 
     //--------------------------------------------------------------------------
@@ -201,12 +202,20 @@ begin
       FDBConn := gDBConnManager.GetConnection(gDBConnManager.DefaultConnection, nErr);
       if not Assigned(FDBConn) then Continue;
 
-//      if FNumOutFactMsg = 0 then
-//      begin
-//        DoSaveOutFactMsg;
-//      end;
+      if FNumOutFactMsg = 0 then
+      begin
+        TBusWorkerBusinessHHJY.CallMe(cBC_GetLoginToken,
+                    gSysParam.FWXZhangHu,gSysParam.FWXMiMa, @nOut);
+        TBusWorkerBusinessHHJY.CallMe(cBC_GetSaleInfo,'','',@nOut);
+      end;
+      if FNumOutFactMsg = 300 then
+      begin
+        TBusWorkerBusinessHHJY.CallMe(cBC_GetLoginToken,
+                    gSysParam.FWXZhangHu,gSysParam.FWXMiMa, @nOut);
+        TBusWorkerBusinessHHJY.CallMe(cBC_GetOrderInfoEx,'','',@nOut);
+      end;
 
-      nStr:= 'select top 100 * from %s where H_SyncNum <= %d And H_Deleted <> ''%s''';
+      nStr:= ' select top 100 *, H_PurType from %s where H_SyncNum <= %d And H_Deleted <> ''%s''';
       nStr:= Format(nStr,[sTable_HHJYSync, gMessageScan.FSyncTime, sFlag_Yes]);
       with gDBConnManager.WorkerQuery(FDBConn, nStr) do
       begin
@@ -219,9 +228,87 @@ begin
         nInit := GetTickCount;
 
         First;
-
         while not Eof do
         begin
+        {$IFDEF UseWXERP}
+          FListA.Clear;
+          FListA.Values['ID']       := FieldByName('H_ID').AsString;
+          FListA.Values['BillType'] := FieldByName('H_BillType').AsString;
+          FListA.Values['PurType']  := FieldByName('H_PurType').AsString;
+          FListA.Values['Status']   := FieldByName('H_Status').AsString;
+          FListA.Values['Order']    := FieldByName('H_Order').AsString;
+
+          UpdateMsgNumEx(False,FListA.Values['ID'],FListA.Values['PurType']);
+
+          if  UpperCase(Trim(FListA.Values['BillType'])) = 'S' then
+          begin
+            WriteLog('类型：'+ Trim(FListA.Values['PurType']));
+            if UpperCase(Trim(FListA.Values['PurType'])) <> 'TRK' then
+            begin
+              TBusWorkerBusinessHHJY.CallMe(cBC_GetLoginToken,
+                          gSysParam.FWXZhangHu,gSysParam.FWXMiMa, @nOut);
+                          
+              WriteLog('执行同步销售磅单');
+              //同步销售磅单
+              nResult := TBusWorkerBusinessHHJY.CallMe(cBC_GetSalePound,
+                      FListA.Values['ID'], '', @nOut);
+
+              TBusWorkerBusinessHHJY.CallMe(cBC_GetLoginToken,
+                  gSysParam.FWXZhangHu,gSysParam.FWXMiMa, @nOut);
+
+              TBusWorkerBusinessHHJY.CallMe(cBC_GetSaleTruckNum,
+                      FListA.Values['Order'], '', @nOut);
+              //获取质检信息 
+               TBusWorkerBusinessHHJY.CallMe(cBC_GetHYInfo,
+                      FListA.Values['ID'], '', @nOut);
+            end
+            else
+            begin
+              TBusWorkerBusinessHHJY.CallMe(cBC_GetLoginToken,
+                  gSysParam.FWXZhangHu,gSysParam.FWXMiMa, @nOut);
+              //销售订单关联已入场车辆数
+             nResult :=  TBusWorkerBusinessHHJY.CallMe(cBC_GetSaleTruckNum,
+                      FListA.Values['Order'], '', @nOut);
+            end;
+          end
+          else
+          begin
+            if Trim(FListA.Values['PurType']) <> 'Trk' then
+            begin
+              TBusWorkerBusinessHHJY.CallMe(cBC_GetLoginToken,
+                        gSysParam.FWXZhangHu,gSysParam.FWXMiMa, @nOut);
+              //同步采购磅单
+              nResult := TBusWorkerBusinessHHJY.CallMe(cBC_GetOrderPound,
+                      FListA.Values['ID'], '', @nOut);
+
+              //采购订单关联已入场车辆数
+              TBusWorkerBusinessHHJY.CallMe(cBC_GetOrderTruckNum,
+                      FListA.Values['Order'], '', @nOut);
+            end
+            else
+            begin
+              TBusWorkerBusinessHHJY.CallMe(cBC_GetLoginToken,
+                  gSysParam.FWXZhangHu,gSysParam.FWXMiMa, @nOut);
+              //采购订单关联已入场车辆数
+             nResult :=  TBusWorkerBusinessHHJY.CallMe(cBC_GetOrderTruckNum,
+                      FListA.Values['Order'], '', @nOut);
+            end;
+          end;
+          if nResult then
+          begin
+            //更新为已处理
+            Inc(nSuccessCount);
+          end
+          else
+          begin
+            Inc(nFailCount);
+          end;
+
+          UpdateMsgNumEx(nResult,FListA.Values['ID'],FListA.Values['PurType']);
+
+          WriteLog('第'+IntToStr(RecNo)+'条数据处理完成！提货单号:'+FieldByName('H_ID').AsString);
+          Next;
+        {$ELSE}
           FListA.Clear;
           FListA.Values['ID']:= FieldByName('H_ID').AsString;
           FListA.Values['BillType']:= FieldByName('H_BillType').AsString;
@@ -259,9 +346,10 @@ begin
             Inc(nFailCount);
           end;
 
-          UpdateMsgNum(nResult,FListA.Values['ID']);
+          UpdateMsgNumEx(nResult,FListA.Values['ID'],);
           WriteLog('第'+IntToStr(RecNo)+'条数据处理完成！提货单号:'+FListA.Values['ID']);
           Next;
+        {$ENDIF}
         end;
       end;
       WriteLog(IntToStr(nSuccessCount) + '条消息同步成功，'
@@ -582,6 +670,39 @@ begin
                        nList.Values['WOM_BillType']]);
   gDBConnManager.WorkerExec(FDBConn, nStr);
   Result := True;
+end;
+
+procedure TMessageScanThread.UpdateMsgNumEx(const nSuccess: Boolean; nLID,
+  nPurType: string);
+var nStr: string;
+    nUpdateDBWorker: PDBWorker;
+begin
+  if nSuccess then
+  begin
+    nUpdateDBWorker := nil;
+
+    try
+        nStr := 'Update %s set H_Deleted = ''%s'' where H_ID = ''%s'' and H_PurType = ''%s'' ';
+        nStr:= Format(nStr,[sTable_HHJYSync, sFlag_Yes,nLID,nPurType]);
+        gDBConnManager.ExecSQL(nStr);
+        //更新为已处理
+    finally
+      gDBConnManager.ReleaseConnection(nUpdateDBWorker);
+    end;
+  end
+  else
+  begin
+    nUpdateDBWorker := nil;
+
+    try
+      nStr := 'Update %s Set H_SyncNum = H_SyncNum + 1 '+
+                ' where H_ID = ''%s'' and H_PurType = ''%s'' ';
+      nStr:= Format(nStr,[sTable_HHJYSync, nLID, nPurType]);
+      gDBConnManager.ExecSQL(nStr);
+    finally
+      gDBConnManager.ReleaseConnection(nUpdateDBWorker);
+    end;
+  end;
 end;
 
 initialization
