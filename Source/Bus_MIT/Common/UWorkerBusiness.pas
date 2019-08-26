@@ -5237,11 +5237,6 @@ begin
   else
     WriteLog('车牌识别:'+'岗位:'+nPos+'事件接收部门:'+nDept+'人工干预:是');
 
-  nData := '车辆[ %s ]车牌识别失败';
-  nData := Format(nData, [nTruck]);
-  FOut.FData := nData;
-  //default
-
   nStr := 'Select isnull(T_LastTime,''2000-12-12 09:00:00'') as T_LastTime From %s Where T_Truck=''%s''  ';
   nStr := Format(nStr, [sTable_Truck, nTruck]);
   //xxxxx
@@ -5258,12 +5253,12 @@ begin
     end;
     
     nLastTime := FieldByName('T_LastTime').AsDateTime;
-    if Now - nLastTime <= 0.02 then
+    if Now - nLastTime <= 0.1 then
     begin
-      Result := True;
       nData := '车辆[ %s ]车牌识别成功';
       nData:= Format(nData, [nTruck]);
       FOut.FData := nData;
+      Result := True;
       Exit;
     end;
     //车牌识别成功
