@@ -683,6 +683,26 @@ begin
     Exit;
   end;
 
+  {$IFDEF UseEnableStruck}
+  if not VeriFyTruckLicense(FLastReader, nBills[0], nHint, nPos) then
+  begin
+    nVoice := '%s车牌识别失败,请移动车辆或联系管理员';
+    nVoice := Format(nVoice, [nBills[0].FTruck]);
+    PlayVoice(nHint);
+    WriteSysLog(nHint);
+    SetUIData(True);
+    Exit;
+  end
+  else
+  begin
+    if nHint <> '' then
+    begin
+      PlayVoice(nHint);
+      WriteSysLog(nHint);
+    end;
+  end;
+  {$ENDIF}
+
   EditBill.Properties.Items.Clear;
   SetLength(FBillItems, nInt);
   nInt := 0;

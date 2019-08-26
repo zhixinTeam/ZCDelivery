@@ -136,6 +136,7 @@ const
   cFI_FormSaleModifyStock = $1088;                   //销售修改物料
   cFI_FormSaleKwOther   = $1089;                     //销售勘误(外运业务)
   cFI_FormSaleBuDanOther= $1090;                     //销售补单(外运业务)
+  cFI_FormPound_WxKw    = $1094;                     //问信磅单勘误
 
   cFI_FormTruckXz       = $1091;                     //车辆限载管理
   cFI_FormSaleModifyStockMul = $1092;                //矿山外运批量修改物料
@@ -151,6 +152,8 @@ const
   cCmd_EditData         = $1005;                     //修改数据
   cCmd_ViewData         = $1006;                     //查看数据
   cCmd_GetData          = $1007;                     //选择数据
+
+  cFI_FormWXBaseLoad    = $6011;                     //同步问信接口
 
   cSendWeChatMsgType_AddBill=1; //开提货单
   cSendWeChatMsgType_OutFactory=2; //车辆出厂
@@ -209,7 +212,10 @@ type
     FEmpTruckWc : Double;                            //空车出厂误差
 
     FPrinterBill: string;                            //小票打印机
-    FPrinterHYDan : string;                          //化验单打印机 
+    FPrinterHYDan : string;                          //化验单打印机
+
+    FWXZhangHu  : string;                            //问信账户
+    FWXMiMa     : string;                            //问信密码
   end;
   //系统参数
 
@@ -364,6 +370,8 @@ begin
 
   AddMenuModuleItem('MAIN_W01', cFI_FrameWXAccount);
   AddMenuModuleItem('MAIN_W02', cFI_FrameWXSendLog);
+
+  AddMenuModuleItem('MAIN_S01', cFI_FormWXBaseLoad, mtForm);
 end;
 
 //Desc: 清理模块列表

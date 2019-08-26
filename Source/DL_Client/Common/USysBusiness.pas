@@ -83,6 +83,33 @@ function LoadSaleMan(const nList: TStrings; const nWhere: string = ''): Boolean;
 function LoadCustomer(const nList: TStrings; const nWhere: string = ''): Boolean;
 //读取客户列表
 
+{$IFDEF UseWXERP}
+function GetLoginToken(const username,password: string): Boolean;
+//问信登录
+function SyncWXDept:Boolean;
+//同步问信部门信息
+function SyncWXPersonal:Boolean;
+//同步问信人员信息
+function SyncWXCusPro:Boolean;
+//同步客商人员信息
+function SyncWXStockType:Boolean;
+//同步存货分类信息
+function SyncWXStockInfo:Boolean;
+//同步存货档案信息
+function SyncWXOrderInfo(const nStr: string):string;
+//同步采购订单信息
+function SyncWXSaleInfo(const nStr: string):Boolean;
+//同步销售订单信息
+function SyncWXPoundKW(const nID: string): Boolean;
+//同步磅单勘误
+function SyncWXPoundDel(const nID: string): Boolean;
+//同步磅单删除
+{$ENDIF}
+
+//车牌识别
+function VeriFyTruckLicense(const nReader: string; nBill: TLadingBillItem;
+                         var nMsg, nPos: string): Boolean;
+
 function VerifyFQSumValue: Boolean;
 //是否校验封签号
 function SaveBill(const nBillData: string): string;
@@ -138,6 +165,8 @@ function GetTruckEmptyValue(const nTruck, nType: string): Double;
 //获取车辆皮重
 function GetTruckLastTime(const nTruck: string): Integer;
 //最后一次过磅时间
+function GetTruckLastTimeEx(const nTruck: string; var nLast: Integer): Boolean;
+//获取车辆活动间隔
 function IsStrictSanValue: Boolean;
 //判断是否严格执行散装禁止超发
 
@@ -746,6 +775,113 @@ begin
   Result := nList.Count > 0;
 end;
 
+{$IFDEF UseWXERP}
+function GetLoginToken(const username,password: string): Boolean;
+var nOut: TWorkerHHJYData;
+begin
+  Result := CallBusinessHHJY(cBC_GetLoginToken, username, password, '', @nOut);
+end;
+
+function SyncWXDept:Boolean;
+var nOut: TWorkerHHJYData;
+begin
+  Result := CallBusinessHHJY(cBC_GetDepotInfo, '', '', '', @nOut);
+end;
+
+function SyncWXPersonal:Boolean;
+var nOut: TWorkerHHJYData;
+begin
+  Result := CallBusinessHHJY(cBC_GetUserInfo, '', '','', @nOut);
+end;
+
+function SyncWXCusPro:Boolean;
+var nOut: TWorkerHHJYData;
+begin
+  Result := CallBusinessHHJY(cBC_GetCusProInfo, '', '','', @nOut);
+end;
+
+function SyncWXStockType:Boolean;
+var nOut: TWorkerHHJYData;
+begin
+  Result := CallBusinessHHJY(cBC_GetStockType, '', '', '', @nOut);
+end;
+
+function SyncWXStockInfo:Boolean;
+var nOut: TWorkerHHJYData;
+begin
+  Result := CallBusinessHHJY(cBC_GetStockInfo, '', '','', @nOut);
+end;
+
+function SyncWXOrderInfo(const nStr: string):string;
+var nOut: TWorkerHHJYData;
+begin
+  if CallBusinessHHJY(cBC_GetOrderInfo, nStr, '','', @nOut) then
+    Result := nOut.FData
+  else Result := '';
+end;
+
+function SyncWXSaleInfo(const nStr: string):Boolean;
+var nOut: TWorkerHHJYData;
+begin
+  Result := CallBusinessHHJY(cBC_GetSaleInfo, nStr, '','', @nOut,False);
+end;
+
+function SyncWXPoundKW(const nID: string): Boolean;
+var nOut: TWorkerHHJYData;
+    nStr: string;
+    nList: TStrings;
+begin
+  Result := False;
+  nList := TStringList.Create;
+
+  try
+    nStr := 'Select P_ID, P_TYPE  From %s Where P_ID = ''%s'' ';
+    nStr := Format(nStr, [sTable_PoundLog, nID]);
+
+    with FDM.QueryTemp(nStr) do
+    if RecordCount > 0 then
+    begin
+      nList.Values['P_ID']      := Fields[0].AsString;
+      nList.Values['P_TYPE']    := Fields[1].AsString;
+      nList.Values['P_Status']  := '0';
+
+      nStr   := PackerEncodeStr(nList.Text);
+      Result := CallBusinessHHJY(cBC_GetPoundKW, nStr, '', '', @nOut, False);
+    end;
+  finally
+    nList.Free;
+  end;
+end;
+
+function SyncWXPoundDel(const nID: string): Boolean;
+var nOut: TWorkerHHJYData;
+    nStr: string;
+    nList: TStrings;
+begin
+  Result := False;
+  nList := TStringList.Create;
+
+  try
+    nStr := 'Select P_ID, P_TYPE  From %s Where P_BILL = ''%s'' ';
+    nStr := Format(nStr, [sTable_PoundLog, nID]);
+
+    with FDM.QueryTemp(nStr) do
+    if RecordCount > 0 then
+    begin
+      nList.Values['P_ID']      := Fields[0].AsString;
+      nList.Values['P_TYPE']    := Fields[1].AsString;
+      nList.Values['P_Status']  := '1';
+
+      nStr   := PackerEncodeStr(nList.Text);
+      Result := CallBusinessHHJY(cBC_GetPoundKW, nStr, '', '', @nOut, False);
+    end;
+  finally
+    nList.Free;
+  end;
+end;
+
+{$ENDIF}
+
 //------------------------------------------------------------------------------
 //Date: 2017-09-27
 //Parm: 记录标识;车牌号;图片文件
@@ -1302,6 +1438,159 @@ begin
   Result := (nP.FCommand = cCmd_ModalResult) and (nP.FParamA = mrOK);
 end;
 
+function VerifyTruckLicense(const nReader: string; nBill: TLadingBillItem;
+                         var nMsg, nPos: string): Boolean;
+var nStr, nDept: string;
+    nNeedManu, nUpdate: Boolean;
+    nTruck, nEvent, nPicName: string;
+    nLastTime: TDateTime;
+begin
+  Result := False;
+  nPos := sFlag_DepBangFang;
+  nNeedManu := False;
+  nDept := '';
+  nTruck := nBill.Ftruck;
+
+  nStr := ' Select D_Value From %s Where D_Name=''%s'' ';
+  nStr := Format(nStr, [sTable_SysDict, sFlag_EnableTruck]);
+  with FDM.QueryTemp(nStr) do
+  begin
+    if RecordCount > 0 then
+    begin
+      nNeedManu := FieldByName('D_Value').AsString = sFlag_Yes;
+
+      if nNeedManu then
+      begin
+        nMsg := '读卡器[ %s ]车牌识别已启用.';
+        nMsg := Format(nMsg, [nReader]);
+      end
+      else
+      begin
+        nMsg := '读卡器[ %s ]车牌识别已关闭.';
+        nMsg := Format(nMsg, [nReader]);
+        Result := True;
+        Exit;
+      end;
+    end
+    else
+    begin
+      Result := True;
+      nMsg := '读卡器[ %s ]未配置车牌识别.';
+      nMsg := Format(nMsg, [nReader]);
+      Exit;
+    end;
+  end;
+
+  nStr := 'Select D_Value From %s Where D_Name=''%s'' and D_Memo=''%s''';
+  nStr := Format(nStr, [sTable_SysDict, sFlag_TruckInNeedManu,nPos]);
+  //xxxxx
+
+  with FDM.QueryTemp(nStr) do
+  begin
+    if RecordCount > 0 then
+    begin
+      nNeedManu := FieldByName('D_Value').AsString = sFlag_Yes;
+
+      if nNeedManu then
+      begin
+        nMsg := '读卡器[ %s ]绑定岗位[ %s ]干预规则:人工干预已启用.';
+        nMsg := Format(nMsg, [nReader, nPos]);
+      end
+      else
+      begin
+        nMsg := '读卡器[ %s ]绑定岗位[ %s ]干预规则:人工干预已关闭.';
+        nMsg := Format(nMsg, [nReader, nPos]);
+        Result := True;
+        Exit;
+      end;
+    end
+    else
+    begin
+      Result := True;
+      nMsg := '读卡器[ %s ]绑定岗位[ %s ]未配置干预规则,无法进行车牌识别.';
+      nMsg := Format(nMsg, [nReader, nPos]);
+      Exit;
+    end;
+  end;
+
+  nStr := 'Select T_LastTime From %s Where T_Truck=''%s''  ';
+  nStr := Format(nStr, [sTable_Truck, nTruck]);
+  //xxxxx
+
+  with FDM.QueryTemp(nStr) do
+  begin
+    if RecordCount < 1 then
+    begin
+      if not nNeedManu then
+        Result := True;
+      Exit;
+    end;
+
+    nLastTime := FieldByName('T_LastTime').AsDateTime;
+    if Now - nLastTime <= 0.02 then
+    begin
+      Result := True;
+      nMsg := '车辆[ %s ]车牌识别成功,抓拍车牌号:[ %s ]';
+      nMsg := Format(nMsg, [nTruck,nTruck]);
+      Exit;
+    end;
+    //车牌识别成功
+  end;
+
+  nStr := 'Select * From %s Where E_ID=''%s''';
+  nStr := Format(nStr, [sTable_ManualEvent, nBill.FID+sFlag_ManualE]);
+
+  with FDM.QueryTemp(nStr) do
+  begin
+    if RecordCount > 0 then
+    begin
+      if FieldByName('E_Result').AsString = 'N' then
+      begin
+        nMsg := '车辆[ %s ]车牌识别失败,管理员禁止';
+        nMsg := Format(nMsg, [nTruck]);
+        Exit;
+      end;
+      if FieldByName('E_Result').AsString = 'Y' then
+      begin
+        Result := True;
+        nMsg := '车辆[ %s ]车牌识别失败,管理员允许';
+        nMsg := Format(nMsg, [nTruck]);
+        Exit;
+      end;
+      nUpdate := True;
+    end
+    else
+    begin
+      nMsg := '车辆[ %s ]车牌识别失败';
+      nMsg := Format(nMsg, [nTruck]);
+      nUpdate := False;
+      if not nNeedManu then
+      begin
+        Result := True;
+        Exit;
+      end;
+    end;
+  end;
+
+  nEvent := '车辆[ %s ]车牌识别失败';
+  nEvent := Format(nEvent, [nTruck]);
+
+  nStr := SF('E_ID', nBill.FID+sFlag_ManualE);
+  nStr := MakeSQLByStr([
+          SF('E_ID', nBill.FID+sFlag_ManualE),
+          SF('E_Key', nPicName),
+          SF('E_From', nPos),
+          SF('E_Result', 'Null', sfVal),
+
+          SF('E_Event', nEvent),
+          SF('E_Solution', sFlag_Solution_YN),
+          SF('E_Departmen', nDept),
+          SF('E_Date', sField_SQLServer_Now, sfVal)
+          ], sTable_ManualEvent, nStr, (not nUpdate));
+  //xxxxx
+  FDM.ExecuteSQL(nStr);
+end;
+
 //Desc: 是否需要验证封签
 function VerifyFQSumValue: Boolean;
 var nStr: string;
@@ -1486,6 +1775,23 @@ begin
     if nPDate > nMDate then
          Result := Trunc((nNow - nPDate) * 24 * 60 * 60)
     else Result := Trunc((nNow - nMDate) * 24 * 60 * 60);
+  end;
+end;
+
+function GetTruckLastTimeEx(const nTruck: string; var nLast: Integer): Boolean;
+var nStr: string;
+begin
+  Result := False;
+  nStr := 'Select %s as T_Now,T_LastTime From %s ' +
+          'Where T_Truck=''%s''';
+  nStr := Format(nStr, [sField_SQLServer_Now, sTable_Truck, nTruck]);
+
+  with FDM.QueryTemp(nStr) do
+  if RecordCount > 0 then
+  begin
+    nLast := Trunc((FieldByName('T_Now').AsDateTime -
+                    FieldByName('T_LastTime').AsDateTime) * 24 * 60 * 60);
+    Result := True;                
   end;
 end;
 

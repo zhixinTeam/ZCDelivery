@@ -36,6 +36,9 @@ uses
   UFrameHYData, UFormHYData, UFrameBatcodeJ, UFormBatcodeJ, UFormGetStockNo,
   UFrameHYRecord, UFormHYRecord, UFrameHYStock, UFormHYStock,
   UFrameBatcodeRecord,
+  {$IFDEF UseWXERP}
+  UFormWXBaseLoad, UFormPound_WxKw,
+  {$ENDIF}
   //for huayan
   UFrameOrderCard,UFramePurchaseOrder,UFrameOrderDetail,UFrameOtherCard,
   UFormCardOther,UFormPurchaseOrder,UFormGetPOrderBase,UFormPurchasing;
@@ -106,6 +109,14 @@ begin
       if nStr = sFlag_HHJYServiceMIT then
         FHHJYURL := Fields[0].AsString;
       //xxxxx
+
+      if nStr = sFlag_WXErpZhangHu then
+        gSysParam.FWXZhangHu := Fields[0].AsString;
+       //问信账户
+
+      if nStr = sFlag_WXErpMima then
+        gSysParam.FWXMiMa := Fields[0].AsString;
+       //问信账户
 
       Next;
     end;

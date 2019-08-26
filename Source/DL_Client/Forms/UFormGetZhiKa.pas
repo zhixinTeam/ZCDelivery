@@ -122,14 +122,20 @@ begin
     cxView1.Columns[nIdx].Tag := nIdx;
   InitTableView(Name, cxView1);
 
-  {$IFDEF SyncDataByWSDL}
-  dxLayout1Item4.Visible := False;
-  dxLayout1Item5.Visible := True;
-  dxLayout1Item6.Visible := True;
+  {$IFDEF UseWXERP}
+    dxLayout1Item4.Visible := False;
+    dxLayout1Item5.Visible := True;
+    dxLayout1Item6.Visible := True;
   {$ELSE}
-  dxLayout1Item4.Visible := True;
-  dxLayout1Item5.Visible := False;
-  dxLayout1Item6.Visible := False;
+    {$IFDEF SyncDataByWSDL}
+    dxLayout1Item4.Visible := False;
+    dxLayout1Item5.Visible := True;
+    dxLayout1Item6.Visible := True;
+    {$ELSE}
+    dxLayout1Item4.Visible := True;
+    dxLayout1Item5.Visible := False;
+    dxLayout1Item6.Visible := False;
+    {$ENDIF}
   {$ENDIF}
 end;
 
@@ -145,7 +151,7 @@ end;
 procedure TfFormGetZhiKa.InitFormData(const nCusName: string);
 var nStr: string;
 begin
-  nStr := 'Select * From %s Where O_Valid=''%s''';
+  nStr := 'Select * From %s Where O_Valid=''%s'' and O_PlanRemain > 0 ';
   nStr := Format(nStr, [sTable_SalesOrder, sFlag_Yes]);
   
   if nCusName <> '' then
@@ -157,12 +163,17 @@ begin
     ActiveControl := BtnOK;
   end else
   begin
-    {$IFDEF SyncDataByWSDL}
-    ActiveControl := EditCusList;
-    EditCusList.SelectAll;
+    {$IFDEF UseWXERP}
+      ActiveControl := EditCusList;
+      EditCusList.SelectAll;
     {$ELSE}
-    ActiveControl := EditCus;
-    EditCus.SelectAll;
+      {$IFDEF SyncDataByWSDL}
+      ActiveControl := EditCusList;
+      EditCusList.SelectAll;
+      {$ELSE}
+      ActiveControl := EditCus;
+      EditCus.SelectAll;
+      {$ENDIF}
     {$ENDIF}
   end;
 end;
@@ -233,8 +244,12 @@ begin
     if Pos('袋' , FType) > 0 then
          FType := sFlag_Dai
     else FType := sFlag_San;
+    {$IFDEF UseWXERP}
+    FStockNo     := FieldByName('O_StockID').AsString;
+    {$ELSE}
     FStockNo     := GetStockNo(FieldByName('O_StockName').AsString,
                                FType);
+    {$ENDIF}
     FStockName   := FieldByName('O_StockName').AsString;
     FCusID       := '';
     FCusName     := FieldByName('O_CusName').AsString;
@@ -293,35 +308,50 @@ end;
 procedure TfFormGetZhiKa.BtnSearchClick(Sender: TObject);
 var nStr, nCusID, nBeginDate, nEndDate: string;
 begin
-  if EditCusList.Text = '' then
-  begin
-    nStr := '请选择客户';
-    EditCusList.SetFocus;
-    ShowMsg(nStr, sHint);
-    Exit;
-  end;
-  nCusID := GetCusID(EditCusList.Text);
-  if nCusID = '' then
-  begin
-    nStr := '未找到[ %s ]对应的客户ID';
-    nStr := Format(nStr, [EditCusList.Text]);
-    ShowMsg(nStr, sHint);
-    Exit;
-  end;
+  {$IFDEF UseWXERP}
+    GetLoginToken(gSysParam.FWXZhangHu,gSysParam.FWXMiMa);
+    nStr := '';
+    if Trim(EditCusList.Text) <> '' then
+    begin
+      nStr := Trim(EditCusList.Text);
+    end;
+    nStr := PackerEncodeStr(nStr);
+    if not SyncWXSaleInfo(nStr) then
+    begin
+      ShowMsg('获取销售计划失败',sHint);
+      Exit;
+    end;
+  {$ELSE}
+    if EditCusList.Text = '' then
+    begin
+      nStr := '请选择客户';
+      EditCusList.SetFocus;
+      ShowMsg(nStr, sHint);
+      Exit;
+    end;
+    nCusID := GetCusID(EditCusList.Text);
+    if nCusID = '' then
+    begin
+      nStr := '未找到[ %s ]对应的客户ID';
+      nStr := Format(nStr, [EditCusList.Text]);
+      ShowMsg(nStr, sHint);
+      Exit;
+    end;
 
-  nBeginDate := FormatDateTime('YYYY-MM-DD HH:MM:SS', IncMonth(Now, -2));
-  nEndDate   := FormatDateTime('YYYY-MM-DD', IncDay(Now, -1)) + ' 00:00:00';
+    nBeginDate := FormatDateTime('YYYY-MM-DD HH:MM:SS', IncMonth(Now, -2));
+    nEndDate   := FormatDateTime('YYYY-MM-DD', IncDay(Now, -1)) + ' 00:00:00';
 
-  nStr := 'FCustomerID = ''%s'' and FStatus = ''1'' ' +
-          'and FRemainAmount >= 0 and FBeginDate >= ''%s'' and FEndDate >= ''%s'' ';
-  nStr := Format(nStr, [nCusID, nBeginDate, nEndDate]);
+    nStr := 'FCustomerID = ''%s'' and FStatus = ''1'' ' +
+            'and FRemainAmount >= 0 and FBeginDate >= ''%s'' and FEndDate >= ''%s'' ';
+    nStr := Format(nStr, [nCusID, nBeginDate, nEndDate]);
 
-  nStr := PackerEncodeStr(nStr);
-  if not GetHhSalePlanWSDL(nStr, '') then
-  begin
-    ShowMsg('获取销售计划失败',sHint);
-    Exit;
-  end;
+    nStr := PackerEncodeStr(nStr);
+    if not GetHhSalePlanWSDL(nStr, '') then
+    begin
+      ShowMsg('获取销售计划失败',sHint);
+      Exit;
+    end;
+  {$ENDIF}
   nStr := 'O_CusName Like ''%%%s%%'' Or O_CusPY Like ''%%%s%%''';
   nStr := Format(nStr, [EditCusList.Text, EditCusList.Text]);
   InitFormData(nStr);

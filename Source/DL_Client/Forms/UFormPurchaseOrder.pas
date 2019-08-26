@@ -288,6 +288,9 @@ begin
     {$ENDIF}
     Values['CardType']      := nCardType;
 
+    {$IFDEF UseWXERP}
+    Values['RestValue']     := FCardData.Values['SQ_RestValue'];
+    {$ENDIF}
     Values['SaleID']        := FCardData.Values['SQ_SaleID'];
     Values['SaleMan']       := FCardData.Values['SQ_SaleName'];
 

@@ -132,6 +132,9 @@ begin
   AdjustCtrlData(Self);
   LoadFormConfig(Self);
   dxGroup1.AlignHorz := ahClient;
+  {$IFDEF UseWXERP}
+  cxLabel1.Visible := False;
+  {$ENDIF}
 end;
 
 procedure TfFormPoundKw.FormClose(Sender: TObject; var Action: TCloseAction);

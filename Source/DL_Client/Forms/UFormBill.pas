@@ -61,6 +61,8 @@ type
     //补单标记
     procedure LoadFormData;
     //载入数据
+    function SetVipValue(nValue: String): Boolean;
+    //VIP设置
   public
     { Public declarations }
     class function CreateForm(const nPopedom: string = '';
@@ -206,7 +208,9 @@ begin
     //xxxxx
 
     if Sender = EditValue then
-         ActiveControl := BtnOK
+    begin
+      ActiveControl := BtnOK;
+    end
     else Perform(WM_NEXTDLGCTL, 0, 0);
   end;
 
@@ -300,7 +304,11 @@ begin
   end else
   if Sender = EditWT then
   begin
-    Result := Length(EditWT.Text) > 0;
+    {$IFDEF UseWXERP}
+      Result := True;
+    {$ELSE}
+      Result := Length(EditWT.Text) > 0;
+    {$ENDIF}
     nHint := '请选择委托单';
   end else
   if Sender = EditValue then
@@ -360,6 +368,7 @@ begin
     ShowMsg(nHint,sHint);
     Exit;
   end;
+  SetVipValue(EditValue.Text);
   if not IsOtherOrder(gBillItem) then
   if not OnVerifyCtrl(EditWT, nHint) then
   begin
@@ -473,6 +482,36 @@ begin
     dxLayout1Item5.Visible := True
   else
     dxLayout1Item5.Visible := False;
+end;
+
+function TfFormBill.SetVipValue(nValue: String): Boolean;
+var
+  nStr, nVip : string;
+  nNum : Double;
+begin
+  Result := False;
+
+  nStr := ' Select D_Value From %s Where D_Name=''%s'' and D_Memo=''%s'' ';
+  nStr := Format(nStr, [sTable_SysDict, sFlag_SysParam,sFlag_VIPManyNum]);
+  
+  nVip := '';
+  nNum := 0;
+  with FDM.QueryTemp(nStr) do
+  begin
+    if RecordCount > 0 then
+    begin
+      nNum := Fields[0].AsFloat;
+    end;
+  end;
+  if nNum > 0 then
+  begin
+    if StrToFloatDef(nValue,0) >= nNum then
+      nVip := 'V';
+  end;
+  if nVip <> '' then
+    SetCtrlData(EditType, nVip);
+
+  Result := nVip = sFlag_TypeVIP;
 end;
 
 initialization

@@ -125,6 +125,19 @@ begin
   N13.Visible := True;
   N14.Visible := True;
   {$ENDIF}
+
+  {$IFDEF UseWXERP}
+  N6.Visible  := True;
+  N9.Visible  := True;
+  N10.Visible := True;
+  N11.Visible := True;
+  N12.Visible := False;
+  N13.Visible := False;
+  N14.Visible := False;
+  N15.Visible := False;
+  N9.Caption  := '磅单上传';
+  N10.Caption := '磅单勘误';
+  {$ENDIF}
   FPreFix := 'WY';
   nStr := 'Select B_Prefix From %s ' +
           'Where B_Group=''%s'' And B_Object=''%s''';
@@ -512,59 +525,68 @@ begin
       Exit;
     end;
 
-    if SQLQuery.FieldByName('P_Type').AsString = sFlag_Sale then
-    begin
-      nStr := '销售单据请在发货明细进行上传';
-      ShowMsg(nStr, sHint);
-      Exit;
-    //xxxxx
-    end
-    else
-    begin
-      if SQLQuery.FieldByName('P_PoundIdx').AsInteger > 0  then//备品备件
+    {$IFNDEF UseWXERP}
+      if SQLQuery.FieldByName('P_Type').AsString = sFlag_Sale then
       begin
-        if not SyncHhOtherOrderData(nPID) then
-        begin
-          ShowMsg('上传失败',sHint);
-          Exit;
-        end;
+        nStr := '销售单据请在发货明细进行上传';
+        ShowMsg(nStr, sHint);
+        Exit;
+      //xxxxx
       end
       else
       begin
-        nStr := 'Select O_IfNeiDao From %s a , %s b' +
-        ' where a.O_ID = b.D_OID and  b.D_ID = ''%s''';
-        //xxxxx
-
-        nStr := Format(nStr, [sTable_Order, sTable_OrderDtl,
-                              SQLQuery.FieldByName('P_OrderBak').AsString]);
-
-        with FDM.QueryTemp(nStr) do
+        if SQLQuery.FieldByName('P_PoundIdx').AsInteger > 0  then//备品备件
         begin
-          if RecordCount < 1 then
+          if not SyncHhOtherOrderData(nPID) then
           begin
-            nStr := Format('未找到磅单[ %s ]对应的采购单据,无法上传', [nPID]);
-            ShowMsg(nStr, sHint);
+            ShowMsg('上传失败',sHint);
             Exit;
           end;
-          if Fields[0].AsString = sFlag_Yes then
+        end
+        else
+        begin
+          nStr := 'Select O_IfNeiDao From %s a , %s b' +
+          ' where a.O_ID = b.D_OID and  b.D_ID = ''%s''';
+          //xxxxx
+
+          nStr := Format(nStr, [sTable_Order, sTable_OrderDtl,
+                                SQLQuery.FieldByName('P_OrderBak').AsString]);
+
+          with FDM.QueryTemp(nStr) do
           begin
-            if not SyncHhNdOrderData(nPID) then
+            if RecordCount < 1 then
             begin
-              ShowMsg('上传失败',sHint);
+              nStr := Format('未找到磅单[ %s ]对应的采购单据,无法上传', [nPID]);
+              ShowMsg(nStr, sHint);
               Exit;
             end;
-          end
-          else
-          begin
-            if not SyncHhOrderData(nPID) then
+            if Fields[0].AsString = sFlag_Yes then
             begin
-              ShowMsg('上传失败',sHint);
-              Exit;
+              if not SyncHhNdOrderData(nPID) then
+              begin
+                ShowMsg('上传失败',sHint);
+                Exit;
+              end;
+            end
+            else
+            begin
+              if not SyncHhOrderData(nPID) then
+              begin
+                ShowMsg('上传失败',sHint);
+                Exit;
+              end;
             end;
           end;
         end;
       end;
-    end;
+    {$ELSE}
+      GetLoginToken(gSysParam.FWXZhangHu,gSysParam.FWXMiMa);
+      if not SyncWXPoundKW(nPID) then
+      begin
+        ShowMsg('上传失败',sHint);
+        Exit;
+      end;
+    {$ENDIF}
     ShowMsg('上传成功',sHint);
     InitFormData('');
   end;
@@ -596,7 +618,7 @@ begin
     ShowMsg('请选择要勘误的记录', sHint);
     Exit;
   end;
-
+  {$IFNDEF UseWXERP}
   if SQLQuery.FieldByName('P_Type').AsString = sFlag_Sale then
   begin
     nStr := '销售单据请在提货查询进行勘误';
@@ -626,6 +648,27 @@ begin
   finally
     nList.Free;
   end;
+  {$ELSE}
+    nID := SQLQuery.FieldByName('P_ID').AsString;
+
+    nList := TStringList.Create;
+    try
+      nList.Add(nID);
+
+      nP.FCommand := cCmd_EditData;
+      nP.FParamA := nList.Text;
+
+      CreateBaseFormItem(cFI_FormPound_WxKw, '', @nP);
+
+      if (nP.FCommand = cCmd_ModalResult) and (nP.FParamA = mrOK) then
+      begin
+        InitFormData(FWhere);
+      end;
+
+    finally
+      nList.Free;
+    end;
+  {$ENDIF}
 
 end;
 

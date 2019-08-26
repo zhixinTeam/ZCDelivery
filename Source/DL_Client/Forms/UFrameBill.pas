@@ -137,6 +137,16 @@ begin
   N16.Visible := True;
   N14.Visible := False;
   {$ENDIF}
+
+  {$IFDEF UseWXERP}
+  N10.Visible := False;
+  N12.Visible := False;
+  N13.Visible := False;
+  N15.Visible := False;
+  N16.Visible := False;
+  N17.Visible := False;
+  {$ENDIF}
+  
   FPreFix := 'WY';
   nStr := 'Select B_Prefix From %s ' +
           'Where B_Group=''%s'' And B_Object=''%s''';
@@ -308,21 +318,30 @@ begin
   nStr := Format(nStr, [SQLQuery.FieldByName('L_ID').AsString]);
   if not QueryDlg(nStr, sAsk) then Exit;
 
-  {$IFDEF SyncDataByWSDL}
-  nList := TStringList.Create;
-  nList.Values['ID'] := SQLQuery.FieldByName('L_ID').AsString;
-  nList.Values['Delete'] := sFlag_Yes;
+  {$IFNDEF UseWXERP}
+    {$IFDEF SyncDataByWSDL}
+    nList := TStringList.Create;
+    nList.Values['ID'] := SQLQuery.FieldByName('L_ID').AsString;
+    nList.Values['Delete'] := sFlag_Yes;
 
-  nStr := PackerEncodeStr(nList.Text);
-  try
-    if not SyncHhSaleDetailWSDL(nStr) then
+    nStr := PackerEncodeStr(nList.Text);
+    try
+      if not SyncHhSaleDetailWSDL(nStr) then
+      begin
+        ShowMsg('提货单作废失败',sHint);
+        Exit;
+      end;
+    finally
+      nList.Free;
+    end;
+    {$ENDIF}
+  {$ELSE}
+    GetLoginToken(gSysParam.FWXZhangHu,gSysParam.FWXMiMa);
+    if not SyncWXPoundDel(nLID) then
     begin
       ShowMsg('提货单作废失败',sHint);
       Exit;
     end;
-  finally
-    nList.Free;
-  end;
   {$ENDIF}
 
   if DeleteBill(SQLQuery.FieldByName('L_ID').AsString) then

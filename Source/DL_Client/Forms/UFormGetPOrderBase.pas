@@ -69,6 +69,8 @@ type
     FOrderItems: TOrderBaseParams;
     function QueryData(const nQueryType: string=''): Boolean;
     //查询数据
+    function QueryWXData(const nQueryType: string=''): Boolean;
+    //查询数据
     function QueryDataWSDL(const nQueryType: string=''): Boolean;
     //查询数据
     procedure GetResult;
@@ -356,7 +358,11 @@ begin
   {$IFDEF SyncDataByWSDL}
   if QueryDataWSDL(nQueryType) then ListQuery.SetFocus;
   {$ELSE}
-  if QueryData(nQueryType) then ListQuery.SetFocus;
+    {$IFDEF UseWXERP}
+      if QueryWXData(nQueryType) then ListQuery.SetFocus;
+    {$ELSE}
+      if QueryData(nQueryType) then ListQuery.SetFocus;
+    {$ENDIF}
   {$ENDIF}
 end;
 
@@ -367,7 +373,7 @@ begin
   with ListQuery.Selected do
   begin
     for nIdx:=Low(FOrderItems) to High(FOrderItems) do
-    with FOrderItems[nIdx], FResults do
+    with FOrderItems[ListQuery.ItemIndex], FResults do
     begin
       //if CompareText(FID, Caption)=0 then
       if CompareText(FRecID, SubItems[6])=0 then
@@ -448,6 +454,92 @@ begin
   else
     dxLayout1Item5.Visible := True;
   ListQuery.Items.Clear;
+end;
+
+function TfFormGetPOrderBase.QueryWXData(
+  const nQueryType: string): Boolean;
+var nStr, nQuery, nData: string;
+    nIdx, nOrderCount: Integer;
+    nListA, nListB: TStrings;
+begin
+  Result := False;
+  ListQuery.Items.Clear;
+
+  nListA := TStringList.Create;
+  nListB := TStringList.Create;
+  try
+    nListA.Values['YearPeriod'] := EditYear.Text;
+
+    if nQueryType = '1' then //供应商
+    begin
+      nListA.Values['Provider'] := Trim(EditProvider.Text);
+    end
+    else if nQueryType = '2' then //原材料
+    begin
+      nListA.Values['Materiel'] := Trim(EditMate.Text);
+    end;
+
+    nStr := PackerEncodeStr(nListA.Text);
+    {$IFDEF UseWXERP}
+      GetLoginToken(gSysParam.FWXZhangHu,gSysParam.FWXMiMa);
+      case EditOrderType.ItemIndex of
+        0:
+          nData := SyncWXOrderInfo(nStr);
+        1:
+          nData := SyncWXOrderInfo(nStr);
+      end;
+    {$ENDIF}
+
+    if nData = '' then
+    begin
+      ShowMsg('未查询到相关信息',sHint);
+      Exit;
+    end;
+
+    nListA.Text := PackerDecodeStr(nData);
+    nOrderCount := nListA.Count;
+    SetLength(FOrderItems,nOrderCount);
+    for nIdx := 0 to nOrderCount-1 do
+    with FOrderItems[nIdx] do
+    begin
+      nListB.Text := PackerDecodeStr(nListA.Strings[nIdx]);
+      FID       := nListB.Values['Order'];
+      FProvID   := nListB.Values['ProID'];
+      FProvName := nListB.Values['ProName'];
+      FSaleID   := '';
+      FSaleName := '';
+      FStockNO  := nListB.Values['StockNo'];
+      FStockName:= nListB.Values['StockName'];
+      FStockModel:= nListB.Values['Model'];
+      FKD       := nListB.Values['KD'];
+      FArea     := '';
+      FProject  := '';
+      FRecID    := IntToStr(nIdx+1);
+      FPurchType:= EditOrderType.Text;
+      FMemo     := '';
+      FRestValue:= nListB.Values['Value'];
+      FYear     := EditYear.Text;
+
+      with ListQuery.Items.Add do
+      begin
+        Caption := FID;
+        SubItems.Add(FStockName);
+        SubItems.Add(FStockModel);
+        SubItems.Add(FProvName);
+        SubItems.Add(FKD);
+        SubItems.Add(FRestValue);
+        SubItems.Add(FMemo);
+        SubItems.Add(FRecID);
+        ImageIndex := cItemIconIndex;
+      end;
+    end;
+    if ListQuery.Items.Count>0 then
+      ListQuery.ItemIndex := 0;
+    Result := True;
+  finally
+    nListA.Free;
+    nListB.Free;
+  end;
 end;
 
 initialization
