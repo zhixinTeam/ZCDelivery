@@ -34,6 +34,7 @@ uses
   UMgrQueue, UMgrLEDCard, UMgrHardHelper, UMgrRemotePrint, U02NReader,
   {$IFDEF MultiReplay}UMultiJS_Reply, {$ELSE}UMultiJS, {$ENDIF}
   UMgrERelay, UMgrRemoteVoice, UMgrCodePrinter, UMgrLEDDisp,
+  {$IFDEF UseLBCModbus}UMgrLBCModusTcp, {$ENDIF}
   UMgrRFID102, UMgrVoiceNet, UMgrTTCEM100, UMgrRemoteSnap;
 
 class function THardwareWorker.ModuleInfo: TPlugModuleInfo;
@@ -123,6 +124,11 @@ begin
       gHKSnapHelper.LoadConfig(nCfg + 'RemoteSnap.xml');
     end;
 
+    {$IFDEF UseLBCModbus}
+    nStr := '定量装车';
+    gModBusClient.LoadConfig(nCfg + 'ModBusController.xml');
+    {$ENDIF}
+
   except
     on E:Exception do
     begin
@@ -147,6 +153,10 @@ begin
 
   gHardShareData := WhenBusinessMITSharedDataIn;
   //hard monitor share
+
+  {$IFDEF UseLBCModbus}
+  gModBusClient := TReaderHelperEx.Create;
+  {$ENDIF}
 end;
 
 procedure THardwareWorker.BeforeStartServer;
@@ -208,6 +218,14 @@ begin
 
   gHKSnapHelper.StartSnap;
   //remote snap
+
+  {$IFDEF UseLBCModbus}
+  if Assigned(gModBusClient) then
+  begin
+    gModBusClient.OnStatusChange := WhenLBCWeightStatusChange;
+    gModBusClient.StartPrinter;
+  end;
+  {$ENDIF}
 end;
 
 procedure THardwareWorker.AfterStopServer;
@@ -261,6 +279,11 @@ begin
   
   gTruckQueueManager.StopQueue;
   //queue
+
+  {$IFDEF UseLBCModbus}
+  if Assigned(gModBusClient) then
+  gModBusClient.StopPrinter;
+  {$ENDIF}
 end;
 
 end.

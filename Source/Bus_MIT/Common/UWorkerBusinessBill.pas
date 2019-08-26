@@ -437,23 +437,27 @@ begin
       Values['ConsignCusName']       := FieldByName('O_ConsignCusName').AsString;
       {$ENDIF}
     end;
+
+    {$IFDEF UseWXERP}
+      FListB.Values['StockNo'] := FieldByName('O_StockID').AsString;
+    {$ELSE}
+      if Length(FListB.Values['StockName']) > 0 then
+      begin
+        nStr := 'Select D_ParamB From %s Where D_Name = ''%s'' ' +
+                'And D_Memo=''%s'' and D_Value like ''%%%s%%''';
+        nStr := Format(nStr, [sTable_SysDict, sFlag_StockItem,
+                              FListB.Values['Type'],
+                              FListB.Values['StockName']]);
+
+        with gDBConnManager.WorkerQuery(FDBConn, nStr) do
+        if RecordCount > 0 then
+        begin
+          FListB.Values['StockNo'] := Fields[0].AsString;
+        end;
+      end;
+    {$ENDIF}
   end;
-
-  if Length(FListB.Values['StockName']) > 0 then
-  begin
-    nStr := 'Select D_ParamB From %s Where D_Name = ''%s'' ' +
-            'And D_Memo=''%s'' and D_Value like ''%%%s%%''';
-    nStr := Format(nStr, [sTable_SysDict, sFlag_StockItem,
-                          FListB.Values['Type'],
-                          FListB.Values['StockName']]);
-
-    with gDBConnManager.WorkerQuery(FDBConn, nStr) do
-    if RecordCount > 0 then
-    begin
-      FListB.Values['StockNo'] := Fields[0].AsString;
-    end;
-  end;
-
+  
   Result := True;
   //verify done
 end;
@@ -465,6 +469,7 @@ var nStr,nSQL,nPreFix: string;
     nWorker: TBusinessWorkerBase;
     nPacker: TBusinessPackerBase;
     nIn,nOut: TWorkerBusinessCommand;
+    nLine: string;
 begin
   Result := False;
   FListA.Text := PackerDecodeStr(FIn.FData);
@@ -570,6 +575,17 @@ begin
             ], sTable_Bill, '', True);
     gDBConnManager.WorkerExec(FDBConn, nStr);
 
+    {$IFDEF UseWXERP}
+    nSQL := MakeSQLByStr([
+          SF('H_ID'   , FOut.FData),
+          SF('H_Order' , FListA.Values['ZhiKa']),
+          SF('H_Status' , '0'),
+          SF('H_BillType'  , sFlag_Sale),
+          SF('H_PurType'   , 'Trk')
+          ], sTable_HHJYSync, '', True);
+    gDBConnManager.WorkerExec(FDBConn, nSQL);
+    {$ENDIF}
+
     nStr := 'Update %s Set B_HasUse=B_HasUse+%s Where B_Batcode=''%s''';
     nStr := Format(nStr, [sTable_StockBatcode, FListA.Values['Value'],
             FListA.Values['Batcode']]);
@@ -620,6 +636,22 @@ begin
         gDBConnManager.WorkerExec(FDBConn, nSQL);
       end else
       begin
+        nLine := '';
+        {$IFDEF MoreNumZDLine}
+        nStr := 'Select D_Name From $Sys where D_Memo=''$ST'' and D_ParamB = ''$SA'' and D_Value <= $SV ';
+        nStr := MacroValue(nStr, [MI('$Sys', sTable_SysDict),
+                MI('$ST', FListB.Values['StockName']),
+                MI('$SA', sFlag_ZDLineItem),
+                MI('$SV', FListA.Values['Value'])]);
+        with gDBConnManager.WorkerQuery(FDBConn, nStr) do
+        begin
+          if RecordCount > 0 then
+          begin
+            nLine := FieldByName('D_Name').AsString;
+          end;
+        end;
+        {$ENDIF}
+        
         nSQL := MakeSQLByStr([
           SF('T_Truck'   , FListA.Values['Truck']),
           SF('T_StockNo' , FListB.Values['StockNo']),
@@ -627,6 +659,9 @@ begin
           SF('T_Type'    , FListB.Values['Type']),
           SF('T_InTime'  , sField_SQLServer_Now, sfVal),
           SF('T_Bill'    , FOut.FData),
+          {$IFDEF MoreNumZDLine}
+          SF('T_Line',     nLine),
+          {$ENDIF}
           SF('T_Valid'   , sFlag_Yes),
           SF('T_Value'   , FListA.Values['Value'], sfVal),
           SF('T_VIP'     , FListA.Values['IsVIP']),
@@ -652,13 +687,16 @@ begin
       //freeze
     end;
 
+    {$IFNDEF UseWXERP}
     nSQL := MakeSQLByStr([
           SF('H_ID'   , FOut.FData),
           SF('H_Order' , FListA.Values['ZhiKa']),
           SF('H_Status' , '0'),
-          SF('H_BillType'   , sFlag_Sale)
+          SF('H_BillType'   , sFlag_Sale),
+          SF('H_PurType'   , 'S')
           ], sTable_HHJYSync, '', True);
     gDBConnManager.WorkerExec(FDBConn, nSQL);
+    {$ENDIF}
 
     FDBConn.FConn.CommitTrans;
     Result := True;
@@ -2028,10 +2066,17 @@ begin
       end
       else
       begin
-        nSQL := 'Update %s Set O_HasDone=O_HasDone+(%.2f),' +
-                'O_Freeze=O_Freeze-(%.2f) Where O_Order=''%s''';
-        nSQL := Format(nSQL, [sTable_SalesOrder, FValue, FValue, FZhiKa]);
-        FListA.Add(nSQL); //sale done
+        {$IFDEF UseWXERP}
+          nSQL := ' Update %s Set O_PlanRemain = O_PlanRemain-(%.2f), O_HasDone=O_HasDone+(%.2f),' +
+                  ' O_Freeze=O_Freeze-(%.2f) Where O_Order=''%s''';
+          nSQL := Format(nSQL, [sTable_SalesOrder, FValue, FValue, FValue, FZhiKa]);
+          FListA.Add(nSQL); //sale done
+        {$ELSE}
+          nSQL := 'Update %s Set O_HasDone=O_HasDone+(%.2f),' +
+                  'O_Freeze=O_Freeze-(%.2f) Where O_Order=''%s''';
+          nSQL := Format(nSQL, [sTable_SalesOrder, FValue, FValue, FZhiKa]);
+          FListA.Add(nSQL); //sale done
+        {$ENDIF}
       end;
 
       {$IFDEF PrintHYEach}
@@ -2176,18 +2221,33 @@ begin
     nSQL := Format(nSQL, [sTable_ZTTrucks, nStr]);
     FListA.Add(nSQL); //清理装车队列
 
-    {$IFDEF SyncDataByWSDL}
-    for nIdx:=Low(nBills) to High(nBills) do
-    with nBills[nIdx] do
-    begin
-      nSQL := MakeSQLByStr([
-            SF('H_ID'   , FID),
-            SF('H_Order' , FZhiKa),
-            SF('H_Status' , '1'),
-            SF('H_BillType'   , sFlag_Sale)
-            ], sTable_HHJYSync, '', True);
-      FListA.Add(nSQL);
-    end;
+    {$IFNDEF UseWXERP}
+      {$IFDEF SyncDataByWSDL}
+      for nIdx:=Low(nBills) to High(nBills) do
+      with nBills[nIdx] do
+      begin
+        nSQL := MakeSQLByStr([
+              SF('H_ID'   , FID),
+              SF('H_Order' , FZhiKa),
+              SF('H_Status' , '1'),
+              SF('H_BillType'   , sFlag_Sale)
+              ], sTable_HHJYSync, '', True);
+        FListA.Add(nSQL);
+      end;
+      {$ENDIF}
+    {$ELSE}
+      for nIdx:=Low(nBills) to High(nBills) do
+      with nBills[nIdx] do
+      begin
+        nSQL := MakeSQLByStr([
+              SF('H_ID'   , FID),
+              SF('H_Order' , FZhiKa),
+              SF('H_Status' , '1'),
+              SF('H_BillType'  , sFlag_Sale),
+              SF('H_PurType'   , sFlag_Sale)
+              ], sTable_HHJYSync, '', True);
+        FListA.Add(nSQL);
+      end;
     {$ENDIF}
   end;
 

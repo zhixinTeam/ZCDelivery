@@ -12,6 +12,7 @@ uses
   UBusinessWorker, UBusinessConst, UBusinessPacker, UMgrQueue,
   {$IFDEF MultiReplay}UMultiJS_Reply, {$ELSE}UMultiJS, {$ENDIF}
   UMgrHardHelper, U02NReader, UMgrERelay, UMgrRemotePrint,
+  {$IFDEF UseLBCModbus}UMgrLBCModusTcp, {$ENDIF}
   UMgrLEDDisp, UMgrRFID102, UMgrTTCEM100, UMgrVoiceNet, UMgrremoteSnap;
 
 procedure WhenReaderCardArrived(const nReader: THHReaderItem);
@@ -34,6 +35,11 @@ function VerifySnapTruck(const nTruck,nBill,nPos: string;var nResult: string): B
 procedure MakeGateSound(const nText,nPost: string; const nSucc: Boolean);
 //播放门岗语音
 procedure PlayNetVoice(const nText,nPost: string);
+{$IFDEF UseLBCModbus}
+procedure WhenLBCWeightStatusChange(const nTunnel: PLBTunnel);
+//链板秤定量装车状态改变
+{$ENDIF}
+
 implementation
 
 uses
@@ -224,6 +230,30 @@ begin
   Result := CallBusinessCommand(cBC_VerifyTruckStatus, nLID, nNowTruck, @nOut);
 end;
 
+function VeryTruckLicense(const nTruck, nBill: string; var nMsg: string): Boolean;
+var
+  nList: TStrings;
+  nOut: TWorkerBusinessCommand;
+  nID : string;
+begin
+  if nBill = '' then
+    nID := nTruck + FormatDateTime('YYMMDD',Now)
+  else
+    nID := nBill;
+
+  nList := nil;
+  try
+    nList := TStringList.Create;
+    nList.Values['Truck'] := nTruck;
+    nList.Values['Bill'] := nID;
+
+    Result := CallBusinessCommand(cBC_VeryTruckLicense, nList.Text, '', @nOut);
+    nMsg := nOut.FData
+  finally
+    nList.Free;
+  end;
+end;
+
 //Date: 2015-08-06
 //Parm: 磁卡号;岗位;采购单列表
 //Desc: 获取nPost岗位上磁卡为nCard的交货单列表
@@ -346,6 +376,7 @@ var nStr,nTruck,nCardType,nSnapStr: string;
     nPTruck: PTruckItem;
     nTrucks: TLadingBillItems;
     nRet: Boolean;
+    nMsg: string;
 begin
   if gTruckQueueManager.IsTruckAutoIn and (GetTickCount -
      gHardwareHelper.GetCardLastDone(nCard, nReader) < 2 * 60 * 1000) then
@@ -408,6 +439,17 @@ begin
       Exit;
     end;
   end;
+  {$ENDIF}
+
+  {$IFDEF UseEnableStruck}
+  if nTrucks[0].FStatus = sFlag_TruckNone then
+  if not VeryTruckLicense(nTrucks[0].FTruck,nTrucks[0].FID, nMsg) then
+  begin
+    WriteHardHelperLog(nMsg, sPost_In);
+    Exit;
+  end;
+  nStr := nMsg + ',请进厂';
+  WriteHardHelperLog(nMsg, sPost_In);
   {$ENDIF}
 
   if nTrucks[0].FStatus = sFlag_TruckIn then
@@ -905,7 +947,6 @@ begin
             gDBConnManager.ReleaseConnection(nDBConn);
           end;
         end;
-
         if nRetain then
           WriteHardHelperLog('吞卡机执行状态:'+'卡类型:'+nCType+'动作:吞卡')
         else
@@ -1385,6 +1426,10 @@ begin
 
   gERelayManager.LineOpen(nTunnel);
   //打开放灰
+  {$IFDEF UseLBCModbus}
+  gModBusClient.StartWeight(nTunnel, nTruck.FBill, nTruck.FValue);
+  //开始定量装车
+  {$ENDIF}
 
   nStr := nTruck.FTruck + StringOfChar(' ', 12 - Length(nTruck.FTruck));
   nTmp := nTruck.FStockName + FloatToStr(nTruck.FValue);
@@ -1474,7 +1519,6 @@ begin
       nStr := nTrucks[0].FTruck + '请换库装车';
     nStr := nStr + ',' + gTruckQueueManager.IsSafeVocie;
     gNetVoiceHelper.PlayVoice(nStr, sPost_FH);
-
     Exit;
   end; //检查通道
 
@@ -1541,6 +1585,10 @@ begin
 
   gERelayManager.LineClose(nHost.FTunnel);
   Sleep(100);
+
+  {$IFDEF UseLBCModbus}
+  gModBusClient.StopWeightSaveNum(nHost.FTunnel);
+  {$ENDIF}
 
   if nHost.FETimeOut then
        gERelayManager.ShowTxt(nHost.FTunnel, '电子标签超出范围')
@@ -1684,5 +1732,50 @@ begin
     nList.Free;
   end;
 end;
+
+{$IFDEF UseLBCModbus}
+procedure WhenLBCWeightStatusChange(const nTunnel: PLBTunnel);
+var
+  nStr, nTruck, nMsg: string;
+  nList : TStrings;
+  nIdx  : Integer;
+begin
+  if nTunnel.FStatusNew = bsDone then
+  begin
+    gERelayManager.ShowTxt(nTunnel.FID, '装车完成 请下磅');
+
+    gERelayManager.LineClose(nTunnel.FID);
+    Sleep(100);
+    WriteNearReaderLog('称重完成:' + nTunnel.FID + '单据号：' + nTunnel.FBill);
+    Exit;
+  end;
+  
+  if nTunnel.FStatusNew = bsProcess then
+  begin
+    if nTunnel.FWeightMax > 0 then
+    begin
+      nStr := Format('%.2f/%.2f', [nTunnel.FWeightMax, nTunnel.FValTunnel]);
+    end
+    else nStr := Format('%.2f/%.2f', [nTunnel.FValue, nTunnel.FValTunnel]);
+    
+    gERelayManager.ShowTxt(nTunnel.FID, nStr);
+    Exit;
+  end;
+
+  case nTunnel.FStatusNew of
+   bsInit      : WriteNearReaderLog('初始化:' + nTunnel.FID   + '单据号：' + nTunnel.FBill);
+   bsNew       : WriteNearReaderLog('新添加:' + nTunnel.FID   + '单据号：' + nTunnel.FBill);
+   bsStart     : WriteNearReaderLog('开始称重:' + nTunnel.FID + '单据号：' + nTunnel.FBill);
+   bsClose     : WriteNearReaderLog('称重关闭:' + nTunnel.FID + '单据号：' + nTunnel.FBill);
+  end; //log
+
+  if nTunnel.FStatusNew = bsClose then
+  begin
+    gERelayManager.ShowTxt(nTunnel.FID, '装车业务关闭');
+    WriteNearReaderLog(nTunnel.FID+'装车业务关闭');
+    Exit;
+  end;
+end;
+{$ENDIF}
 
 end.

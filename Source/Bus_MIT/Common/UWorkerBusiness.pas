@@ -10,7 +10,7 @@ interface
 uses
   Windows, Classes, Controls, DB, SysUtils, UBusinessWorker, UBusinessPacker,
   UBusinessConst, UMgrDBConn, UMgrParam, ULibFun, UFormCtrl, UBase64, ZnMD5, 
-  USysLoger, USysDB, UMITConst,DateUtils;
+  USysLoger, USysDB, UMITConst,DateUtils, IdHTTP, uSuperObject;
 
 type
   TBusWorkerQueryField = class(TBusinessWorkerBase)
@@ -51,9 +51,11 @@ type
   TWorkerBusinessCommander = class(TMITDBWorker)
   private
     FListA,FListB,FListC: TStrings;
+    FListD,FListE,FListF: TStrings;
     //list
     FIn: TWorkerBusinessCommand;
     FOut: TWorkerBusinessCommand;
+    
   protected
     procedure GetInOutData(var nIn,nOut: PBWDataBase); override;
     function DoDBWork(var nData: string): Boolean; override;
@@ -116,6 +118,8 @@ type
     //生成化验单推送事件
     function VerifyTruckStatus(var nData: string): Boolean;
     //校验车辆状态
+    function VerifyTruckLicense(var nData: string): Boolean;
+    //车牌识别
   public
     constructor Create; override;
     destructor destroy; override;
@@ -308,6 +312,9 @@ begin
   FListA := TStringList.Create;
   FListB := TStringList.Create;
   FListC := TStringList.Create;
+  FListD := TStringList.Create;
+  FListE := TStringList.Create;
+  FListF := TStringList.Create;
   inherited;
 end;
 
@@ -316,6 +323,9 @@ begin
   FreeAndNil(FListA);
   FreeAndNil(FListB);
   FreeAndNil(FListC);
+  FreeAndNil(FListD);
+  FreeAndNil(FListE);
+  FreeAndNil(FListF);
   inherited;
 end;
 
@@ -410,8 +420,10 @@ begin
    cBC_SyncHhOtOrderPoundData : Result := SyncHhOtherOrderPoundData(nData);
 
    cBC_GetHhSalePlan       : Result := GetHhSalePlan(nData);
-   cBC_SyncHhSaleDetail     : Result := SyncHhSaleDetail(nData);
+   cBC_SyncHhSaleDetail    : Result := SyncHhSaleDetail(nData);
    cBC_SyncHhSaleWTTruck   : Result := GetHhSaleWTTruck(nData);
+
+   cBC_VeryTruckLicense    : Result := VerifyTruckLicense(nData);
    else
     begin
       Result := False;
@@ -1168,6 +1180,7 @@ begin
     SaveHyDanEvent(FIn.FData,FOut.FBase.FErrDesc,
                    sFlag_DepDaTing,sFlag_Solution_OK,sFlag_DepDaTing);
   end;
+
   Result := True;
   FOut.FBase.FResult := True;
 end;
@@ -1326,6 +1339,9 @@ begin
             SF('O_Year', FListA.Values['Year']),
             SF('O_Memo', FListA.Values['Memo']),
             SF('O_PrintBD', FListA.Values['PrintBD']),
+            {$IFDEF UseWXERP}
+            SF('O_RestValue', StrToFloatDef(FListA.Values['RestValue'],0),sfVal),
+            {$ENDIF}
             SF('O_expiretime', FListA.Values['expiretime'],sfDateTime)
             ], sTable_Order, '', True);
     gDBConnManager.WorkerExec(FDBConn, nStr);
@@ -1940,7 +1956,7 @@ begin
               '(P_Order =''$OID'' or P_OrderBak =''$OID'') And P_PoundIdx=''$PI''';
       //xxxxx
     end;
-
+    
 	  nStr := MacroValue(nStr, [MI('$PI', FListA.Values['O_PoundIdx']),
 	                            MI('$PD', sTable_PoundLog),
 	                            MI('$OID', FListA.Values['O_ID'])]);
@@ -2063,6 +2079,7 @@ begin
               FKZValue  := FieldByName('P_KZValue').AsFloat;
             end;
 
+
             FNeiDao     := sFlag_No;
             //FCtype  := sFlag_OrderCardL;
             FPoundIdx   := nPoundIdx;
@@ -2168,6 +2185,17 @@ begin
   //            SF('D_RecID', FRecID)
               ], sTable_OrderDtl, '', True);
         FListA.Add(nSQL);
+
+        {$IFDEF UseWXERP}
+        nSQL := MakeSQLByStr([
+              SF('H_ID'    , nOut.FData),
+              SF('H_Order' , nBID),
+              SF('H_Status' , '0'),
+              SF('H_BillType'  , sFlag_Provide),
+              SF('H_PurType'   , 'Trk')
+              ], sTable_HHJYSync, '', True);
+        gDBConnManager.WorkerExec(FDBConn, nSQL);
+        {$ENDIF}
       end;
     end;
   end else
@@ -2748,6 +2776,33 @@ begin
       end;
       WriteLog('采购单写入同步消息:' + nSQL);
       gDBConnManager.WorkerExec(FDBConn, nSQL);
+    end;
+  end;
+  {$ENDIF}
+
+
+  {$IFDEF UseWXERP}
+  if FIn.FExtParam = sFlag_TruckOut then
+  begin
+    with nPound[0] do
+    begin
+      nSQL := 'Select Top 1 P_ID,P_BID From %s Where P_OrderBak=''%s'' order by R_ID desc ';
+      nSQL := Format(nSQL, [sTable_PoundLog, FID]);
+
+      with gDBConnManager.WorkerQuery(FDBConn, nSQL) do
+      if RecordCount > 0 then
+      begin
+        nPID := Fields[0].AsString;
+        nSQL := MakeSQLByStr([
+              SF('H_ID'        , nPID),
+              SF('H_Order'     , Fields[1].AsString),
+              SF('H_Status'    , '1'),
+              SF('H_PurType'   , sFlag_PurPT),
+              SF('H_BillType'  , sFlag_Provide)
+              ], sTable_HHJYSync, '', True);
+      
+        gDBConnManager.WorkerExec(FDBConn, nSQL);
+      end;
     end;
   end;
   {$ENDIF}
@@ -4589,7 +4644,6 @@ begin
               'and FStatus = 1 and FFactoryName like ''%%%s%%'' ';
       nStr := Format(nStr, [sTable_HH_SalePlan, FIn.Fdata]);
     end;
-
     //xxxxx
     WriteLog('获取销售计划SQL:'+nStr);
     with gDBConnManager.SQLQuery(nStr, nDBWorker, sFlag_DB_HH) do
@@ -5145,6 +5199,133 @@ begin
       WriteLog(e.message);
     end;
   end;
+end;
+
+function TWorkerBusinessCommander.VerifyTruckLicense(
+  var nData: string): Boolean;
+var nStr: string;
+    nTruck, nBill, nPos, nEvent, nDept, nPicName: string;
+    nUpdate, nNeedManu: Boolean;
+    nLastTime: TDateTime;
+begin
+  Result := False;
+  FListA.Text := FIn.FData;
+  nPos := sFlag_DepBangFang;
+  nDept:= sFlag_DepDaTing;
+  nEvent:= '' ;
+  nNeedManu := False;
+
+  nTruck := FListA.Values['Truck'];
+  nBill  := FListA.Values['Bill'];
+
+  nStr := 'Select D_Value From %s Where D_Name=''%s'' and D_Memo=''%s''';
+  nStr := Format(nStr, [sTable_SysDict, sFlag_TruckInNeedManu,nPos]);
+  //xxxxx
+
+  with gDBConnManager.WorkerQuery(FDBConn, nStr) do
+  begin
+    if RecordCount > 0 then
+    begin
+      nNeedManu := FieldByName('D_Value').AsString = sFlag_Yes;
+    end;
+  end;
+
+  if not nNeedManu then
+  begin
+    WriteLog('车牌识别:'+'岗位:'+nPos+'事件接收部门:'+nDept+'人工干预:否');
+  end
+  else
+    WriteLog('车牌识别:'+'岗位:'+nPos+'事件接收部门:'+nDept+'人工干预:是');
+
+  nData := '车辆[ %s ]车牌识别失败';
+  nData := Format(nData, [nTruck]);
+  FOut.FData := nData;
+  //default
+
+  nStr := 'Select isnull(T_LastTime,''2000-12-12 09:00:00'') as T_LastTime From %s Where T_Truck=''%s''  ';
+  nStr := Format(nStr, [sTable_Truck, nTruck]);
+  //xxxxx
+
+  with gDBConnManager.WorkerQuery(FDBConn, nStr) do
+  begin
+    if RecordCount < 1 then
+    begin
+      Result:= False;
+      nData := '车辆[ %s ]识别异常';
+      nData := Format(nData, [nTruck]);
+      FOut.FData := nData;
+      Exit;
+    end;
+    
+    nLastTime := FieldByName('T_LastTime').AsDateTime;
+    if Now - nLastTime <= 0.02 then
+    begin
+      Result := True;
+      nData := '车辆[ %s ]车牌识别成功';
+      nData:= Format(nData, [nTruck]);
+      FOut.FData := nData;
+      Exit;
+    end;
+    //车牌识别成功
+  end;
+
+  if not nNeedManu then
+  begin
+   // Result := True;
+    Exit;
+  end;
+
+  nStr := 'Select * From %s Where E_ID=''%s''';
+  nStr := Format(nStr, [sTable_ManualEvent, nBill+sFlag_ManualE]);
+
+  with gDBConnManager.WorkerQuery(FDBConn, nStr) do
+  begin
+    if RecordCount > 0 then
+    begin
+      if FieldByName('E_Result').AsString = 'N' then
+      begin
+        nData := '车辆[ %s ]车牌识别失败,管理员禁止进厂';
+        nData := Format(nData, [nTruck]);
+        FOut.FData := nData;
+        Exit;
+      end;
+      if FieldByName('E_Result').AsString = 'Y' then
+      begin
+        Result := True;
+        nData := '车辆[ %s ]车牌识别失败,管理员允许';
+        nData := Format(nData, [nTruck]);
+        FOut.FData := nData;
+        Exit;
+      end;
+      nUpdate := True;
+    end
+    else
+    begin
+      nData := '车辆[ %s ]车牌识别失败';
+      nData := Format(nData, [nTruck]);
+      FOut.FData := nData;
+      nUpdate := False;
+      Result  := False;
+    end;
+  end;
+
+  nEvent := '车辆[ %s ]车牌识别失败';
+  nEvent := Format(nEvent, [nTruck]);
+
+  nStr := SF('E_ID', nBill+sFlag_ManualE);
+  nStr := MakeSQLByStr([
+          SF('E_ID', nBill+sFlag_ManualE),
+          SF('E_Key', nPicName),
+          SF('E_From', nPos),
+          SF('E_Result', 'Null', sfVal),
+
+          SF('E_Event', nEvent),
+          SF('E_Solution', sFlag_Solution_YN),
+          SF('E_Departmen', nDept),
+          SF('E_Date', sField_SQLServer_Now, sfVal)
+          ], sTable_ManualEvent, nStr, (not nUpdate));
+  //xxxxx
+  gDBConnManager.WorkerExec(FDBConn, nStr);
 end;
 
 initialization
