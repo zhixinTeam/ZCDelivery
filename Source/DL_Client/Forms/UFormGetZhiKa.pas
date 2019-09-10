@@ -263,6 +263,7 @@ begin
     FStatus      := '';
     FNextStatus  := FieldByName('O_Company').AsString;
     FPrice       := FieldByName('O_Price').AsFloat;
+    FSaleMan     := FieldByName('O_SaleMan').AsString;
   end;
 
   ModalResult := mrOk;

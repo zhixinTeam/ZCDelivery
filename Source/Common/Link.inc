@@ -52,7 +52,7 @@
 {.$DEFINE COMMON}
 //通用版本
 
-{$DEFINE ZZZC}
+{$DEFINE GXBL}
 //特定系统
 
 //安徽中材
@@ -140,4 +140,51 @@
   {$DEFINE RemoteSnap}
   //车牌识别
 {$ENDIF}
+
+//广西北流
+{$IFDEF GXBL}
+  {$DEFINE HYRFID201}
+  //华益读头
+  {$DEFINE AppAtTaskBar}
+  //状态栏显示
+  {$DEFINE MITTruckProber}
+  //车检由中间件控制
+  {.$DEFINE TruckProberEx}
+  //车检判断Ex
+  {$DEFINE MultiReplay}
+  //计数器应答模式
+  {$DEFINE DaiStepWuCha}
+  //包装阶梯误差
+  {.$DEFINE DaiOpenBackWhenError}
+  //包装错误抬后杆
+  {$DEFINE BatchInHYOfBill}
+  //批次保存在化验单字段
+  {$DEFINE PrintHYEach}
+  //随车开化验单
+  {$DEFINE HeGeZhengOnly}
+  //随车开单时只打合格证
+  {$DEFINE HeGeZhengSimpleData}
+  //使用简单合格证数据(无检验结果)
+  {$DEFINE JSTruck}
+  //格式化计数器车牌
+  {$DEFINE SyncRemote}
+  //远程同步
+  {$DEFINE MicroMsg}
+  //微信
+  {$DEFINE UseWXERP}
+   //使用问信ERP接口
+  {$DEFINE UseEnableStruck}
+   //启用车牌识别
+  {$DEFINE UseLBCModbus}
+  //启用链板秤装车
+ {$DEFINE MoreNumZDLine}
+  //数量达一定值指定通道
+ {$DEFINE NoUsePlayVoice}
+  //屏蔽一些语音播报
+ {$DEFINE UseWXServiceEx}
+  //使用二期微信中间件
+ {$DEFINE UseFliterRefresh}
+  //使用筛选刷新功能
+{$ENDIF}
+
 

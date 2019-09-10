@@ -417,7 +417,10 @@ begin
   if (not nRet) or (Length(nBills) < 1) then
   begin
     nVoice := '读取磁卡信息失败,请联系管理员';
+
+    {$IFNDEF NoUsePlayVoice}
     PlayVoice(nVoice);
+    {$ENDIF}
 
     WriteLog(nVoice);
     WriteSysLog(nVoice);
@@ -446,7 +449,10 @@ begin
         ShowMsg('车辆进厂失败', sHint);
 
         nVoice := '车辆进厂失败,请联系管理员';
+
+        {$IFNDEF NoUsePlayVoice}
         PlayVoice(nVoice);
+        {$ENDIF}
 
         WriteLog(nVoice);
         WriteSysLog(nVoice);
@@ -467,7 +473,10 @@ begin
         ShowMsg('车辆进厂失败', sHint);
 
         nVoice := '车辆进厂失败,请联系管理员';
+        
+        {$IFNDEF NoUsePlayVoice}
         PlayVoice(nVoice);
+        {$ENDIF}
 
         WriteLog(nVoice);
         WriteSysLog(nVoice);
@@ -543,7 +552,10 @@ begin
         ShowMsg('车辆进厂失败', sHint);
 
         nVoice := '车辆进厂失败,请联系管理员';
+
+        {$IFNDEF NoUsePlayVoice}
         PlayVoice(nVoice);
+        {$ENDIF}
 
         WriteLog(nVoice);
         WriteSysLog(nVoice);
@@ -563,7 +575,10 @@ begin
       begin
         ShowMsg('车辆进厂失败', sHint);
         nVoice := '车辆进厂失败,请联系管理员';
+
+        {$IFNDEF NoUsePlayVoice}
         PlayVoice(nVoice);
+        {$ENDIF}
 
         WriteLog(nVoice);
         WriteSysLog(nVoice);
@@ -593,6 +608,8 @@ begin
         FillChar(FMData, SizeOf(FMData), 0);
       end;
     end;
+
+    {$IFNDEF UseWXERP}
     if (FStatus = sFlag_TruckOut) and (FCardUsed = sFlag_Sale) then
     begin
       if IsTruckCanPound(nBills[nIdx]) then
@@ -614,6 +631,7 @@ begin
         Exit;
       end;
     end;
+    {$ENDIF}
     //长期卡+预置皮重
     if (FCtype=sFlag_CardGuDing) and nIsPreTruck then
     begin
@@ -674,8 +692,10 @@ begin
 
   if nInt = 0 then
   begin
+    {$IFNDEF NoUsePlayVoice}
     PlayVoice(nVoice);
     //车辆状态异常
+    {$ENDIF}
 
     nHint := '该车辆当前不能过磅,详情如下: ' + #13#10#13#10 + nHint;
     WriteSysLog(nStr);
@@ -684,23 +704,23 @@ begin
   end;
 
   {$IFDEF UseEnableStruck}
-  if not VeriFyTruckLicense(FLastReader, nBills[0], nHint, nPos) then
-  begin
-    nVoice := '%s车牌识别失败,请移动车辆或联系管理员';
-    nVoice := Format(nVoice, [nBills[0].FTruck]);
-    PlayVoice(nHint);
-    WriteSysLog(nHint);
-    SetUIData(True);
-    Exit;
-  end
-  else
-  begin
-    if nHint <> '' then
-    begin
-      PlayVoice(nHint);
-      WriteSysLog(nHint);
-    end;
-  end;
+//  if not VeriFyTruckLicense(FLastReader, nBills[0], nHint, nPos) then
+//  begin
+//    nVoice := '%s车牌识别失败,请移动车辆或联系管理员';
+//    nVoice := Format(nVoice, [nBills[0].FTruck]);
+//    PlayVoice(nHint);
+//    WriteSysLog(nHint);
+//    SetUIData(True);
+//    Exit;
+//  end
+//  else
+//  begin
+//    if nHint <> '' then
+//    begin
+//      PlayVoice(nHint);
+//      WriteSysLog(nHint);
+//    end;
+//  end;
   {$ENDIF}
 
   EditBill.Properties.Items.Clear;
@@ -745,7 +765,10 @@ begin
 
     nStr := '请等待 %d 秒后过磅';
     nStr := Format(nStr, [FPoundTunnel.FCardInterval - nInt]);
+
+    {$IFNDEF NoUsePlayVoice}
     PlayVoice(nStr);
+    {$ENDIF}
 
     SetUIData(True);
     Exit;
@@ -820,7 +843,7 @@ var nStr,nCard: string;
 begin
   if gSysParam.FIsManual then Exit;
   Timer_ReadCard.Tag := Timer_ReadCard.Tag + 1;
-  if Timer_ReadCard.Tag < 5 then Exit;
+  if Timer_ReadCard.Tag < 2 then Exit;
 
   Timer_ReadCard.Tag := 0;
   if FIsWeighting then Exit;
@@ -856,7 +879,9 @@ begin
 
       nStr := '请等待 %d 秒后过磅';
       nStr := Format(nStr, [FPoundTunnel.FCardInterval - nLast]);
+      {$IFNDEF NoUsePlayVoice}
       PlayVoice(nStr);
+      {$ENDIF}
       Exit;
     end;
 
@@ -942,7 +967,11 @@ begin
 
         nStr := '[n1]%s皮重超出预警,请下磅联系开票员处理后再次过磅';
         nStr := Format(nStr, [FTruck]);
+
+        {$IFNDEF NoUsePlayVoice}
         PlayVoice(nStr);
+        {$ENDIF}
+        
         Exit;
       end;
       {$ENDIF}
@@ -990,7 +1019,10 @@ begin
 
         nStr := '[n1]%s毛重超出限载,请下磅联系开票员处理后再次过磅';
         nStr := Format(nStr, [FTruck]);
+
+        {$IFNDEF NoUsePlayVoice}
         PlayVoice(nStr);
+        {$ENDIF}
 
         Exit;
       end;
@@ -1030,7 +1062,10 @@ begin
 
           nStr := '[n1]%s净重小于过磅净重限值,请下磅联系开票员处理后再次过磅';
           nStr := Format(nStr, [FTruck]);
+
+          {$IFNDEF NoUsePlayVoice}
           PlayVoice(nStr);
+          {$ENDIF}
 
           Exit;
         end;
@@ -1156,7 +1191,10 @@ begin
 
           nStr := '[n1]%s净重超出订单可用量,请下磅联系开票员处理后再次过磅';
           nStr := Format(nStr, [FTruck]);
+
+          {$IFNDEF NoUsePlayVoice}
           PlayVoice(nStr);
+          {$ENDIF}
 
           Exit;
         end;
@@ -1518,7 +1556,7 @@ begin
     nStr := '车辆未停到位,请移动车辆.';
     WriteSysLog(nStr);
     PlayVoice(nStr);
-
+    
     InitSamples;
     Exit;
   end;
@@ -1622,11 +1660,17 @@ begin
     if (FCardUsed = sFlag_Sale) and (FUIData.FType = sFlag_San) and
        (FUIData.FNextStatus = sFlag_TruckBFM) then
     begin
+      {$IFNDEF NoUsePlayVoice}
       nStr := '车辆[n1]%s毛重[n2]%.2f吨[p500]净重[n2]%.2f吨,请下磅';
       nStr := Format(nStr, [FUIData.FTruck,
               Float2Float(FUIData.FMData.FValue, 1000),
               Float2Float(FUIData.FMData.FValue - FUIData.FPData.FValue, 1000)]);
       PlayVoice(nStr);
+      {$ELSE}
+      nStr := '车辆[n1]%s称重完成,请下磅';
+      nStr := Format(nStr, [FUIData.FTruck]);
+      PlayVoice(nStr);
+      {$ENDIF}
     end else PlayVoice(#9 + FUIData.FTruck);
     //播放语音
 

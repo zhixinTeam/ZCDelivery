@@ -10,17 +10,17 @@ inherited fFormGetZhiKa: TfFormGetZhiKa
   PixelsPerInch = 96
   TextHeight = 12
   inherited dxLayout1: TdxLayoutControl
-    Width = 888
-    Height = 392
+    Width = 896
+    Height = 399
     inherited BtnOK: TButton
-      Left = 742
-      Top = 359
+      Left = 750
+      Top = 366
       Caption = #30830#23450
       TabOrder = 4
     end
     inherited BtnExit: TButton
-      Left = 812
-      Top = 359
+      Left = 820
+      Top = 366
       TabOrder = 5
     end
     object GridOrders: TcxGrid [2]

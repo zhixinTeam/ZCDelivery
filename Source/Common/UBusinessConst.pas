@@ -153,6 +153,26 @@ const
   cBC_WX_DownLoadPic          = $0522;   //微信：下载图片
   cBC_WX_get_shoporderbyTruck = $0523;   //微信：根据车牌号获取订单信息
 
+  cBC_WX_get_shopBigorderbyNO = $0524;   //微信：根据订单号获取大订单信息
+
+  cBC_VeryTruckLicense        = $1006;   //车牌识别
+
+  cBC_GetLoginToken           =  $0601;   //问信登录接口
+  cBC_GetDepotInfo            =  $0602;   //获取问信部门档案
+  cBC_GetUserInfo             =  $0603;   //获取问信人员档案
+  cBC_GetCusProInfo           =  $0604;   //获取问信客商档案
+  cBC_GetStockType            =  $0605;   //获取问信存货分类
+  cBC_GetStockInfo            =  $0606;   //获取问信存货档案
+  cBC_GetOrderInfo            =  $0607;   //获取问信采购订单信息
+  cBC_GetOrderInfoEx          =  $0615;   //获取问信采购订单信息(存数据库)
+  cBC_GetOrderPound           =  $0608;   //获取问信采购磅单接口
+  cBC_GetSaleInfo             =  $0609;   //获取问信销售订单信息
+  cBC_GetSalePound            =  $0610;   //获取问信销售磅单接口
+  cBC_GetHYInfo               =  $0611;   //获取问信质检信息
+  cBC_GetPoundKW              =  $0612;   //获取榜单勘误信息
+  cBC_GetOrderTruckNum        =  $0613;   //获取采购订单关联已入厂车辆
+  cBC_GetSaleTruckNum         =  $0614;   //获取销售订单关联已入厂车辆
+
 type
   PWorkerQueryFieldData = ^TWorkerQueryFieldData;
   TWorkerQueryFieldData = record
@@ -228,6 +248,7 @@ type
     FPoundIdx   : Integer;          //多物料称重顺序
     FPoundMax   : Integer;          //多物料称重总次数
     FPrintBD    : Boolean;         //打印磅单
+    FSaleMan    : string;          //业务员名称
   end;
 
   TLadingBillItems = array of TLadingBillItem;

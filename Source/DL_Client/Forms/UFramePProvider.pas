@@ -182,46 +182,88 @@ procedure TfFrameProvider.N2Click(Sender: TObject);
 var
   nWechartAccount:string;
   nParam: TFormCommandParam;
-  nPID,nPName:string;
+  nPID,nPName,nPhone:string;
   nBindcustomerid:string;
-  nStr:string;
+  nStr,nMsg:string;
 begin
   if cxView1.DataController.GetSelectedCount < 1 then
   begin
     ShowMsg('请选择要开通的记录', sHint);
     Exit;
   end;
-  nWechartAccount := SQLQuery.FieldByName('P_WechartAccount').AsString;
-  if nWechartAccount<>'' then
-  begin
-    ShowMsg('商城账户['+nWechartAccount+']已存在', sHint);
-    Exit;
-  end;
-  nParam.FCommand := cCmd_AddData;
-  CreateBaseFormItem(cFI_FormGetWXAccount, PopedomItem, @nParam);
+  {$IFDEF UseWXServiceEx}
+    nWechartAccount := SQLQuery.FieldByName('P_WechartAccount').AsString;
+    if nWechartAccount<>'' then
+    begin
+      ShowMsg('商城账户['+nWechartAccount+']已存在', sHint);
+      Exit;
+    end;
+    nParam.FCommand := cCmd_AddData;
+    CreateBaseFormItem(cFI_FormGetWXAccount, PopedomItem, @nParam);
 
-  if (nParam.FCommand <> cCmd_ModalResult) or (nParam.FParamA <> mrOK) then Exit;
+    if (nParam.FCommand <> cCmd_ModalResult) or (nParam.FParamA <> mrOK) then Exit;
 
-  nBindcustomerid  := nParam.FParamB;
-  nWechartAccount := nParam.FParamC;
-  nPID      := SQLQuery.FieldByName('P_ID').AsString;
-  nPName    := SQLQuery.FieldByName('P_Name').AsString;
+    nBindcustomerid  := nParam.FParamB;
+    nWechartAccount  := nParam.FParamC;
+    nPhone           := nParam.FParamD;
+    nPID      := SQLQuery.FieldByName('P_ID').AsString;
+    nPName    := SQLQuery.FieldByName('P_Name').AsString;
 
-  with FListA do
-  begin
-    Clear;
-    Values['Action']   := 'add';
-    Values['BindID']   := nBindcustomerid;
-    Values['Account']  := nWechartAccount;
-    Values['CusID']    := nPID;
-    Values['CusName']  := nPName;
-    Values['Memo']     := sFlag_Provide;
-  end;
+    with FListA do
+    begin
+      Clear;
+      Values['Action']   := 'add';
+      Values['BindID']   := nBindcustomerid;
+      Values['Account']  := nWechartAccount;
+      Values['CusID']    := nPID;
+      Values['CusName']  := nPName;
+      Values['Memo']     := sFlag_Provide;
+      Values['Phone']    := nPhone;
+      Values['btype']    := '2';
+    end;
+    nMsg := edit_shopclients(PackerEncodeStr(FListA.Text));
+    if nMsg <> sFlag_Yes then
+    begin
+       ShowMsg('关联商城账户失败：'+nMsg,sHint);
+       Exit;
+    end;
 
-  if edit_shopclients(PackerEncodeStr(FListA.Text)) <> sFlag_Yes then Exit;
-  //call remote
-  nStr := 'update %s set P_WechartAccount=''%s'' where P_ID=''%s''';
-  nStr := Format(nStr,[sTable_Provider,nWechartAccount,nPID]);
+    //call remote
+    nStr := 'update %s set P_WechartAccount=''%s'',P_Phone=''%s'',P_custSerialNo=''%s'' where P_ID=''%s''';
+    nStr := Format(nStr,[sTable_Provider,nWechartAccount, nPhone, nBindcustomerid, nPID]);
+  {$ELSE}
+    nWechartAccount := SQLQuery.FieldByName('P_WechartAccount').AsString;
+    if nWechartAccount<>'' then
+    begin
+      ShowMsg('商城账户['+nWechartAccount+']已存在', sHint);
+      Exit;
+    end;
+    nParam.FCommand := cCmd_AddData;
+    CreateBaseFormItem(cFI_FormGetWXAccount, PopedomItem, @nParam);
+
+    if (nParam.FCommand <> cCmd_ModalResult) or (nParam.FParamA <> mrOK) then Exit;
+
+    nBindcustomerid  := nParam.FParamB;
+    nWechartAccount := nParam.FParamC;
+    nPID      := SQLQuery.FieldByName('P_ID').AsString;
+    nPName    := SQLQuery.FieldByName('P_Name').AsString;
+
+    with FListA do
+    begin
+      Clear;
+      Values['Action']   := 'add';
+      Values['BindID']   := nBindcustomerid;
+      Values['Account']  := nWechartAccount;
+      Values['CusID']    := nPID;
+      Values['CusName']  := nPName;
+      Values['Memo']     := sFlag_Provide;
+    end;
+
+    if edit_shopclients(PackerEncodeStr(FListA.Text)) <> sFlag_Yes then Exit;
+    //call remote
+    nStr := 'update %s set P_WechartAccount=''%s'' where P_ID=''%s''';
+    nStr := Format(nStr,[sTable_Provider,nWechartAccount,nPID]);
+  {$ENDIF}
   FDM.ADOConn.BeginTrans;
   try
     FDM.ExecuteSQL(nStr);
@@ -239,38 +281,75 @@ var
   nWechartAccount:string;
   nPID:string;
   nStr:string;
-  nPName:string;
+  nPName,nMsg,nPhone,nBindID:string;
 begin
   if cxView1.DataController.GetSelectedCount < 1 then
   begin
     ShowMsg('请选择要取消的记录', sHint);
     Exit;
   end;
-  nWechartAccount := SQLQuery.FieldByName('P_WechartAccount').AsString;
-  if nWechartAccount='' then
-  begin
-    ShowMsg('商城账户不存在', sHint);
-    Exit;
-  end;
+  {$IFDEF UseWXServiceEx}
+    nWechartAccount := SQLQuery.FieldByName('P_WechartAccount').AsString;
+    if nWechartAccount='' then
+    begin
+      ShowMsg('商城账户不存在', sHint);
+      Exit;
+    end;
 
-  nPID := SQLQuery.FieldByName('P_ID').AsString;
-  nPName := SQLQuery.FieldByName('P_Name').AsString;
+    nPID     := SQLQuery.FieldByName('P_ID').AsString;
+    nPName   := SQLQuery.FieldByName('P_Name').AsString;
+    nPhone   := SQLQuery.FieldByName('P_Phone').AsString;
+    nBindID  := SQLQuery.FieldByName('P_custSerialNo').AsString;
 
-  with FListA do
-  begin
-    Clear;
-    Values['Action']   := 'del';
-    Values['Account']  := nWechartAccount;
-    Values['CusID']    := nPID;
-    Values['CusName']  := nPName;
-    Values['Memo']     := sFlag_Provide;
-  end;
+    with FListA do
+    begin
+      Clear;
+      Values['Action']   := 'del';
+      Values['Account']  := nWechartAccount;
+      Values['CusID']    := nPID;
+      Values['CusName']  := nPName;
+      Values['Memo']     := sFlag_Provide;
+      Values['Phone']    := nPhone;
+      Values['BindID']   := nBindID;
+      Values['btype']    := '2';
+    end;
+    nMsg := edit_shopclients(PackerEncodeStr(FListA.Text));
+    if nMsg <> sFlag_Yes then
+    begin
+       ShowMsg('取消关联商城账户失败：'+nMsg,sHint);
+       Exit;
+    end;
+    //call remote
 
-  if edit_shopclients(PackerEncodeStr(FListA.Text)) <> sFlag_Yes then Exit;
-  //call remote
+    nStr := 'update %s set P_WechartAccount='''',P_Phone='''',P_custSerialNo='''' where P_ID=''%s''';
+    nStr := Format(nStr,[sTable_Provider,nPID]);
+  {$ELSE}
+    nWechartAccount := SQLQuery.FieldByName('P_WechartAccount').AsString;
+    if nWechartAccount='' then
+    begin
+      ShowMsg('商城账户不存在', sHint);
+      Exit;
+    end;
 
-  nStr := 'update %s set P_WechartAccount='''' where P_ID=''%s''';
-  nStr := Format(nStr,[sTable_Provider,nPID]);
+    nPID := SQLQuery.FieldByName('P_ID').AsString;
+    nPName := SQLQuery.FieldByName('P_Name').AsString;
+
+    with FListA do
+    begin
+      Clear;
+      Values['Action']   := 'del';
+      Values['Account']  := nWechartAccount;
+      Values['CusID']    := nPID;
+      Values['CusName']  := nPName;
+      Values['Memo']     := sFlag_Provide;
+    end;
+
+    if edit_shopclients(PackerEncodeStr(FListA.Text)) <> sFlag_Yes then Exit;
+    //call remote
+
+    nStr := 'update %s set P_WechartAccount='''' where P_ID=''%s''';
+    nStr := Format(nStr,[sTable_Provider,nPID]);
+  {$ENDIF}
   FDM.ADOConn.BeginTrans;
   try
     FDM.ExecuteSQL(nStr);

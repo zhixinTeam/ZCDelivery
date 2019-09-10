@@ -343,8 +343,8 @@ begin
   nPacker := nil;
   nWorker := nil;
   try
-    nIn.FCommand := nCmd;
-    nIn.FData := nData;
+    nIn.FCommand  := nCmd;
+    nIn.FData     := nData;
     nIn.FExtParam := nExt;
 
     nPacker := gBusinessPackerManager.LockPacker(sBus_BusinessHHJY);
@@ -7429,7 +7429,7 @@ begin
     wParam.Values['token']   := Ftoken;
 
     nSQL := 'select *,(P_MValue-P_PValue - isnull(P_KZValue,0)) as D_NetWeight From %s a,'+
-    ' %s b, %s c where a.D_OID=b.O_ID and a.D_ID=c.P_OrderBak and c.P_ID = ''%s'' ';
+    ' %s b, %s c where a.D_OID=b.O_ID and a.D_ID=c.P_OrderBak and c.P_ID = ''%s'' and isnull(a.D_YSResult,''Y'') <> ''N'' ';
 
     nSQL := Format(nSQL,[sTable_OrderDtl,sTable_Order,sTable_PoundLog,FIn.FData]);
     with gDBConnManager.WorkerQuery(FDBConn, nSQL)  do
@@ -7639,16 +7639,16 @@ begin
                 SF('O_StockType', nType),
                 SF('O_Lading', '买方自提'),
                 SF('O_CusPY', GetPinYinOfStr(OneJo.S['partner_name'])),
-                SF('O_PlanAmount', SO(ArrsJaSub.S[0]).S['product_qty']),        //数量
+                SF('O_PlanAmount', FloatToStr(SO(ArrsJaSub.S[0]).D['product_qty'])),        //数量
                 SF('O_PlanDone', '0'),
-                SF('O_PlanRemain', SO(ArrsJaSub.S[0]).S['remainder']),          //剩余未出库量
+                SF('O_PlanRemain', FloatToStr(SO(ArrsJaSub.S[0]).D['remainder'])),          //剩余未出库量
                 SF('O_PlanBegin', StrToDateDef(OneJo.S['confirmation_date'],Now),sfDateTime),
                 SF('O_PlanEnd', StrToDateDef(OneJo.S['confirmation_date'],Now),sfDateTime),
                 SF('O_Company', ''),
                 SF('O_Depart', ''),
-                SF('O_SaleMan', ''),
+                SF('O_SaleMan', SO(ArrsJaSub.S[0]).S['seller']),
                 SF('O_Remark', ''),
-                SF('O_Price', StrToFloatDef(SO(ArrsJaSub.S[0]).S['price_unit'],0),sfVal),
+                SF('O_Price', SO(ArrsJaSub.S[0]).D['price_unit'],sfVal),
                 SF('O_Valid', nO_Valid),
                 SF('O_Freeze', 0, sfVal),
                 SF('O_HasDone', 0, sfVal),
@@ -7671,16 +7671,16 @@ begin
                 SF('O_StockType', nType),
                 SF('O_Lading', '买方自提'),
                 SF('O_CusPY',      GetPinYinOfStr(OneJo.S['partner_name'])),
-                SF('O_PlanAmount', SO(ArrsJaSub.S[0]).S['product_qty']),
+                SF('O_PlanAmount', FloatToStr(SO(ArrsJaSub.S[0]).D['product_qty'])),
                 SF('O_PlanDone', '0'),
-                SF('O_PlanRemain', SO(ArrsJaSub.S[0]).S['remainder']),
+                SF('O_PlanRemain',FloatToStr(SO(ArrsJaSub.S[0]).D['remainder'])),
                 SF('O_PlanBegin', StrToDateDef(OneJo.S['confirmation_date'],Now),sfDateTime),
                 SF('O_PlanEnd', StrToDateDef(OneJo.S['confirmation_date'],Now),sfDateTime),
                 SF('O_Company', ''),
                 SF('O_Depart', ''),
-                SF('O_SaleMan', ''),
+                SF('O_SaleMan', SO(ArrsJaSub.S[0]).S['seller']),
                 SF('O_Remark', ''),
-                SF('O_Price', StrToFloatDef(SO(ArrsJaSub.S[0]).S['price_unit'],0),sfVal),
+                SF('O_Price', SO(ArrsJaSub.S[0]).D['price_unit'],sfVal),
                 SF('O_Valid',  nO_Valid),
                 SF('O_Freeze', 0, sfVal),
                 SF('O_HasDone', 0, sfVal),
@@ -7765,7 +7765,7 @@ begin
     wParam.Clear;
     wParam.Values['token']   := Ftoken;
 
-    nSQL := 'select *,(P_MValue-P_PValue) as D_NetWeight From %s a,'+
+    nSQL := ' select *,(P_MValue-P_PValue) as D_NetWeight From %s a, '+
     ' %s b, %s c where a.O_Order=b.L_Order and b.L_ID=c.P_Bill and c.P_Bill = ''%s'' ';
 
     nSQL := Format(nSQL,[sTable_SalesOrder,sTable_Bill,sTable_PoundLog,FIn.FData]);
@@ -7789,8 +7789,9 @@ begin
           nDate := FieldByName('P_PDate').AsString;
       end;
 
-
-      wParam.Values['ordername']    := FieldByName('O_Order').AsString;
+      wParam.Values['yktorderno']    := FieldByName('L_ID').AsString;
+      wParam.Values['batchno']       := FieldByName('L_HYDan').AsString;
+      wParam.Values['ordername']     := FieldByName('O_Order').AsString;
       wParam.Values['weightime']     := nDate;
       wParam.Values['trucknumber']   := FieldByName('P_Truck').AsString;
       wParam.Values['productid']     := FieldByName('P_MID').AsString;
@@ -7805,6 +7806,8 @@ begin
                                          - StrToFLoatDef(FieldByName('D_NetWeight').AsString,0));
 
       nDataStream.AddFormField('token', Ftoken);
+      nDataStream.AddFormField('yktorderno', FieldByName('L_ID').AsString);
+      nDataStream.AddFormField('batchno',    FieldByName('L_HYDan').AsString);
       nDataStream.AddFormField('ordername', FieldByName('O_Order').AsString);
       nDataStream.AddFormField('weightime', nDate);
       nDataStream.AddFormField('trucknumber', Ansitoutf8(FieldByName('P_Truck').AsString));
@@ -7852,10 +7855,14 @@ begin
         nStr := Format(nStr,[sTable_PoundLog,OneJo.S['stockpickname'], OneJo.S['stockmovelineid'],OneJo.S['batchno'],FIn.FData]);
         gDBConnManager.WorkerExec(FDBConn,nStr);
 
-        //更新提货单批次号
-        nStr := ' update %s set L_HYDan = ''%s'' where L_ID = ''%s'' ';
-        nStr := Format(nStr,[sTable_Bill,OneJo.S['batchno'],FIn.FData]);
+        //更新同步状态
+        nStr := ' update %s set L_BDAX=''1'',L_BDNUM=L_BDNUM+1 where L_ID = ''%s'' ';
+        nStr := Format(nStr,[sTable_Bill,FIn.FData]);
+
         gDBConnManager.WorkerExec(FDBConn,nStr);
+//        nStr := ' update %s set L_HYDan = ''%s'' where L_ID = ''%s'' ';
+//        nStr := Format(nStr,[sTable_Bill,OneJo.S['batchno'],FIn.FData]);
+//        gDBConnManager.WorkerExec(FDBConn,nStr);
 
         //更新化验单批次号
         nStr := ' update %s set H_SerialNo = ''%s'' where H_Bill= ''%s'' ';
@@ -8547,8 +8554,8 @@ begin
 
             ArrsJaSub          := OneJo.A['products'];
             try
-              nHasDone := StrToFloatDef(SO(ArrsJaSub.S[0]).S['product_qty'],0)
-                          - StrToFloatDef(SO(ArrsJaSub.S[0]).S['remainder'],0);
+              nHasDone := SO(ArrsJaSub.S[0]).D['product_qty']
+                          - SO(ArrsJaSub.S[0]).D['remainder'];
               nHasDone := Float2PInt(nHasDone, cPrecision, False) / cPrecision;
               if nHasDone <= 0 then
                 nHasDone := 0;
@@ -8563,7 +8570,7 @@ begin
                 SF('B_StockName', SO(ArrsJaSub.S[0]).S['product_name']),
                 SF('B_Value',     SO(ArrsJaSub.S[0]).S['product_qty']),
                 SF('B_SentValue', FloatToStr(nHasDone)),
-                SF('B_RestValue', SO(ArrsJaSub.S[0]).S['remainder']),
+                SF('B_RestValue', FloatToStr(SO(ArrsJaSub.S[0]).D['remainder'])),
                 SF('B_BStatus',   nO_Valid),
                 SF('B_Date',  Now,sfDateTime)
                 ], sTable_OrderBase, '', True);
@@ -8575,9 +8582,9 @@ begin
                 SF('B_ProName',   OneJo.S['partner_name']),
                 SF('B_StockNo',   SO(ArrsJaSub.S[0]).S['productid']),
                 SF('B_StockName', SO(ArrsJaSub.S[0]).S['product_name']),
-                SF('B_Value',     SO(ArrsJaSub.S[0]).S['product_qty']),
+                SF('B_Value',     FloatToStr(SO(ArrsJaSub.S[0]).D['product_qty'])),
                 SF('B_SentValue', FloatToStr(nHasDone)),
-                SF('B_RestValue', SO(ArrsJaSub.S[0]).S['remainder']),
+                SF('B_RestValue', FloatToStr(SO(ArrsJaSub.S[0]).D['remainder'])),
                 SF('B_BStatus',   nO_Valid),
                 SF('B_Date',  Now,sfDateTime)
                 ], sTable_OrderBase, nStr, False);

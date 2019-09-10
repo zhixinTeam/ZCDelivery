@@ -15,20 +15,25 @@ type
   TfFormLogin = class(TForm)
     Image1: TImage;
     GroupBox1: TGroupBox;
-    Edit_User: TLabeledEdit;
     Edit_Pwd: TLabeledEdit;
     LabelCopy: TLabel;
     BtnExit: TSpeedButton;
     BtnSet: TSpeedButton;
     BtnLogin: TButton;
+    Edit_User: TComboBox;
+    Label1: TLabel;
     procedure BtnSetClick(Sender: TObject);
     procedure BtnExitClick(Sender: TObject);
     procedure BtnLoginClick(Sender: TObject);
     procedure FormKeyDown(Sender: TObject; var Key: Word;
       Shift: TShiftState);
     procedure FormKeyPress(Sender: TObject; var Key: Char);
+    procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure FormCreate(Sender: TObject);
   private
     { Private declarations }
+    procedure UserList(const nWrite: Boolean);
+    //用户列表
   public
     { Public declarations }
   end;
@@ -40,8 +45,8 @@ implementation
 
 {$R *.dfm}
 uses
-  ULibFun, USysConst, USysDB, USysPopedom, USysMenu, UMgrPopedom, USysLoger,
-  UFormWait, UFormConn, UDataModule;
+  IniFiles, ULibFun, USysConst, USysDB, USysPopedom, USysMenu, UMgrPopedom,
+  USysLoger, UFormWait, UFormConn, UDataModule;
   
 ResourceString
   sUserLogin = '用户[ %s ]尝试登陆系统';
@@ -74,6 +79,51 @@ begin
     Result := ShowModal = mrOk;
     Free
   end;
+end;
+
+procedure TfFormLogin.UserList(const nWrite: Boolean);
+var nStr: string;
+    nIdx: Integer;
+    nIni: TIniFile;
+begin
+  nIni := TIniFile.Create(gPath + sFormConfig);
+  try
+    if nWrite then
+    begin
+      if Edit_User.ItemIndex >= 0 then Exit;
+      nStr := 'User_' + IntToStr(Edit_User.Items.Count);
+      nIni.WriteString(Name, nStr, Edit_User.Text);
+      Exit;
+    end;
+
+    Edit_User.Items.Clear;
+    nIdx := 0;
+
+    while True do
+    begin
+      nStr := 'User_' + IntToStr(nIdx);
+      nStr := nIni.ReadString(Name, nStr, '');
+      if nStr = '' then Exit;
+
+      if Edit_User.Items.IndexOf(nStr)<0 then
+        Edit_User.Items.Add(nStr);
+      Inc(nIdx);
+    end;
+  finally
+    nIni.Free;
+  end;
+end;
+
+procedure TfFormLogin.FormCreate(Sender: TObject);
+begin
+  UserList(False);
+end;
+
+procedure TfFormLogin.FormClose(Sender: TObject; var Action: TCloseAction);
+begin
+  if ModalResult = mrOK then
+    UserList(True);
+  //xxxxx
 end;
 
 //------------------------------------------------------------------------------

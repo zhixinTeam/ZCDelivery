@@ -35,7 +35,7 @@ uses
   UFormSnapTruckSet,
   UFrameHYData, UFormHYData, UFrameBatcodeJ, UFormBatcodeJ, UFormGetStockNo,
   UFrameHYRecord, UFormHYRecord, UFrameHYStock, UFormHYStock,
-  UFrameBatcodeRecord,
+  UFrameBatcodeRecord, UFrameQueryWXSynInfo,
   {$IFDEF UseWXERP}
   UFormWXBaseLoad, UFormPound_WxKw,
   {$ENDIF}

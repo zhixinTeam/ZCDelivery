@@ -165,7 +165,7 @@ const
 
   sFlag_SysParam      = 'SysParam';                  //系统参数
   sFlag_FactoryID     = 'FactoryID';                 //工厂编号
-  sFlag_FactoryName   = 'FactoryName';                 //工厂名称
+  sFlag_FactoryName   = 'FactoryName';               //工厂名称
   sFlag_EnableBakdb   = 'Uses_BackDB';               //备用库
   sFlag_ValidDate     = 'SysValidDate';              //有效期
   sFlag_PrintBill     = 'PrintStockBill';            //需打印订单
@@ -179,10 +179,17 @@ const
   sFlag_VerifyTruckP  = 'VerifyTruckP';              //校验预置皮重
   sFlag_VerifyFQValue = 'VerifyFQValue';             //禁止封签号超发
   sFlag_PEmpTWuCha    = 'EmpTruckWuCha';             //空车出厂误差
+  sFlag_WXStockName   = 'WXStockName';               //问信销售名称
 
   sFlag_WXFactory     = 'WXFactoryID';               //微信标识
   sFlag_WXServiceMIT  = 'WXServiceMIT';              //微信工厂服务
   sFlag_WXSrvRemote   = 'WXServiceRemote';           //微信远程服务
+  sFlag_Rq_WXUrl      = 'WXRqUrl';                   //请求微信网址
+  sFlag_Rq_WXPicUrl   = 'WXRqPicUrl';                //请求微信图片地址
+
+  sFlag_WXErpUrl      = 'WXErpUrl';                  //问信服务地址
+  sFlag_WXErpZhangHu  = 'WXErpZhangHu';              //问信账户
+  sFlag_WXErpMima     = 'WXErpMima';                 //问信密码
 
   sFlag_HHJYServiceMIT= 'HHJYService';              //恒河久远工厂服务
   sFlag_HHJYDepotID   = 'HHJYDepotID';               //恒河久远存货场ID
@@ -190,6 +197,8 @@ const
   sFlag_PrinterBill   = 'PrinterBill';               //小票打印机
   sFlag_PrinterHYDan  = 'PrinterHYDan';              //化验单打印机
 
+  sFlag_VIPManyNum      = 'VIPManyNum';              //提单量到量进VIP道
+  
   sFlag_PoundIfDai    = 'PoundIFDai';                //袋装是否过磅
   sFlag_PoundWuCha    = 'PoundWuCha';                //过磅误差分组
   sFlag_PoundPWuChaZ  = 'PoundPWuChaZ';              //皮重正误差
@@ -221,6 +230,7 @@ const
   sFlag_ProviderItem  = 'ProviderItem';              //供应商信息项
   sFlag_MaterailsItem = 'MaterailsItem';             //原材料信息项
   sFlag_SaleOrderItem = 'SaleOrderItem';             //销售订单信息项
+  sFlag_ZDLineItem    = 'ZDLINEItem';                //指定通道信息项
 
   sFlag_HardSrvURL    = 'HardMonURL';
   sFlag_MITSrvURL     = 'MITServiceURL';
@@ -264,7 +274,8 @@ const
   sFlag_WTNo          = 'Bus_WT';                    //委托单号
 
   sFlag_TruckInNeedManu = 'TruckInNeedManu';         //车牌识别需要人工干预
-  sFlag_CardGInvalid  = 'CardGInvalid';              //长期卡是否失效
+  sFlag_EnableTruck     = 'EnableTruck';             //是否启用车牌识别
+  sFlag_CardGInvalid    = 'CardGInvalid';            //长期卡是否失效
   
   sFlag_SerialSAP     = 'SAPFunction';               //SAP编码组
   sFlag_SAPMsgNo      = 'SAP_MsgNo';                 //SAP消息号
@@ -322,6 +333,7 @@ const
 
   sTable_Provider     = 'P_Provider';                //客户表
   sTable_Materails    = 'P_Materails';               //物料表
+  sTable_OrderBaseBak = 'P_OrderBaseBak';            //已删除采购申请订单
 
   sTable_TruckXz      = 'Sys_TruckXz';               //车辆限载表
   sTable_PMaterailControl = 'Sys_PMaterailControl';  //原材料进厂控制表

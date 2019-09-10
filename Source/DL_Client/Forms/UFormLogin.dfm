@@ -14,6 +14,8 @@ object fFormLogin: TfFormLogin
   KeyPreview = True
   OldCreateOrder = False
   Position = poDesktopCenter
+  OnClose = FormClose
+  OnCreate = FormCreate
   OnKeyDown = FormKeyDown
   OnKeyPress = FormKeyPress
   PixelsPerInch = 96
@@ -58,18 +60,18 @@ object fFormLogin: TfFormLogin
       Flat = True
       OnClick = BtnSetClick
     end
-    object Edit_User: TLabeledEdit
-      Left = 65
-      Top = 20
-      Width = 141
-      Height = 20
-      BevelKind = bkTile
-      BorderStyle = bsNone
-      EditLabel.Width = 30
-      EditLabel.Height = 12
-      EditLabel.Caption = #29992#25143':'
-      LabelPosition = lpLeft
-      TabOrder = 0
+    object Label1: TLabel
+      Left = 32
+      Top = 23
+      Width = 30
+      Height = 12
+      Caption = #29992#25143':'
+      Font.Charset = GB2312_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -12
+      Font.Name = #23435#20307
+      Font.Style = []
+      ParentFont = False
     end
     object Edit_Pwd: TLabeledEdit
       Left = 65
@@ -93,6 +95,16 @@ object fFormLogin: TfFormLogin
       Caption = #30331#24405
       TabOrder = 2
       OnClick = BtnLoginClick
+    end
+    object Edit_User: TComboBox
+      Left = 65
+      Top = 20
+      Width = 141
+      Height = 20
+      AutoComplete = False
+      BevelKind = bkTile
+      ItemHeight = 12
+      TabOrder = 0
     end
   end
 end

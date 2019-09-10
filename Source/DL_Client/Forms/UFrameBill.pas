@@ -59,6 +59,7 @@ type
     N14: TMenuItem;
     N18: TMenuItem;
     N19: TMenuItem;
+    N20: TMenuItem;
     procedure EditIDPropertiesButtonClick(Sender: TObject;
       AButtonIndex: Integer);
     procedure BtnDelClick(Sender: TObject);
@@ -82,6 +83,7 @@ type
     procedure N14Click(Sender: TObject);
     procedure N18Click(Sender: TObject);
     procedure N19Click(Sender: TObject);
+    procedure N20Click(Sender: TObject);
   protected
     FStart,FEnd: TDate;
     //时间区间
@@ -336,11 +338,14 @@ begin
     end;
     {$ENDIF}
   {$ELSE}
-    GetLoginToken(gSysParam.FWXZhangHu,gSysParam.FWXMiMa);
-    if not SyncWXPoundDel(nLID) then
+    if Trim(SQLQuery.FieldByName('L_OutFact').AsString) <> '' then
     begin
-      ShowMsg('提货单作废失败',sHint);
-      Exit;
+      GetLoginToken(gSysParam.FWXZhangHu,gSysParam.FWXMiMa);
+      if not SyncWXPoundDel(nLID) then
+      begin
+        ShowMsg('提货单作废失败',sHint);
+        Exit;
+      end;
     end;
   {$ENDIF}
 
@@ -871,6 +876,21 @@ begin
   nStr := Format(nStr, [sTable_Bill, nBill]);
   FDM.ExecuteSQL(nStr);
   ShowMsg('重置完成', sHint);
+end;
+
+procedure TfFrameBill.N20Click(Sender: TObject);
+var nStr: string;
+begin
+  inherited;
+
+  nStr := '确认ERP上传失败记录重新上传吗?';
+  if not QueryDlg(nStr, sHint) then Exit;
+
+  nStr := ' Update %s Set H_SyncNum = 0 ' +
+          ' Where H_Deleted = ''%s'' ';
+  nStr := Format(nStr, [sTable_HHJYSync, sFlag_No]);
+  FDM.ExecuteSQL(nStr);
+  ShowMsg('ERP上传失败记录重新上传完成', sHint);
 end;
 
 initialization

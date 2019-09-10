@@ -14,7 +14,7 @@ uses
   XPMan, dxLayoutLookAndFeels, cxEdit, ImgList, Controls, cxGraphics, DB,
   ADODB, dxBkgnd, cxDrawTextUtils,
   dxPSPrVwStd, dxPScxEditorProducers, dxPScxExtEditorProducers,
-  dxPScxPageControlProducer;
+  dxPScxPageControlProducer, dxPSPDFExportCore, dxPSPDFExport;
 
 type
   TFDM = class(TDataModule)

@@ -265,6 +265,7 @@ begin
     Items.Add(Format('%s ', [Delimiter]));
     Items.Add(Format('客户编号:%s %s', [Delimiter, FCusID]));
     Items.Add(Format('客户名称:%s %s', [Delimiter, FCusName]));
+    Items.Add(Format('业 务 员:%s %s', [Delimiter, FSaleMan]));
 
     Items.Add(Format('%s ', [Delimiter]));
     Items.Add(Format('物料编号:%s %s', [Delimiter, FStockNo]));
@@ -273,6 +274,7 @@ begin
     if FType = sFlag_Dai then nStr := '袋装' else nStr := '散装';
     Items.Add(Format('物料类型:%s %s', [Delimiter, nStr]));
     Items.Add(Format('预计可用:%s %.2f吨', [Delimiter, FValue]));
+    Items.Add(Format(' 单 价 :%s %.2f元',  [Delimiter, FPrice]));
   end;
 end;
 
@@ -419,6 +421,8 @@ begin
         nPrint := nStocks.IndexOf(gBillItem.FStockNo) >= 0;
       //xxxxx
 
+      Values['Price']        := FloatToStr(gBillItem.FPrice);
+      Values['SaleMan']      := gBillItem.FSaleMan;
       Values['ZhiKa']        := gBillItem.FZhiKa;
       Values['Truck']        := EditTruck.Text;
       Values['Value']        := EditValue.Text;

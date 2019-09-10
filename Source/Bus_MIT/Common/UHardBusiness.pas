@@ -399,7 +399,11 @@ begin
     WriteHardHelperLog(nStr, sPost_In);
 
     nStr := '读取磁卡信息失败';
+
+    {$IFNDEF NoUsePlayVoice}
     MakeGateSound(nStr, sPost_In, False);
+    {$ENDIF}
+    
     Exit;
   end;
 
@@ -410,7 +414,11 @@ begin
     WriteHardHelperLog(nStr, sPost_In);
 
     nStr := '请先到开票室办理业务';
+
+    {$IFNDEF NoUsePlayVoice}
     MakeGateSound(nStr, sPost_In, False);
+    {$ENDIF}
+    
     Exit;
   end;
 
@@ -426,7 +434,11 @@ begin
 
     nStr := '车辆[ %s ]不能进厂,应该去[ %s ]';
     nStr := Format(nStr, [FTruck, TruckStatusToStr(FNextStatus)]);
+
+    {$IFNDEF NoUsePlayVoice}
     MakeGateSound(nStr, sPost_In, False);
+    {$ENDIF}
+    
     Exit;
   end;
 
@@ -531,9 +543,12 @@ begin
       nStr := Format(nStr, [nTrucks[0].FTruck]);
       WriteHardHelperLog(nStr, sPost_In);
 
+      {$IFNDEF NoUsePlayVoice}
       nStr := '车辆[ %s ]不能进厂,请联系管理人员.';
       nStr := Format(nStr, [nTrucks[0].FTruck]);
       MakeGateSound(nStr, sPost_In, False);
+      {$ENDIF}
+
       Exit;
     end;
   finally
@@ -614,9 +629,12 @@ begin
     nStr := '读取磁卡[ %s ]订单信息失败.吞卡机吞卡';
     nStr := Format(nStr, [nCard]);
     WriteHardHelperLog(nStr, sPost_Out);
-
+    
+    {$IFNDEF NoUsePlayVoice}
     nStr := '读取磁卡信息失败';
     MakeGateSound(nStr, sPost_Out, False);
+    {$ENDIF}
+
     Exit;
   end;
 
@@ -626,8 +644,11 @@ begin
     nStr := Format(nStr, [nCard]);
     WriteHardHelperLog(nStr, sPost_Out);
 
+    {$IFNDEF NoUsePlayVoice}
     nStr := '请先到开票室办理业务';
     MakeGateSound(nStr, sPost_Out, False);
+    {$ENDIF}
+    
     Exit;
   end;
 
@@ -656,9 +677,12 @@ begin
     nStr := Format(nStr, [FTruck, TruckStatusToStr(FNextStatus)]);
     WriteHardHelperLog(nStr, sPost_Out);
 
+    {$IFNDEF NoUsePlayVoice}
     nStr := '车辆[ %s ]不能出厂,应该去[ %s ]';
     nStr := Format(nStr, [FTruck, TruckStatusToStr(FNextStatus)]);
     MakeGateSound(nStr, sPost_Out, False);
+    {$ENDIF}
+
     Exit;
   end;
 
@@ -681,7 +705,10 @@ begin
 
   nStr := '车辆[ %s ]请出厂,欢迎您再来提货.';
   nStr := Format(nStr, [nTrucks[0].FTruck]);
+
+  {$IFNDEF NoUsePlayVoice}
   MakeGateSound(nStr, sPost_Out, True);
+  {$ENDIF}
 
   for nIdx:=Low(nTrucks) to High(nTrucks) do
   begin
@@ -1220,7 +1247,10 @@ begin
       nStr := Format(nStr, [nTruck.FTruck]);
 
       nStr := nStr + ',' + gTruckQueueManager.IsSafeVocie;
+
+      {$IFNDEF NoUsePlayVoice}
       gNetVoiceHelper.PlayVoice(nStr, nPost);
+      {$ENDIF}
 
       WriteNearReaderLog(nStr);
       //log content
@@ -1235,7 +1265,9 @@ begin
     nStr := Format(nStr, [nTruck.FTruck, nNext.FTruck]);
 
     nStr := nStr + ',' + gTruckQueueManager.IsSafeVocie;
+    {$IFNDEF NoUsePlayVoice}
     gNetVoiceHelper.PlayVoice(nStr, nPost);
+    {$ENDIF}
 
     WriteNearReaderLog(nStr);
     //log content
@@ -1326,7 +1358,9 @@ begin
     else
       nStr := nTrucks[0].FTruck + '请换道装车';
     nStr := nStr + ',' + gTruckQueueManager.IsSafeVocie;
+    {$IFNDEF NoUsePlayVoice}
     gNetVoiceHelper.PlayVoice(nStr, sPost_ZT);
+    {$ENDIF}
     Exit;
   end; //检查通道
 
@@ -1518,7 +1552,9 @@ begin
     else
       nStr := nTrucks[0].FTruck + '请换库装车';
     nStr := nStr + ',' + gTruckQueueManager.IsSafeVocie;
+    {$IFNDEF NoUsePlayVoice}
     gNetVoiceHelper.PlayVoice(nStr, sPost_FH);
+    {$ENDIF}
     Exit;
   end; //检查通道
 

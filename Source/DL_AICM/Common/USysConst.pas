@@ -417,7 +417,9 @@ begin
   AddMenuModuleItem('MAIN_L07', cFI_FrameSaleTotalQuery);
   AddMenuModuleItem('MAIN_L08', cFI_FrameZhiKaDetail);
   AddMenuModuleItem('MAIN_L09', cFI_FrameOrderDetailQuery);
-  AddMenuModuleItem('MAIN_L11', cFI_FrameTransferDetailQuery); 
+  AddMenuModuleItem('MAIN_L11', cFI_FrameTransferDetailQuery);
+
+  AddMenuModuleItem('MAIN_L12', cFI_FrameQueryWXSynInfo);
 
   AddMenuModuleItem('MAIN_H01', cFI_FormTruckIn, mtForm);
   AddMenuModuleItem('MAIN_H02', cFI_FormTruckOut, mtForm);

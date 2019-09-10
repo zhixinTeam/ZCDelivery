@@ -553,8 +553,7 @@ begin
       nEndValue:=0;
       GetStartValue(nPT.FID,nEndValue);
 
-      nCKValue := nEndValue - nPT.FStartValue;
-
+      nCKValue := (nEndValue - nPT.FStartValue) * 0.001;
       if nCKValue > 0 then
       begin
         nDBConn := nil;

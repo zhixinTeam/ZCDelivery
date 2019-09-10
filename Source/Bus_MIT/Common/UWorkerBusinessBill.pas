@@ -468,7 +468,7 @@ function TWorkerBusinessBills.SaveBills(var nData: string): Boolean;
 var nStr,nSQL,nPreFix: string;
     nWorker: TBusinessWorkerBase;
     nPacker: TBusinessPackerBase;
-    nIn,nOut: TWorkerBusinessCommand;
+    nIn, nOut, nTmp: TWorkerBusinessCommand;
     nLine: string;
 begin
   Result := False;
@@ -519,6 +519,30 @@ begin
     FListA.Values['Batcode'] := 'None';
   end;
 
+  {$IFDEF UseWXERP}
+    if not TWorkerBusinessCommander.CallMe(cBC_GetStockBatcode,
+       FListB.Text, FListA.Values['Value'], @nTmp) then
+       raise Exception.Create(nTmp.FData);
+
+    if nTmp.FBase.FErrCode = sFlag_ForceHint then
+    begin
+      FOut.FBase.FErrCode := sFlag_ForceHint;
+      FOut.FBase.FErrDesc := nTmp.FBase.FErrDesc;
+    end; //提示批次号使用情况
+
+    FListA.Values['Batcode'] := nTmp.FData;
+    FListA.Values['BatcodeFirst'] := nTmp.FExtParam;
+    //批次号
+
+    {$IFDEF BatchInHYOfBill}
+    FListA.Values['HYDan'] := nTmp.FData;
+    {$ELSE}
+    if nTmp.FData <> '' then
+      FListA.Values['Seal'] := nTmp.FData;
+    //auto batcode
+    {$ENDIF}
+  {$ENDIF}
+
   FDBConn.FConn.BeginTrans;
   try
     FListC.Values['Group'] :=sFlag_BusGroup;
@@ -561,7 +585,10 @@ begin
             SF('L_ConsignCusName',    FListB.Values['ConsignCusName']),
             {$ENDIF}
 
+            SF('L_Price',       FListA.Values['Price']),
+            SF('L_SaleMan',     FListA.Values['SaleMan']),
             SF('L_Truck',       FListA.Values['Truck']),
+            SF('L_WebOrderID',  FListA.Values['WebOrderID']),
             SF('L_Phone',       FListA.Values['Phone']),
             SF('L_Lading',      FListA.Values['Lading']),
             SF('L_IsVIP',       FListA.Values['IsVIP']),

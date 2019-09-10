@@ -104,6 +104,11 @@ begin
   N2.Visible := False;
   N3.Visible := False;
   {$ENDIF}
+
+  {$IFDEF UseFliterRefresh}
+  //筛选数据集自动刷新
+  cxView1.DataController.Filter.AutoDataSetFilter := True;
+  {$ENDIF}
 end;
 
 procedure TfFrameSaleDetailQuery.OnDestroyFrame;
@@ -136,7 +141,7 @@ begin
   FEnableBackDB := True;
   EditDate.Text := Format('%s 至 %s', [Date2Str(FStart), Date2Str(FEnd)]);
 
-  Result := 'Select * From $Bill b' +
+  Result := 'Select *, CAST((L_Value * L_Price) as decimal(38, 2)) as L_Money From $Bill b ' +
             ' Left Join $ZK on O_Order=L_ZhiKa ' +
             ' Left Join $C on C_ID=L_CusID ' +
             ' Left Join $Truck on T_Truck=L_Truck ';
