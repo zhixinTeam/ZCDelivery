@@ -808,11 +808,12 @@ begin
         '  O_CusID,' +                           //客户编号
         '  O_CusName,' +                         //客户名称
         '  O_Lading' +                          //提货方式
-        ' from %s ' +
-        ' where O_Valid=''%s'''+
-        ' and O_CusID=''%s''';
+        ' from %s a, %s b ' +
+        ' where a.O_Valid = ''%s'' '+
+        ' and a.O_CusName = b.C_Name '+
+        ' and b.C_ID = ''%s'' ';
         //订单有效
-  nStr := Format(nStr,[sTable_SalesOrder,sFlag_Yes,
+  nStr := Format(nStr,[sTable_SalesOrder,sTable_Customer, sFlag_Yes,
                        FIn.FData]);
   WriteLog('获取订单列表sql:'+nStr);
   with gDBConnManager.WorkerQuery(FDBConn, nStr),FPacker.XMLBuilder do
@@ -837,7 +838,7 @@ begin
     nNode := Root.NodeNew('head');
     with nNode do
     begin
-      NodeNew('CusId').ValueAsString := FieldByName('O_CusID').AsString;
+      NodeNew('CusId').ValueAsString   := FIn.FData;
       NodeNew('CusName').ValueAsString := GetCusName(FieldByName('O_CusName').AsString);
     end;
 
@@ -1614,10 +1615,10 @@ begin
       Exit;
     end;
 
-    nStr := 'Select *,(B_Value-B_SentValue-B_FreezeValue) As B_MaxValue From %s PB ' +
-            'left join %s PM on PM.M_ID = PB.B_StockNo ' +
-            'where ((B_Value-B_SentValue>0) or (B_Value=0)) And B_BStatus=''%s'' and B_ProID=''%s''';
-    nStr := Format(nStr, [sTable_OrderBase, sTable_Materails, sFlag_Yes, nProID]);
+    nStr := ' Select *,(B_Value-B_SentValue-B_FreezeValue) As B_MaxValue From %s PB , %s B ' +
+            ' where ((B_Value-B_SentValue>0) or (B_Value=0)) And B_BStatus=''%s'' ' +
+            ' and PB.B_ProName = B.P_Name and B.P_ID = ''%s'' ';
+    nStr := Format(nStr, [sTable_OrderBase, sTable_Provider, sFlag_Yes, nProID]);
     WriteLog('获取采购订单列表sql:' + nStr);
 
     with gDBConnManager.WorkerQuery(FDBConn, nStr), FPacker.XMLBuilder do
@@ -1641,7 +1642,7 @@ begin
       nNode := Root.NodeNew('head');
       with nNode do
       begin
-        NodeNew('ProvId').ValueAsString := FieldByName('B_ProID').AsString;
+        NodeNew('ProvId').ValueAsString   := nProID;
         NodeNew('ProvName').ValueAsString := FieldByName('B_ProName').AsString;
       end;
 
