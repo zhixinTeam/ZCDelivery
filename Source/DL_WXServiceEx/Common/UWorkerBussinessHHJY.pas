@@ -518,7 +518,7 @@ end;
 
 function TBusWorkerBusinessHHJY.GetSaleInfo(var nData: string): Boolean;
 var nStr, nProStr, nMatStr, nYearStr: string;
-    nO_Valid: string;
+    nO_Valid, nStockName: string;
     nValue: Double;
     nYearMonth,szUrl, nType : string;
     ReJo, OneJo : ISuperObject;
@@ -617,11 +617,17 @@ begin
             else
               nO_Valid := 'Y';
 
+            if (Trim(SO(ArrsJaSub.S[0]).S['specification']) <> 'null')
+              and (Trim(SO(ArrsJaSub.S[0]).S['specification']) <> '') then
+              nStockName := SO(ArrsJaSub.S[0]).S['specification']
+            else
+              nStockName := SO(ArrsJaSub.S[0]).S['product_name'];
+
             nStr := MakeSQLByStr([SF('O_Order', OneJo.S['ordername']),
                 SF('O_Factory', ''),
                 SF('O_CusName', OneJo.S['partner_name']),
                 SF('O_ConsignCusName', ''),
-                SF('O_StockName', SO(ArrsJaSub.S[0]).S['product_name']),
+                SF('O_StockName', nStockName),
                 SF('O_StockType', nType),
                 SF('O_Lading', '买方自提'),
                 SF('O_CusPY', GetPinYinOfStr(OneJo.S['partner_name'])),
@@ -632,7 +638,7 @@ begin
                 SF('O_PlanEnd', StrToDateDef(OneJo.S['confirmation_date'],Now),sfDateTime),
                 SF('O_Company', ''),
                 SF('O_Depart', ''),
-                SF('O_SaleMan', ''),
+                SF('O_SaleMan', OneJo.S['seller']),
                 SF('O_Remark', ''),
                 SF('O_Price', SO(ArrsJaSub.S[0]).D['price_unit'],sfVal),
                 SF('O_Valid', nO_Valid),
@@ -653,7 +659,7 @@ begin
                 SF('O_Factory', ''),
                 SF('O_CusName', OneJo.S['partner_name']),
                 SF('O_ConsignCusName', ''),
-                SF('O_StockName', SO(ArrsJaSub.S[0]).S['product_name']),
+                SF('O_StockName', nStockName),
                 SF('O_StockType', nType),
                 SF('O_Lading', '买方自提'),
                 SF('O_CusPY',      GetPinYinOfStr(OneJo.S['partner_name'])),
@@ -664,7 +670,7 @@ begin
                 SF('O_PlanEnd', StrToDateDef(OneJo.S['confirmation_date'],Now),sfDateTime),
                 SF('O_Company', ''),
                 SF('O_Depart', ''),
-                SF('O_SaleMan', ''),
+                SF('O_SaleMan', OneJo.S['seller']),
                 SF('O_Remark', ''),
                 SF('O_Price', SO(ArrsJaSub.S[0]).D['price_unit'],sfVal),
                 SF('O_Valid',  nO_Valid),

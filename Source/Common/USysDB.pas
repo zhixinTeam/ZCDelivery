@@ -232,6 +232,8 @@ const
   sFlag_SaleOrderItem = 'SaleOrderItem';             //销售订单信息项
   sFlag_ZDLineItem    = 'ZDLINEItem';                //指定通道信息项
 
+  sFag_Between2Time   = 'Between2Time';              //出厂时间间隔内不能办卡
+
   sFlag_HardSrvURL    = 'HardMonURL';
   sFlag_MITSrvURL     = 'MITServiceURL';
   sFlag_WechatSrvURL  = 'WXServiceURL';              //服务地址

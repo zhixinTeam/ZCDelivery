@@ -117,7 +117,7 @@ object fFormNewCard: TfFormNewCard
       TabStop = False
       object BtnOK: TButton
         Left = 487
-        Top = 298
+        Top = 567
         Width = 250
         Height = 41
         Caption = #30830#35748#26080#35823#24182#21150#21345
@@ -132,7 +132,7 @@ object fFormNewCard: TfFormNewCard
       end
       object BtnExit: TButton
         Left = 743
-        Top = 298
+        Top = 567
         Width = 107
         Height = 41
         Caption = #21462#28040
@@ -147,7 +147,7 @@ object fFormNewCard: TfFormNewCard
       end
       object EditValue: TcxTextEdit
         Left = 367
-        Top = 243
+        Top = 512
         ParentFont = False
         Style.BorderColor = clWindowFrame
         Style.BorderStyle = ebs3D
@@ -163,7 +163,7 @@ object fFormNewCard: TfFormNewCard
       end
       object EditCard: TcxTextEdit
         Left = 78
-        Top = -214
+        Top = 55
         ParentFont = False
         Properties.MaxLength = 15
         Properties.ReadOnly = True
@@ -174,7 +174,7 @@ object fFormNewCard: TfFormNewCard
       end
       object EditID: TcxTextEdit
         Left = 78
-        Top = -241
+        Top = 28
         ParentFont = False
         Properties.MaxLength = 100
         Properties.ReadOnly = True
@@ -185,7 +185,7 @@ object fFormNewCard: TfFormNewCard
       end
       object EditCus: TcxTextEdit
         Left = 78
-        Top = -187
+        Top = 82
         ParentFont = False
         Properties.ReadOnly = True
         Style.BorderColor = clWindowFrame
@@ -201,7 +201,7 @@ object fFormNewCard: TfFormNewCard
       end
       object EditCName: TcxTextEdit
         Left = 78
-        Top = -144
+        Top = 125
         ParentFont = False
         Properties.ReadOnly = True
         Style.BorderColor = clWindowFrame
@@ -217,7 +217,7 @@ object fFormNewCard: TfFormNewCard
       end
       object EditMan: TcxTextEdit
         Left = 78
-        Top = -101
+        Top = 168
         ParentFont = False
         Properties.ReadOnly = True
         Style.BorderColor = clWindowFrame
@@ -227,7 +227,7 @@ object fFormNewCard: TfFormNewCard
       end
       object EditDate: TcxTextEdit
         Left = 78
-        Top = -74
+        Top = 195
         ParentFont = False
         Properties.ReadOnly = True
         Style.BorderColor = clWindowFrame
@@ -237,7 +237,7 @@ object fFormNewCard: TfFormNewCard
       end
       object EditFirm: TcxTextEdit
         Left = 78
-        Top = -47
+        Top = 222
         ParentFont = False
         Properties.ReadOnly = True
         Style.BorderColor = clWindowFrame
@@ -247,7 +247,7 @@ object fFormNewCard: TfFormNewCard
       end
       object EditArea: TcxTextEdit
         Left = 78
-        Top = -20
+        Top = 249
         ParentFont = False
         Properties.ReadOnly = True
         Style.BorderColor = clWindowFrame
@@ -257,7 +257,7 @@ object fFormNewCard: TfFormNewCard
       end
       object EditStock: TcxTextEdit
         Left = 78
-        Top = 91
+        Top = 360
         ParentFont = False
         Properties.ReadOnly = True
         Style.BorderColor = clWindowFrame
@@ -273,7 +273,7 @@ object fFormNewCard: TfFormNewCard
       end
       object EditSName: TcxTextEdit
         Left = 367
-        Top = 91
+        Top = 360
         ParentFont = False
         Properties.ReadOnly = True
         Style.BorderColor = clWindowFrame
@@ -289,7 +289,7 @@ object fFormNewCard: TfFormNewCard
       end
       object EditMax: TcxTextEdit
         Left = 367
-        Top = 200
+        Top = 469
         ParentFont = False
         Properties.ReadOnly = True
         Style.BorderColor = clWindowFrame
@@ -305,7 +305,7 @@ object fFormNewCard: TfFormNewCard
       end
       object EditTruck: TcxButtonEdit
         Left = 78
-        Top = 243
+        Top = 512
         ParentFont = False
         Properties.Buttons = <
           item
@@ -326,7 +326,7 @@ object fFormNewCard: TfFormNewCard
       end
       object EditType: TcxComboBox
         Left = 78
-        Top = 134
+        Top = 403
         ParentFont = False
         Properties.DropDownListStyle = lsEditFixedList
         Properties.ItemHeight = 18
@@ -350,7 +350,7 @@ object fFormNewCard: TfFormNewCard
       end
       object EditTrans: TcxTextEdit
         Left = 78
-        Top = 34
+        Top = 303
         ParentFont = False
         Properties.ReadOnly = True
         Style.BorderColor = clWindowFrame
@@ -360,7 +360,7 @@ object fFormNewCard: TfFormNewCard
       end
       object EditWorkAddr: TcxTextEdit
         Left = 78
-        Top = 7
+        Top = 276
         ParentFont = False
         Style.BorderColor = clWindowFrame
         Style.BorderStyle = ebs3D
@@ -369,7 +369,7 @@ object fFormNewCard: TfFormNewCard
       end
       object PrintFH: TcxCheckBox
         Left = 10
-        Top = 298
+        Top = 567
         Caption = #20986#21378#25171#21360#29289#36164#21457#36135#21333#65288#21363#25910#36153#21333#65289
         ParentFont = False
         Style.BorderColor = clWindowFrame
@@ -386,7 +386,7 @@ object fFormNewCard: TfFormNewCard
       end
       object EditFQ: TcxButtonEdit
         Left = 78
-        Top = 200
+        Top = 469
         ParentFont = False
         Properties.Buttons = <
           item
@@ -407,7 +407,7 @@ object fFormNewCard: TfFormNewCard
       end
       object EditGroup: TcxComboBox
         Left = 367
-        Top = 134
+        Top = 403
         AutoSize = False
         ParentFont = False
         Properties.DropDownListStyle = lsFixedList

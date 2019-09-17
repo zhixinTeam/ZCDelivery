@@ -125,6 +125,7 @@ type
     procedure LoadSingleOrder;
     procedure AddListViewItem(var nWebOrderItem:stMallOrderItem);
     function IsRepeatCard(const nWebOrderItem:string):Boolean;
+    function IsLastTime(const nTruck:string):Boolean;
     function LoadValidZTLineGroupSpec(const nStockno:string;const nList: TStrings):Boolean;
     function LoadWarehouseConfig:Boolean;
     function GetOutASH(const nStr: string): string;
@@ -1065,6 +1066,11 @@ begin
   FCardData.Values['XCB_CementCode'] := nCementCode;
   FCardData.Values['XCB_CementCodeID'] := nCementCodeID;
   EditFQ.Text     := FCardData.Values['XCB_CementCode'];
+end;
+
+function TfFormNewCard.IsLastTime(const nTruck: string): Boolean;
+begin
+  //
 end;
 
 end.

@@ -33,7 +33,7 @@ uses
   SysUtils, USysLoger, UHardBusiness, UMgrTruckProbe, UMgrParam,
   UMgrQueue, UMgrLEDCard, UMgrHardHelper, UMgrRemotePrint, U02NReader,
   {$IFDEF MultiReplay}UMultiJS_Reply, {$ELSE}UMultiJS, {$ENDIF}
-  UMgrERelay, UMgrRemoteVoice, UMgrCodePrinter, UMgrLEDDisp,
+  UMgrERelay, UMgrRemoteVoice, UMgrCodePrinter, UMgrLEDDisp,UMgrSendCardNo,
   {$IFDEF UseLBCModbus}UMgrLBCModusTcp, {$ENDIF}
   UMgrRFID102, UMgrVoiceNet, UMgrTTCEM100, UMgrRemoteSnap;
 
@@ -129,6 +129,11 @@ begin
     gModBusClient.LoadConfig(nCfg + 'ModBusController.xml');
     {$ENDIF}
 
+    {$IFDEF FixLoad}
+    nStr := '¶¨ÖÃ×°³µ';
+    gSendCardNo.LoadConfig(nCfg + 'PLCController.xml');
+    {$ENDIF}
+
   except
     on E:Exception do
     begin
@@ -156,6 +161,10 @@ begin
 
   {$IFDEF UseLBCModbus}
   gModBusClient := TReaderHelperEx.Create;
+  {$ENDIF}
+
+  {$IFDEF FixLoad}
+  gSendCardNo := TReaderHelper.Create;
   {$ENDIF}
 end;
 
@@ -226,6 +235,12 @@ begin
     gModBusClient.StartPrinter;
   end;
   {$ENDIF}
+
+  {$IFDEF FixLoad}
+  if Assigned(gSendCardNo) then
+  gSendCardNo.StartPrinter;
+  //sendcard
+  {$ENDIF}
 end;
 
 procedure THardwareWorker.AfterStopServer;
@@ -283,6 +298,12 @@ begin
   {$IFDEF UseLBCModbus}
   if Assigned(gModBusClient) then
   gModBusClient.StopPrinter;
+  {$ENDIF}
+
+  {$IFDEF FixLoad}
+  if Assigned(gSendCardNo) then
+  gSendCardNo.StopPrinter;
+  //sendcard
   {$ENDIF}
 end;
 

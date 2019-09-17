@@ -177,6 +177,8 @@
    //启用车牌识别
   {$DEFINE UseLBCModbus}
   //启用链板秤装车
+  {$DEFINE FixLoad}
+  //转子秤定制装车
  {$DEFINE MoreNumZDLine}
   //数量达一定值指定通道
  {$DEFINE NoUsePlayVoice}
@@ -184,7 +186,9 @@
  {$DEFINE UseWXServiceEx}
   //使用二期微信中间件
  {$DEFINE UseFliterRefresh}
-  //使用筛选刷新功能
+  //使用筛选刷新功能  
+ {$DEFINE Between2BillTime}
+//使用出厂一段时间内不能办卡功能
 {$ENDIF}
 
 

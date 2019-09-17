@@ -76,6 +76,7 @@ type
     procedure btnClearClick(Sender: TObject);
   private
     { Private declarations }
+    FSellMan: string;
     FAutoClose:Integer; //窗口自动关闭倒计时（分钟）
     FWebOrderIndex:Integer; //商城订单索引
     FWebOrderItems:array of stMallOrderItem; //商城订单数组
@@ -89,6 +90,7 @@ type
     procedure AddListViewItem(var nWebOrderItem:stMallOrderItem);
     procedure LoadSingleOrder;
     function IsRepeatCard(const nWebOrderItem:string):Boolean;
+    function IsLastTime(const nTruck:string; var nTime:Integer):Boolean;
     function VerifyCtrl(Sender: TObject; var nHint: string): Boolean;
     function SaveBillProxy:Boolean;
     function SaveWebOrderMatch(const nBillID,nWebOrderID,nBillType:string):Boolean;
@@ -420,6 +422,23 @@ begin
     EditCus.Text    := '';
     EditCName.Text  := '';
 
+    nStr := 'select O_Price,O_SaleMan from %s where O_Order=''%s''';
+
+    nStr := Format(nStr,[sTable_SalesOrder,nOrderItem.FYunTianOrderId]);
+    with fdm.QueryTemp(nStr) do
+    begin
+      if RecordCount <= 0 then
+      begin
+        ShowMsg('订单' + nOrderItem.FYunTianOrderId + '不是销售订单,无法办卡', sHint);
+        Exit;
+      end;
+      if RecordCount = 1 then
+      begin
+        EditPrice.Text  := Fields[0].AsString;
+        FSellMan        := Fields[1].AsString;
+      end;
+    end;
+
     //提单信息
     EditType.ItemIndex := 0;
     EditStock.Text  := nOrderItem.FGoodsID;
@@ -527,11 +546,12 @@ var
   nWebOrderID:string;
   nNewCardNo:string;
   nidx:Integer;
-  i:Integer;
+  i,nTimes:Integer;
   nRet: Boolean;
   nOrderItem:stMallOrderItem;
   nCard:string;
   nMaxNum : Double;
+  nStr : string;
 begin
   Result      := False;
   nOrderItem  := FWebOrderItems[FWebOrderIndex];
@@ -558,6 +578,14 @@ begin
       Exit;
     end;
   {$ENDIF}
+
+  if not IsLastTime(EditTruck.Text,nTimes) then
+  begin
+    nStr := '车辆[ %s ]出厂未到'+inttostr(nTimes)+'分钟,禁止开单.';
+    nStr := Format(nStr, [EditTruck.Text]);
+    ShowMsg(nStr, sHint);
+    Exit;
+  end;
   //判断提单量
   nMaxNum := nOrderItem.FMaxNum - GetUsedNum(nWebOrderID);
   if StrToFloatDef(EditValue.Text,0) > nMaxNum then
@@ -641,6 +669,7 @@ begin
       Values['Seal']       := '';
       Values['HYDan']      := '';
       Values['WebOrderID'] := nWebOrderID;
+      Values['SaleMan']    := FSellMan;
       {$IFDEF UseXHSpot}
       Values['L_XHSpot'] := EditMemo.Text;
       {$ENDIF}
@@ -765,6 +794,44 @@ begin
   FAutoClose := gSysParam.FAutoClose_Mintue;
   editWebOrderNo.Clear;
   ActiveControl := editWebOrderNo;
+end;
+
+function TfFormNewCard.IsLastTime(const nTruck: string; var nTime:Integer): Boolean;
+var
+  nStr : string;
+  sFlag_Between2BillsTime : Integer;
+begin
+  Result := True;
+  {$IFDEF Between2BillTime}
+  sFlag_Between2BillsTime := 30;
+
+  nStr := ' select d_value from %s where d_name = ''%s'' and d_memo = ''%s'' ';
+  nStr := Format(nStr,[sTable_SysDict, sFlag_SysParam, sFag_Between2Time]);
+  with FDM.QuerySQL(nStr) do
+  begin
+    if RecordCount>0 then
+    begin
+      sFlag_Between2BillsTime := FieldByName('d_value').AsInteger;
+    end;
+  end;
+  
+  nTime := sFlag_Between2BillsTime;
+
+  nStr := 'select top 1 L_OutFact from %s where '+
+          'l_truck=''%s'' order by L_OutFact desc';
+  nStr := Format(nStr,[sTable_Bill,nTruck]);
+  with fdm.QueryTemp(nStr) do
+  begin
+    if recordcount > 0 then
+    begin
+      if (Now - FieldByName('L_OutFact').AsDateTime)*24*60 < sFlag_Between2BillsTime then
+      begin
+        Result := False;
+        Exit;
+      end;
+    end;
+  end;
+  {$ENDIF}
 end;
 
 end.

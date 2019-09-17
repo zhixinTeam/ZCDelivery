@@ -517,11 +517,11 @@ begin
     Exit;
   end;
 
-  if IsPurOrderHasControl(nOrderItem.FProvID, nOrderItem.FGoodsID, nHint) then
-  begin
-    ShowMsg(nHint, sWarn);
-    Exit;
-  end;
+//  if IsPurOrderHasControl(nOrderItem.FProvID, nOrderItem.FGoodsID, nHint) then
+//  begin
+//    ShowMsg(nHint, sWarn);
+//    Exit;
+//  end;
 
   {$IFDEF UseTruckXTNum}
     if not IsEnoughNum(EditTruck.Text, StrToFloatDef(EditValue.Text,0)) then
@@ -529,17 +529,6 @@ begin
       ShowMsg('超过车辆允许提单最大量！请联系管理员', sHint);
       Exit;
     end;
-  {$ENDIF}
-
-  {$IFDEF ForceEleCard}
-  {$IFDEF XXCJ}
-  if not IsEleCardVaidEx(EditTruck.Text) then
-  {$ELSE}
-  if not IsEleCardVaid(EditTruck.Text) then
-  {$ENDIF}
-  begin
-    ShowMsg('车辆未办理电子标签或电子标签未启用！请联系管理员', sHint); Exit;
-  end;
   {$ENDIF}
 
   {$IFDEF OrderNoMulCard}
@@ -607,12 +596,16 @@ begin
     nList.Values['ProviderName'] := nOrderItem.FProvName;
     nList.Values['StockNO'] := nOrderItem.FGoodsID;
     nList.Values['StockName'] := nOrderItem.FGoodsname;
-    nList.Values['Value'] := EditValue.Text;
+    nList.Values['Value']     :=  FloatToStr(StrToFloatDef(EditValue.Text,0)) ;
+    nList.Values['Model'] := '';
+    nList.Values['KD']    := Trim(EditLs.Text);
+    nList.Values['Year']  := '';
+    nList.Values['NeiDao'] := sFlag_No;
+    nList.Values['OppositeValue'] := '0';
+    nList.Values['expiretime']    := '0';
+    nList.Values['PrintBD']       := sFlag_Yes;
 
     nList.Values['WebOrderID'] := nWebOrderID;
-
-    nList.Values['KFValue']  := Trim(EditValue.Text);
-    nList.Values['KFLS']     := Trim(EditLs.Text);
 
     FBegin := Now;
     nOrder := SaveOrder(PackerEncodeStr(nList.Text));
@@ -716,16 +709,6 @@ begin
       Writelog(nHint);
       Exit;
     end;
-
-    {$IFNDEF NoCheckOrderValue}
-    nVal := StrToFloat(EditValue.Text);
-    Result := FloatRelation(nVal, FMaxQuantity,rtLE);
-    if not Result then
-    begin
-      nHint := '已超出可提货量';
-      Writelog(nHint);
-    end;
-    {$ENDIF}
   end;
 end;
 

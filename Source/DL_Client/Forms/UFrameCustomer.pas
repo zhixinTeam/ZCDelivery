@@ -97,7 +97,7 @@ begin
   //xxxxx
 
   if nWhere = '' then
-       Result := Result + ' Where C_XuNi<>''$Yes'''
+       Result := Result + ' Where  isnull(C_XuNi,''N'') <>''$Yes'''
   else Result := Result + ' Where (' + nWhere + ')';
 
   Result := MacroValue(Result, [MI('$Cus', sTable_Customer),

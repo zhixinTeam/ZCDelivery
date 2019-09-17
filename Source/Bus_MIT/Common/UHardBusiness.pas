@@ -11,7 +11,7 @@ uses
   Windows, Classes, Controls, SysUtils, UMgrDBConn, UMgrParam, DB,
   UBusinessWorker, UBusinessConst, UBusinessPacker, UMgrQueue,
   {$IFDEF MultiReplay}UMultiJS_Reply, {$ELSE}UMultiJS, {$ENDIF}
-  UMgrHardHelper, U02NReader, UMgrERelay, UMgrRemotePrint,
+  UMgrHardHelper, U02NReader, UMgrERelay, UMgrRemotePrint,UMgrSendCardNo,
   {$IFDEF UseLBCModbus}UMgrLBCModusTcp, {$ENDIF}
   UMgrLEDDisp, UMgrRFID102, UMgrTTCEM100, UMgrVoiceNet, UMgrremoteSnap;
 
@@ -1427,10 +1427,11 @@ end;
 //Date: 2012-4-25
 //Parm: 车辆;通道
 //Desc: 授权nTruck在nTunnel车道放灰
-procedure TruckStartFH(const nTruck: PTruckItem; const nTunnel: string);
+procedure TruckStartFH(const nTruck: PTruckItem; const nTunnel, IsLBC: string);
 var nStr,nTmp,nCardUse: string;
    nField: TField;
    nWorker: PDBWorker;
+   i : Integer;
 begin
   nWorker := nil;
   try
@@ -1456,29 +1457,34 @@ begin
   finally
     gDBConnManager.ReleaseConnection(nWorker);
   end;
-
-
+  
   gERelayManager.LineOpen(nTunnel);
   //打开放灰
-  {$IFDEF UseLBCModbus}
-  gModBusClient.StartWeight(nTunnel, nTruck.FBill, nTruck.FValue);
-  //开始定量装车
-  {$ENDIF}
-
   nStr := nTruck.FTruck + StringOfChar(' ', 12 - Length(nTruck.FTruck));
   nTmp := nTruck.FStockName + FloatToStr(nTruck.FValue);
   nStr := nStr + nTruck.FStockName + StringOfChar(' ', 12 - Length(nTmp)) +
           FloatToStr(nTruck.FValue);
   //xxxxx
   WriteHardHelperLog('小屏' + ntunnel + '发送:' + nStr);
-  gERelayManager.ShowTxt(nTunnel, nStr);
+  for i := 0 to 2 do
+  begin
+    gERelayManager.ShowTxt(nTunnel, nStr);
+  end;
   //显示内容
+  WriteHardHelperLog('是否链板秤' + IsLBC);
+  if IsLBC = 'Y' then
+  begin
+    {$IFDEF UseLBCModbus}
+    gModBusClient.StartWeight(nTunnel, nTruck.FBill, nTruck.FValue);
+    //开始定量装车
+    {$ENDIF}
+  end;
 end;
 
 //Date: 2012-4-24
 //Parm: 磁卡号;通道号
 //Desc: 对nCard执行袋装装车操作
-procedure MakeTruckLadingSan(const nCard,nTunnel: string);
+procedure MakeTruckLadingSan(const nCard,nTunnel,IsLBC,IsZZC: string);
 var nStr: string;
     nIdx: Integer;
     nPLine: PLineItem;
@@ -1567,7 +1573,17 @@ begin
     MakeLadingSound(nPTruck, nPLine, sPost_FH);
     //播放语音
 
-    TruckStartFH(nPTruck, nTunnel);
+    TruckStartFH(nPTruck, nTunnel, IsLBC);
+
+    {$IFDEF FixLoad}
+    if IsZZC = 'Y' then
+    begin
+      WriteNearReaderLog('启动定置装车::'+nTunnel+'@'+nCard);
+      //发送卡号和通道号到定置装车服务器
+      gSendCardNo.SendCardNo(nTunnel+'@'+nCard);
+    end;
+    {$ENDIF}
+    
     Exit;
   end;
 
@@ -1583,8 +1599,17 @@ begin
   MakeLadingSound(nPTruck, nPLine, sPost_FH);
   //播放语音
 
-  TruckStartFH(nPTruck, nTunnel);
+  TruckStartFH(nPTruck, nTunnel, IsLBC);
   //执行放灰
+
+  {$IFDEF FixLoad}
+  if IsZZC = 'Y' then
+  begin
+    WriteNearReaderLog('启动定置装车::'+nTunnel+'@'+nCard);
+    //发送卡号和通道号到定置装车服务器
+    gSendCardNo.SendCardNo(nTunnel+'@'+nCard);
+  end;
+  {$ENDIF}
 end;
 
 //Date: 2012-4-24
@@ -1592,6 +1617,7 @@ end;
 //Desc: 对nHost.nCard新到卡号作出动作
 procedure WhenReaderCardIn(const nCard: string; const nHost: PReaderHost);
 var nStr: string;
+    nIsLBC,nIsZZC:string;
 begin 
   if nHost.FType = rtOnce then
   begin
@@ -1606,7 +1632,15 @@ begin
 
   if nHost.FType = rtKeep then
   begin
-    MakeTruckLadingSan(nCard, nHost.FTunnel);
+    if Assigned(nHost.FOptions) then
+         nIsLBC := nHost.FOptions.Values['IsLBC']
+    else nIsLBC := 'N';
+
+    if Assigned(nHost.FOptions) then
+         nIsZZC := nHost.FOptions.Values['IsZZC']
+    else nIsZZC := 'N';
+
+    MakeTruckLadingSan(nCard, nHost.FTunnel, nIsLBC, nIsZZC);
   end;
 end;
 
@@ -1614,6 +1648,8 @@ end;
 //Parm: 主机;卡号
 //Desc: 对nHost.nCard超时卡作出动作
 procedure WhenReaderCardOut(const nCard: string; const nHost: PReaderHost);
+var
+  nIsLBC,nIsZZC : string;
 begin
   {$IFDEF DEBUG}
   WriteHardHelperLog('WhenReaderCardOut退出.');
@@ -1623,7 +1659,25 @@ begin
   Sleep(100);
 
   {$IFDEF UseLBCModbus}
-  gModBusClient.StopWeightSaveNum(nHost.FTunnel);
+  if Assigned(nHost.FOptions) then
+       nIsLBC := nHost.FOptions.Values['IsLBC']
+  else nIsLBC := 'N';
+  if nIsLBC = 'Y' then
+  begin
+    gModBusClient.StopWeightSaveNum(nHost.FTunnel);
+  end;
+  {$ENDIF}
+
+  {$IFDEF FixLoad}
+  if Assigned(nHost.FOptions) then
+       nIsZZC := nHost.FOptions.Values['IsZZC']
+  else nIsZZC := 'N';
+  if nIsZZC = 'Y' then
+  begin
+    WriteHardHelperLog('停止定置装车::'+nHost.FTunnel+'@Close');
+    //发送卡号和通道号到定置装车服务器
+    gSendCardNo.SendCardNo(nHost.FTunnel+'@Close');
+  end;
   {$ENDIF}
 
   if nHost.FETimeOut then
