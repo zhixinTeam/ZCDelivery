@@ -269,6 +269,14 @@ begin
   if not IsDataValid then Exit;
   //check valid
 
+  {$IFDEF OrderNoMulCard}
+  if IFHasOrder(EditTruck.Text) then
+  begin
+    ShowMsg('车辆存在未完成的采购单,无法开单,请联系管理员',sHint);
+    Exit;
+  end;
+  {$ENDIF}
+
   with FListA do
   begin
     Clear;

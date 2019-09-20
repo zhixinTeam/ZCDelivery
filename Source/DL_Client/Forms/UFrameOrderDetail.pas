@@ -4,6 +4,7 @@
 *******************************************************************************}
 unit UFrameOrderDetail;
 
+{$I Link.Inc}
 interface
 
 uses
@@ -101,18 +102,31 @@ begin
   Result := 'Select *,(D_MValue-D_PValue-D_KZValue) as D_NetWeight ' +
             'From $OD od Left Join $OO oo on od.D_OID=oo.O_ID ';
   //xxxxxx
+  {$IFDEF UseMDate}
+    if FJBWhere = '' then
+    begin
+      Result := Result + 'Where (D_MDate>=''$S'' and D_MDate <''$End'')';
 
-  if FJBWhere = '' then
-  begin
-    Result := Result + 'Where (D_InTime>=''$S'' and D_InTime <''$End'')';
+      if nWhere <> '' then
+        Result := Result + ' And (' + nWhere + ')';
+      //xxxxx
+    end else
+    begin
+      Result := Result + ' Where (' + FJBWhere + ')';
+    end;
+  {$ELSE}
+    if FJBWhere = '' then
+    begin
+      Result := Result + 'Where (D_InTime>=''$S'' and D_InTime <''$End'')';
 
-    if nWhere <> '' then
-      Result := Result + ' And (' + nWhere + ')';
-    //xxxxx
-  end else
-  begin
-    Result := Result + ' Where (' + FJBWhere + ')';
-  end;
+      if nWhere <> '' then
+        Result := Result + ' And (' + nWhere + ')';
+      //xxxxx
+    end else
+    begin
+      Result := Result + ' Where (' + FJBWhere + ')';
+    end;
+  {$ENDIF}
 
   if Check1.Checked then
        Result := MacroValue(Result, [MI('$OD', sTable_OrderDtlBak)])

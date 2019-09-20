@@ -189,6 +189,10 @@
   //使用筛选刷新功能  
  {$DEFINE Between2BillTime}
 //使用出厂一段时间内不能办卡功能
+ {$DEFINE OrderNoMulCard}
+//采购未完成不能再开单
+ {$DEFINE UseMDate}
+//采购车辆查询使用毛重时间查询 
 {$ENDIF}
 
 

@@ -253,6 +253,8 @@ function ChangeOrderTruckNo(const nOrder,nTruck: string): Boolean;
 
 function PrintOrderReport(const nOrder: string;  const nAsk: Boolean): Boolean;
 //打印采购单
+function IFHasOrder(const nTruck: string): Boolean;
+//车辆是否存在未完成采购单
 
 function SaveOrder(const nOrderData: string): string;
 
@@ -2486,6 +2488,21 @@ begin
   FDR.Dataset1.DataSet := FDM.SqlTemp;
   FDR.ShowReport;
   Result := FDR.PrintSuccess;
+end;
+
+//车辆是否存在未完成采购单
+function IFHasOrder(const nTruck: string): Boolean;
+var nStr: string;
+begin
+  Result := False;
+  //磁卡为空不限制
+  nStr :=' select D_ID from %s where D_Status <> ''%s'' and D_Truck =''%s'' and isnull(D_Card,'''') <> '''' ';
+  nStr := Format(nStr, [sTable_OrderDtl, sFlag_TruckOut, nTruck]);
+  with FDM.QueryTemp(nStr) do
+  if RecordCount > 0 then
+  begin
+    Result := True;
+  end;
 end;
 
 //Date: 2014-09-15

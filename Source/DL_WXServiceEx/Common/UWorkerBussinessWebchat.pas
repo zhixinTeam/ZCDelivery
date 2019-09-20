@@ -781,7 +781,7 @@ begin
 
   TBusWorkerBusinessHHJY.CallMe(cBC_GetLoginToken,
               gSysParam.FWXZhangHu,gSysParam.FWXMiMa, @nOut);
-  if not  TBusWorkerBusinessHHJY.CallMe(cBC_GetSaleInfo,FIn.FData,'',@nOut) then
+  if not  TBusWorkerBusinessHHJY.CallMe(cBC_GetSaleInfo,'','',@nOut) then
   begin
     nData := '客户(%s)读取ERP订单失败.';
     nData := Format(nData, [FIn.FData]);
@@ -851,8 +851,8 @@ begin
         NodeNew('SetDate').ValueAsString    := FieldByName('O_Create').AsString;
         NodeNew('BillNumber').ValueAsString := FieldByName('O_Order').AsString;
         NodeNew('StockNo').ValueAsString    := FieldByName('O_StockID').AsString;
-        NodeNew('StockName').ValueAsString  := FieldByName('O_StockName').AsString
-                                             + FieldByName('O_StockType').AsString ;
+        NodeNew('StockName').ValueAsString  := FieldByName('O_StockName').AsString;
+                                            // + FieldByName('O_StockType').AsString ;
 
         {$IFDEF SyncDataByWSDL}//接口模式下开单即推单 订单量会实时扣减
         nValue       := FieldByName('O_PlanRemain').AsFloat;
@@ -1600,7 +1600,7 @@ begin
 
     TBusWorkerBusinessHHJY.CallMe(cBC_GetLoginToken,
                 gSysParam.FWXZhangHu,gSysParam.FWXMiMa, @nOut);
-    if not  TBusWorkerBusinessHHJY.CallMe(cBC_GetOrderInfoEx,FIn.FData,'',@nOut) then
+    if not  TBusWorkerBusinessHHJY.CallMe(cBC_GetOrderInfoEx,'','',@nOut) then
     begin
       nData := '客户(%s)读取ERP订单失败.';
       nData := Format(nData, [FIn.FData]);
