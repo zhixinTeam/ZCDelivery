@@ -301,6 +301,7 @@ type
     FType:string;          //采购，销售
     FCusID:string;
     FCusName:string;
+    FStatus: string;      //订单状态 1：新订单
   end;
   //网上商城供货单明细
 

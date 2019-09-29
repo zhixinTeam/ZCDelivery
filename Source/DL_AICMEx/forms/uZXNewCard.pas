@@ -90,6 +90,10 @@ type
     procedure AddListViewItem(var nWebOrderItem:stMallOrderItem);
     procedure LoadSingleOrder;
     function IsRepeatCard(const nWebOrderItem:string):Boolean;
+    //获取最大剩余量
+    function GetMaxENum(const ncontractno:string): Double;
+    //获取最大提货量
+    function GetMaxTHNum: Double;
     function IsLastTime(const nTruck:string; var nTime:Integer):Boolean;
     function VerifyCtrl(Sender: TObject; var nHint: string): Boolean;
     function SaveBillProxy:Boolean;
@@ -386,6 +390,7 @@ var
   nRepeat, nIsSale : Boolean;
   nWebOrderID:string;
   nMsg,nStr:string;
+  nNum1, nNum2: Double;
 begin
   nOrderItem := FWebOrderItems[FWebOrderIndex];
   nWebOrderID := nOrderItem.FOrdernumber;
@@ -448,7 +453,12 @@ begin
     EditCus.Text    := nOrderItem.FCusID;
     EditCName.Text  := nOrderItem.FCusName;
     EditMemo.Text   := nOrderItem.FXHSpot;
-    EditMaxNum.Text := FloatToStr(nOrderItem.FMaxNum - GetUsedNum(nWebOrderID));
+    nNum1           := GetMaxENum(nOrderItem.FYunTianOrderId);
+    nNum2           := nOrderItem.FMaxNum - GetUsedNum(nWebOrderID);
+    if nNum1 <= nNum2 then
+      EditMaxNum.Text := FloatToStr(nNum1)
+    else if nNum1 > nNum2 then
+      EditMaxNum.Text := FloatToStr(nNum2);
   {$ELSE}
     //填充界面信息
     //基本信息
@@ -550,7 +560,7 @@ var
   nRet: Boolean;
   nOrderItem:stMallOrderItem;
   nCard:string;
-  nMaxNum : Double;
+  nMaxNum, nTHNum,nNum1,nNum2 : Double;
   nStr : string;
 begin
   Result      := False;
@@ -562,6 +572,16 @@ begin
     ShowMsg('提货数量不能为空或不能小于等于零！',sHint);
     Writelog('获取物料价格异常！请联系管理员');
     Exit;
+  end;
+
+  nTHNum := GetMaxTHNum;
+  if nTHNum > 0 then
+  begin
+    if StrToFloatDef(Trim(EditValue.Text),0) > nTHNum  then
+    begin
+      ShowMsg('提货数量不能大于最大提货量'+Floattostr(nTHNum)+'！',sHint);
+      Exit;
+    end;
   end;
 
   if not VerifyCtrl(EditTruck,nHint) then
@@ -587,7 +607,13 @@ begin
     Exit;
   end;
   //判断提单量
-  nMaxNum := nOrderItem.FMaxNum - GetUsedNum(nWebOrderID);
+  nNum1           := GetMaxENum(nOrderItem.FYunTianOrderId);
+  nNum2           := nOrderItem.FMaxNum - GetUsedNum(nWebOrderID);
+  if nNum1 <= nNum2 then
+    nMaxNum := nNum1
+  else if nNum1 > nNum2 then
+    nMaxNum := nNum2;
+    
   if StrToFloatDef(EditValue.Text,0) > nMaxNum then
   begin
     ShowMsg('超过订单最大剩余量'+Floattostr(nMaxNum), sHint);
@@ -832,6 +858,60 @@ begin
     end;
   end;
   {$ENDIF}
+end;
+
+function TfFormNewCard.GetMaxTHNum: Double;
+var
+  nStr:string;
+begin
+  Result := 0;
+  nStr   := ' Select D_Value from %s where  D_Name = ''%s'' and D_Memo = ''%s'' ';
+  nStr   := Format(nStr,[sTable_SysDict,sFlag_SysParam,'AicmMaxTHNum']);
+  with fdm.QueryTemp(nStr) do
+  begin
+    if RecordCount>0 then
+    begin
+      Result := FieldByName('D_Value').AsFloat;
+    end;
+  end;
+end;
+
+function TfFormNewCard.GetMaxENum(const ncontractno:string): Double;
+var
+  nStr : string;
+  num1,num2, nValue : Double;
+begin
+  Result := 0;
+  num1   := 0;
+  num2   := 0;
+  nValue := 0;
+  nStr   := ' Select O_PlanRemain from %s where O_Order = ''%s'' ';
+  nStr   := Format(nStr,[sTable_SalesOrder,ncontractno]);
+  with fdm.QueryTemp(nStr) do
+  begin
+    if RecordCount>0 then
+    begin
+      num1 := FieldByName('O_PlanRemain').AsFloat;
+    end;
+  end;
+
+  nStr   := ' Select sum(L_Value) as L_Value  from %s where L_ZhiKa = ''%s'' and  L_OutFact Is Null ';
+  nStr   := Format(nStr,[sTable_Bill,ncontractno]);
+  with fdm.QueryTemp(nStr) do
+  begin
+    if RecordCount > 0 then
+    begin
+      num2 := FieldByName('L_Value').AsFloat;
+    end;
+  end;
+
+  if num1 > num2 then
+  begin
+    nValue := num1 - num2;
+    nValue := Float2Float(nValue,100, False);
+  end;
+
+  Result := nValue;
 end;
 
 end.

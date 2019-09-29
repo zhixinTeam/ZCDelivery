@@ -241,6 +241,7 @@ const
   sFlag_AutoIn        = 'Truck_AutoIn';              //自动进厂
   sFlag_AutoOut       = 'Truck_AutoOut';             //自动出厂
   sFlag_InTimeout     = 'InFactTimeOut';             //进厂超时(队列)
+  sFlag_InTimeoutEx   = 'InFactTimeOutEx';           //进厂超时(队列)自动重排
   sFlag_SanMultiBill  = 'SanMultiBill';              //散装预开多单
   sFlag_NoDaiQueue    = 'NoDaiQueue';                //袋装禁用队列
   sFlag_NoSanQueue    = 'NoSanQueue';                //散装禁用队列
@@ -304,6 +305,7 @@ const
   sTable_DictItem     = 'Sys_DataDict';              //字典明细
 
   sTable_SysDict      = 'Sys_Dict';                  //系统字典
+  sTable_SysDictEx    = 'S_Inventory';               //问信存货档案信息
   sTable_ExtInfo      = 'Sys_ExtInfo';               //附加信息
   sTable_SysLog       = 'Sys_EventLog';              //系统日志
   sTable_BaseInfo     = 'Sys_BaseInfo';              //基础信息
@@ -1529,6 +1531,7 @@ begin
   gSysTableList := TList.Create;
 
   AddSysTableItem(sTable_SysDict, sSQL_NewSysDict);
+  AddSysTableItem(sTable_SysDictEx, sSQL_NewSysDict);
   AddSysTableItem(sTable_ExtInfo, sSQL_NewExtInfo);
   AddSysTableItem(sTable_SysLog, sSQL_NewSysLog);
 

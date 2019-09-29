@@ -303,6 +303,7 @@ begin
           FWebOrderItems[i].FData           := Values['quantity'];
           FWebOrderItems[i].Fpurchasecontract_no := Values['contractNo'];
           FWebOrderItems[i].FOrder_ls       := '';
+          FWebOrderItems[i].FStatus         := Values['status'];
           AddListViewItem(FWebOrderItems[i]);
         end;
       end;
@@ -373,6 +374,13 @@ begin
       nMsg := '此订单不是采购订单！';
       ShowMsg(nMsg,sHint);
       Writelog(nMsg);
+      Exit;
+    end;
+    if nOrderItem.FStatus <> '1' then
+    begin
+      nMsg := '此订单不是新订单';
+      ShowMsg(nMsg,sHint);
+      Writelog(nMsg+nOrderItem.FStatus);
       Exit;
     end;
   {$ENDIF}
@@ -586,29 +594,32 @@ begin
 
   nList := TStringList.Create;
   try
-    nList.Values['SQID'] := EditID.Text;
-    nList.Values['Area'] := '';
-    nList.Values['Truck'] := Trim(EditTruck.Text);
-    nList.Values['Project'] := EditID.Text;
-    nList.Values['CardType'] := 'L';
+    if not IsSusSaveOrder(nWebOrderID, nOrder) then
+    begin
+      nList.Values['SQID'] := EditID.Text;
+      nList.Values['Area'] := '';
+      nList.Values['Truck'] := Trim(EditTruck.Text);
+      nList.Values['Project'] := EditID.Text;
+      nList.Values['CardType'] := 'L';
 
-    nList.Values['ProviderID'] := nOrderItem.FProvID;
-    nList.Values['ProviderName'] := nOrderItem.FProvName;
-    nList.Values['StockNO'] := nOrderItem.FGoodsID;
-    nList.Values['StockName'] := nOrderItem.FGoodsname;
-    nList.Values['Value']     :=  FloatToStr(StrToFloatDef(EditValue.Text,0)) ;
-    nList.Values['Model'] := '';
-    nList.Values['KD']    := Trim(EditLs.Text);
-    nList.Values['Year']  := '';
-    nList.Values['NeiDao'] := sFlag_No;
-    nList.Values['OppositeValue'] := '0';
-    nList.Values['expiretime']    := '0';
-    nList.Values['PrintBD']       := sFlag_Yes;
+      nList.Values['ProviderID'] := nOrderItem.FProvID;
+      nList.Values['ProviderName'] := nOrderItem.FProvName;
+      nList.Values['StockNO'] := nOrderItem.FGoodsID;
+      nList.Values['StockName'] := nOrderItem.FGoodsname;
+      nList.Values['Value']     :=  FloatToStr(StrToFloatDef(EditValue.Text,0)) ;
+      nList.Values['Model'] := '';
+      nList.Values['KD']    := Trim(EditLs.Text);
+      nList.Values['Year']  := '';
+      nList.Values['NeiDao'] := sFlag_No;
+      nList.Values['OppositeValue'] := '0';
+      nList.Values['expiretime']    := '0';
+      nList.Values['PrintBD']       := sFlag_Yes;
 
-    nList.Values['WebOrderID'] := nWebOrderID;
+      nList.Values['WebOrderID'] := nWebOrderID;
 
-    FBegin := Now;
-    nOrder := SaveOrder(PackerEncodeStr(nList.Text));
+      FBegin := Now;
+      nOrder := SaveOrder(PackerEncodeStr(nList.Text));
+    end;
     if nOrder='' then
     begin
       nHint := '保存采购单失败';

@@ -7116,7 +7116,7 @@ begin
 
   ncateg_id := '';
   nStr := ' Select D_ParamB From %s Where D_Name = ''%s'' ';
-  nStr := Format(nStr, [sTable_SysDict, sFlag_WXStockName]);
+  nStr := Format(nStr, [sTable_SysDictEx, sFlag_WXStockName]);
 
   with gDBConnManager.WorkerQuery(FDBConn, nStr) do
   if RecordCount > 0 then
@@ -7161,7 +7161,7 @@ begin
                   SF('D_Value', OneJo.S['name']),
                   SF('D_Memo', nType),
                   SF('D_ParamB', OneJo.S['productid'])
-                  ], sTable_SysDict, '', True);
+                  ], sTable_SysDictEx, '', True);
           FListA.Add(nStr);
 
           nStr := SF('D_ParamB', OneJo.S['productid']);
@@ -7171,11 +7171,11 @@ begin
                   SF('D_Desc', '水泥类型'),
                   SF('D_Value', OneJo.S['name']),
                   SF('D_Memo', nType)
-                  ], sTable_SysDict, nStr, False);
+                  ], sTable_SysDictEx, nStr, False);
           FListC.Add(nStr);
 
           nStr := ' select * from %s where D_ParamB=''%s'' and D_Name = ''%s'' ';
-          nStr := Format(nStr, [sTable_SysDict, OneJo.S['productid'], 'StockItem']);
+          nStr := Format(nStr, [sTable_SysDictEx, OneJo.S['productid'], 'StockItem']);
           FListD.Add(nStr);
         end;
       end
@@ -7531,7 +7531,7 @@ begin
 end;
 
 function TBusWorkerBusinessHHJY.GetSaleInfo(var nData: string): Boolean;
-var nStr, nProStr, nMatStr, nYearStr: string;
+var nStr, nProStr, nMatStr, nYearStr,nSQL: string;
     nO_Valid, nStockName : string;
     nValue: Double;
     nYearMonth,szUrl, nType : string;
@@ -7554,7 +7554,7 @@ begin
     wParam.Clear;
     wParam.Values['token']     := Ftoken;
 
-    wParam.Values['starttime'] := DateTime2Str(IncMonth(Now,-2));
+    wParam.Values['starttime'] := DateTime2Str(IncMonth(Now,-12));
     wParam.Values['endtime']   := DateTime2Str(Now);
 
     if FListA.Text <> '' then
@@ -7564,7 +7564,7 @@ begin
     WriteLog('查询销售订单入参：' + wParam.Text);
 
     nDataStream.AddFormField('token', Ftoken);
-    nDataStream.AddFormField('starttime', DateTime2Str(IncMonth(Now,-2)));
+    nDataStream.AddFormField('starttime', DateTime2Str(IncMonth(Now,-12)));
 
 
     if FListA.Text <> '' then
@@ -7723,6 +7723,12 @@ begin
       begin
         with gDBConnManager.WorkerQuery(FDBConn,FListD[nIdx]) do
         begin
+          if nIdx = 0 then
+          begin
+            nSQL := ' Update %s Set O_Valid = ''%s'' ';
+            nSQL := Format(nSQL, [sTable_SalesOrder,'N']);
+            gDBConnManager.WorkerExec(FDBConn, nSQL);
+          end;
           if RecordCount>0 then
           begin
             gDBConnManager.WorkerExec(FDBConn,FListC[nIdx]);

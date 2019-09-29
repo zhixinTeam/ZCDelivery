@@ -72,6 +72,7 @@ function LoadCustomer(const nList: TStrings; const nWhere: string = ''): Boolean
 function LoadCustomerInfo(const nCID: string; const nList: TcxMCListBox;
  var nHint: string): TDataSet;
 //载入客户信息
+function IsSusSaveOrder(const nWebOrderID:string; var nOrder:string): Boolean;
 
 function SaveBill(const nBillData: string): string;
 //保存交货单
@@ -735,6 +736,28 @@ begin
   begin
     Result := nil;
     nHint := '客户信息已丢失';
+  end;
+end;
+
+function IsSusSaveOrder(const nWebOrderID:string; var nOrder:string): Boolean;
+var
+  nSql:string;
+begin
+  Result := False;
+
+  nSql := 'select O_ID from %s where O_WebOrderID = ''%s'' ';
+  nSql := Format(nSql,[sTable_Order,nWebOrderID]);
+
+  with FDM.QueryTemp(nSql) do
+  begin
+    if recordcount>0 then
+    begin
+      if (Trim(Fields[0].AsString) <> '') then
+      begin
+        nOrder := Trim(Fields[0].AsString);
+        Result := True;
+      end;
+    end;
   end;
 end;
 
@@ -1698,8 +1721,10 @@ end;
 function GetUsedNum(const nWebOrderID: string): Double;
 var
   nStr: string;
+  nValue: Double;
 begin
   Result := 0;
+  nValue := 0;
 
   nStr := ' Select sum(isnull(L_Value,0)) SumValue  from %s where L_WebOrderID = ''%s'' ';
   nStr := Format(nStr, [sTable_Bill, nWebOrderID]);
@@ -1708,9 +1733,10 @@ begin
   begin
     if FieldByName('SumValue').AsFloat > 0 then
     begin
-      Result := FieldByName('SumValue').AsFloat;
+      nValue := FieldByName('SumValue').AsFloat;
     end;
   end;
+  Result  :=  Float2Float(nValue,100, False);
 end;
 
 //验证车辆电子标签

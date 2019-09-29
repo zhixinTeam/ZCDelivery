@@ -70,6 +70,7 @@ type
     FDaiForceQueue : Boolean;  //袋装强制排队
     FSanForceQueue : Boolean;  //散装强制排队
     FSafeVoice  : string;
+    FInTimeoutEx: Integer;     //进厂超时自动重排
   end;
 
   TStockMatchItem = record
@@ -128,6 +129,8 @@ type
     //车辆判定
     procedure TruckOutofQueue(const nTruck: string);
     //车辆出队
+    procedure TruckOutofQueueEx(const nTruck: string);
+    //车辆出队后重新排队
   public
     constructor Create(AOwner: TTruckQueueManager);
     destructor Destroy; override;
@@ -702,7 +705,8 @@ begin
 
     FDaiForceQueue := False;
     FSanForceQueue := False;
-    FSafeVoice := '请在厂区戴好安全帽,上车系好安全带';
+    FSafeVoice     := '请在厂区戴好安全帽,上车系好安全带';
+    FInTimeoutEx   := 0;
   end;
 
   FWaiter := TWaitObject.Create;
@@ -954,6 +958,10 @@ begin
 
       if CompareText(Fields[1].AsString, sFlag_InTimeout) = 0 then
         FParam.FInTimeout := Fields[0].AsInteger;
+      //xxxxx
+
+      if CompareText(Fields[1].AsString, sFlag_InTimeoutEx) = 0 then
+        FParam.FInTimeoutEx := Fields[0].AsInteger;
       //xxxxx
 
       if CompareText(Fields[1].AsString, sFlag_NoDaiQueue) = 0 then
@@ -1477,38 +1485,83 @@ begin
 
       with FTruckPool[j] do
       begin
-        if (FInFact or ((GetTickCount - nTruck.FInTime) <
-           FParam.FInTimeout * 60 * 1000)) or (FIsVIP = sFlag_TypeShip) then
+        if FParam.FInTimeoutEx = 0 then
         begin
-          if FInFact and (not nTruck.FInFact) then
-            FTruckChanged := True;
-          //xxxxx
+          if (FInFact or ((GetTickCount - nTruck.FInTime) <
+             FParam.FInTimeout * 60 * 1000)) or (FIsVIP = sFlag_TypeShip) then
+          begin
+            if FInFact and (not nTruck.FInFact) then
+              FTruckChanged := True;
+            //xxxxx
 
-          nTruck.FEnable := True;
-          nTruck.FInFact := FInFact;
-          nTruck.FInLade := FInLade;
+            nTruck.FEnable := True;
+            nTruck.FInFact := FInFact;
+            nTruck.FInLade := FInLade;
 
-          nTruck.FIsVIP := FIsVIP;
-          nTruck.FIndex := FIndex;
+            nTruck.FIsVIP := FIsVIP;
+            nTruck.FIndex := FIndex;
 
-          nTruck.FValue := FValue;
-          if nLine.FPeerWeight>0 then
-            nTruck.FDai := Trunc(FValue * 1000 / nLine.FPeerWeight);
+            nTruck.FValue := FValue;
+            if nLine.FPeerWeight>0 then
+              nTruck.FDai := Trunc(FValue * 1000 / nLine.FPeerWeight);
 
-          nTruck.FBill  := FBill;
-          nTruck.FHKBills := FHKBills;
+            nTruck.FBill  := FBill;
+            nTruck.FHKBills := FHKBills;
 
-          if FIsVIP = sFlag_TypeShip then
-            nTruck.FInFact := True;
-          //进队视为进厂
-        end else
+            if FIsVIP = sFlag_TypeShip then
+              nTruck.FInFact := True;
+            //进队视为进厂
+          end else
+          begin
+            {$IFDEF DEBUG}
+            WriteLog(Format('车辆[ %s ]出队.', [nTruck.FTruck]));
+            {$ENDIF}
+
+            TruckOutofQueue(nTruck.FTruck);
+            //未进厂车辆超时
+          end;
+        end
+        else
         begin
-          {$IFDEF DEBUG}
-          WriteLog(Format('车辆[ %s ]出队.', [nTruck.FTruck]));
-          {$ENDIF}
+          if (FInFact or ((GetTickCount - nTruck.FInTime) <
+             FParam.FInTimeoutEx * 60 * 1000)) or (FIsVIP = sFlag_TypeShip) then
+          begin
+            if FInFact and (not nTruck.FInFact) then
+              FTruckChanged := True;
+            //xxxxx
 
-          TruckOutofQueue(nTruck.FTruck);
-          //未进厂车辆超时
+            nTruck.FEnable := True;
+            nTruck.FInFact := FInFact;
+            nTruck.FInLade := FInLade;
+
+            nTruck.FIsVIP := FIsVIP;
+            nTruck.FIndex := FIndex;
+
+            nTruck.FValue := FValue;
+            if nLine.FPeerWeight>0 then
+              nTruck.FDai := Trunc(FValue * 1000 / nLine.FPeerWeight);
+
+            nTruck.FBill  := FBill;
+            nTruck.FHKBills := FHKBills;
+
+            if FIsVIP = sFlag_TypeShip then
+              nTruck.FInFact := True;
+            //进队视为进厂
+          end else if ((GetTickCount - nTruck.FInTime) < FParam.FInTimeout * 60 * 1000)  then
+          begin
+            WriteLog(Format('车辆[ %s ]出队后重新排队.', [nTruck.FTruck]));
+            
+            TruckOutofQueueEx(nTruck.FTruck);
+          end
+          else
+          begin
+            {$IFDEF DEBUG}
+            WriteLog(Format('车辆[ %s ]出队.', [nTruck.FTruck]));
+            {$ENDIF}
+
+            TruckOutofQueue(nTruck.FTruck);
+            //未进厂车辆超时
+          end;
         end;
 
         FTruckPool[j].FEnable := False;
@@ -1604,6 +1657,14 @@ begin
       nList[nIdx] := nTruck;
     end;
   end;
+end;
+
+procedure TTruckQueueDBReader.TruckOutofQueueEx(const nTruck: string);
+var nStr: string;
+begin
+  nStr := ' Update %s Set T_Valid=''%s'',T_InTime=''%s'', T_InQueue=Null Where T_Truck=''%s''';
+  nStr := Format(nStr, [sTable_ZTTrucks, sFlag_Yes,sField_SQLServer_Now, nTruck]);
+  gDBConnManager.WorkerExec(FDBConn, nStr);
 end;
 
 initialization

@@ -105,7 +105,7 @@ begin
   {$IFDEF UseMDate}
     if FJBWhere = '' then
     begin
-      Result := Result + 'Where (D_MDate>=''$S'' and D_MDate <''$End'')';
+      Result := Result + 'Where (isunll(D_MDate,D_InTime)>=''$S'' and isnull(D_MDate,D_InTime) <''$End'')';
 
       if nWhere <> '' then
         Result := Result + ' And (' + nWhere + ')';

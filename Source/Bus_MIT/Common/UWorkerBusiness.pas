@@ -1340,6 +1340,7 @@ begin
             SF('O_Memo', FListA.Values['Memo']),
             SF('O_PrintBD', FListA.Values['PrintBD']),
             {$IFDEF UseWXERP}
+            SF('O_WebOrderID', FListA.Values['WebOrderID']),
             SF('O_RestValue', StrToFloatDef(FListA.Values['RestValue'],0),sfVal),
             {$ENDIF}
             SF('O_expiretime', FListA.Values['expiretime'],sfDateTime)

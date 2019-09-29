@@ -540,7 +540,7 @@ begin
     wParam.Clear;
     wParam.Values['token']     := Ftoken;
 
-    wParam.Values['starttime'] := DateTime2Str(IncMonth(Now,-2));
+    wParam.Values['starttime'] := DateTime2Str(IncMonth(Now,-12));
     wParam.Values['endtime']   := DateTime2Str(Now);
 
     if FListA.Text <> '' then
@@ -550,7 +550,7 @@ begin
     WriteLog('查询销售订单入参：' + wParam.Text);
 
     nDataStream.AddFormField('token', Ftoken);
-    nDataStream.AddFormField('starttime', DateTime2Str(IncMonth(Now,-2)));
+    nDataStream.AddFormField('starttime', DateTime2Str(IncMonth(Now,-12)));
 
 
     if FListA.Text <> '' then

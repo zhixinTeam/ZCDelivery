@@ -425,8 +425,13 @@ begin
   for nIdx:=Low(nTrucks) to High(nTrucks) do
   with nTrucks[nIdx] do
   begin
+    {$IFDEF UseOneTruckIn}
+      if FStatus = sFlag_TruckNone then Continue;
+      //未进厂
+    {$ELSE}
     if (FStatus = sFlag_TruckNone) or (FStatus = sFlag_TruckIn) then Continue;
     //未进长,或已进厂
+    {$ENDIF}
 
     nStr := '车辆[ %s ]下一状态为:[ %s ],进厂刷卡无效.';
     nStr := Format(nStr, [FTruck, TruckStatusToStr(FNextStatus)]);

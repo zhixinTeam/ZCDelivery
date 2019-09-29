@@ -177,7 +177,7 @@
    //启用车牌识别
   {$DEFINE UseLBCModbus}
   //启用链板秤装车
-  {$DEFINE FixLoad}
+  {.$DEFINE FixLoad}
   //转子秤定制装车
  {$DEFINE MoreNumZDLine}
   //数量达一定值指定通道
@@ -193,6 +193,8 @@
 //采购未完成不能再开单
  {$DEFINE UseMDate}
 //采购车辆查询使用毛重时间查询 
+ {$DEFINE UseOneTruckIn}
+//使用一次进厂
 {$ENDIF}
 
 
