@@ -163,6 +163,7 @@ type
     function GetOrderInfoEx(var nData: string): Boolean;
     function SynWxOrderPound(var nData: string): Boolean;
     function GetSaleInfo(var nData: string): Boolean;
+    function GetSaleInfo_One(var nData: string): Boolean;
     function SynWxSalePound(var nData: string): Boolean;
     function GetHYInfo(var nData: string): Boolean;
     function SynWxPoundKW(var nData: string): Boolean;
@@ -441,6 +442,7 @@ begin
    cBC_GetPoundKW              : Result := SynWxPoundKW(nData);
    cBC_GetOrderTruckNum        : Result := SynOrderTruckNum(nData);
    cBC_GetSaleTruckNum         : Result := SynSaleTruckNum(nData);
+   cBC_GetSaleInfoOne          : Result := GetSaleInfo_One(nData);
    {$ENDIF}
   else
     begin
@@ -7151,7 +7153,7 @@ begin
         begin
           OneJo  := SO(ArrsJa.S[nIdx]);
 
-          if Pos('袋',OneJo.S['name']) > 0 then
+          if Pos('袋',OneJo.S['specification']) > 0 then
             nType := 'D'
           else
             nType := 'S';
@@ -7615,11 +7617,6 @@ begin
 
             ArrsJaSub  := OneJo.A['products'];
 
-            if Pos('袋',SO(ArrsJaSub.S[0]).S['product_uom']) > 0 then
-              nType := '袋装'
-            else
-              nType := '散装';
-
             if StrToFloatDef(SO(ArrsJaSub.S[0]).S['remainder'],0) <> 0 then
             begin
               //
@@ -7636,6 +7633,11 @@ begin
               nStockName := SO(ArrsJaSub.S[0]).S['specification']
             else
               nStockName := SO(ArrsJaSub.S[0]).S['product_name'];
+
+            if Pos('袋',nStockName) > 0 then
+              nType := '袋装'
+            else
+              nType := '散装';
 
             nStr := MakeSQLByStr([SF('O_Order', OneJo.S['ordername']),
                 SF('O_Factory', ''),
@@ -7754,7 +7756,7 @@ end;
 
 function TBusWorkerBusinessHHJY.SynWxSalePound(var nData: string): Boolean;
 var
-  nStr, szUrl, nSQL, nType, nDate : string;
+  nStr, szUrl, nSQL, nType, nDate, nInTime : string;
   ReJo, OneJo : ISuperObject;
   ArrsJa: TSuperArray;
   wParam: TStrings;
@@ -7791,8 +7793,9 @@ begin
       end;
 
       try
-        nPDate := FieldByName('P_PDate').AsDateTime;
-        nMDate := FieldByName('P_MDate').AsDateTime;
+        nInTime := FieldByName('L_InTime').AsString;
+        nPDate  := FieldByName('P_PDate').AsDateTime;
+        nMDate  := FieldByName('P_MDate').AsDateTime;
         if nMDate > nPDate then
           nDate := FieldByName('P_MDate').AsString
         else
@@ -7803,8 +7806,12 @@ begin
       if Length(Trim(nDate)) <= 10 then
         nDate := nDate + ' 00:00:01';
 
+      if Length(Trim(nInTime)) <= 10 then
+        nInTime := nInTime + ' 00:00:01';
+
       wParam.Values['yktorderno']    := FieldByName('L_ID').AsString;
       wParam.Values['batchno']       := FieldByName('L_HYDan').AsString;
+      wParam.Values['approachtime']  := nInTime;
       wParam.Values['ordername']     := FieldByName('O_Order').AsString;
       wParam.Values['weightime']     := nDate;
       wParam.Values['trucknumber']   := FieldByName('P_Truck').AsString;
@@ -7822,6 +7829,7 @@ begin
       nDataStream.AddFormField('token', Ftoken);
       nDataStream.AddFormField('yktorderno', FieldByName('L_ID').AsString);
       nDataStream.AddFormField('batchno',    FieldByName('L_HYDan').AsString);
+      nDataStream.AddFormField('approachtime', nInTime);
       nDataStream.AddFormField('ordername', FieldByName('O_Order').AsString);
       nDataStream.AddFormField('weightime', nDate);
       nDataStream.AddFormField('trucknumber', Ansitoutf8(FieldByName('P_Truck').AsString));
@@ -8439,6 +8447,278 @@ begin
     wParam.Free;
   end;
 end;
+
+function TBusWorkerBusinessHHJY.GetSaleInfo_One(
+  var nData: string): Boolean;
+var nStr, nProStr, nMatStr, nYearStr,nSQL: string;
+    nO_Valid, nStockName : string;
+    nValue: Double;
+    nYearMonth,szUrl, nType : string;
+    ReJo, OneJo : ISuperObject;
+    ArrsJa,ArrsJaSub: TSuperArray;
+    wParam: TStrings;
+    ReStream,PostStream:TStringstream;
+    nIdx: Integer;
+    nYear, nMonth, nDays : Word;
+    nDataStream: TMsMultiPartFormDataStream;
+    nOut: TWorkerBusinessCommand;
+    nOrderName,nToken:string;
+function GetLoginToken: string;
+var
+  nStr, szUrl: string;
+  ReJo, ReSubJo : ISuperObject;
+  ArrsJa: TSuperArray;
+  wParam: TStrings;
+  ReStream:TStringstream;
+begin
+  Result   := '';
+  wParam   := TStringList.Create;
+  ReStream := TStringstream.Create('');
+
+  try
+    wParam.Clear;
+    wParam.Values['username'] := gSysParam.FWXZhangHu;
+    wParam.Values['password'] := gSysParam.FWXMiMa;
+
+    szUrl := gSysParam.FWXERPUrl+'/login';
+    FidHttp.Request.ContentType := 'application/x-www-form-urlencoded';
+    FidHttp.Post(szUrl, wParam, ReStream);
+    nStr := ReStream.DataString;
+    nStr := UTF8Decode(ReStream.DataString);
+    nStr := UnicodeToChinese(nStr);
+
+    if nStr <> '' then
+    begin
+      ReJo    := SO(nStr);
+      ReSubJo := SO(ReJo.S['Response']);
+      if ReSubJo.S['token'] <> '' then
+      begin
+        Result := ReSubJo.S['token'];
+      end
+      else
+      begin
+        Result := '';
+      end;
+    end;
+  finally
+    ReStream.Free;
+    wParam.Free;
+  end;
+end;
+begin
+  Result := True;
+  nToken := '';
+  nToken := GetLoginToken;
+  if nToken <> '' then
+  begin
+    wParam      := TStringList.Create;
+    ReStream    := TStringstream.Create('');
+    nDataStream := TMsMultiPartFormDataStream.Create;
+
+    FListA.Text := PackerDecodeStr(FIn.FData);
+    nOrderName  := PackerDecodeStr(FIn.FData);
+    try
+      wParam.Clear;
+      wParam.Values['token']     := nToken;
+
+      wParam.Values['starttime'] := DateTime2Str(IncMonth(Now,-12));
+      wParam.Values['endtime']   := DateTime2Str(Now);
+
+      if FListA.Text <> '' then
+        wParam.Values['ordername'] := FListA.Text;
+
+      nStr := 'token:'+Ftoken;
+      WriteLog('查询销售订单入参：' + wParam.Text);
+
+      nDataStream.AddFormField('token', Ftoken);
+      nDataStream.AddFormField('starttime', DateTime2Str(IncMonth(Now,-12)));
+
+
+      if FListA.Text <> '' then
+      begin
+        nDataStream.AddFormField('endtime', DateTime2Str(Now));
+        nDataStream.AddFormField('ordername', Ansitoutf8(FListA.Text));
+      end
+      else
+        nDataStream.AddFormField('endtime', DateTime2Str(Now) + CRLF);
+      nDataStream.done;
+
+      szUrl := gSysParam.FWXERPUrl + '/saleorder';
+      nStr      := Ansitoutf8(wParam.Text);
+      PostStream:= TStringStream.Create(nStr);
+
+      FIdHttp.HTTPOptions:=FIdHttp.HTTPOptions+[hoKeepOrigProtocol];
+      FidHttp.ProtocolVersion:= pv1_1;
+      FidHttp.Request.ContentType := nDataStream.RequestContentType;
+      FidHttp.Post(szUrl, nDataStream, ReStream);
+      nStr := ReStream.DataString;
+      nStr := UTF8Decode(ReStream.DataString);
+      nStr := UnicodeToChinese(nStr);
+
+
+      WriteLog('销售订单出参：' + nStr);
+      FListA.Clear;
+      FListC.Clear;
+      FListD.Clear;
+      if nStr <> '' then
+      begin
+        ReJo    := SO(nStr);
+        ReJo    := SO(ReJo.S['Response']);
+        ArrsJa  := ReJo.A['Infos'];
+        if ArrsJa <> nil then
+        begin
+          if ArrsJa.Length = 0 then
+          begin
+            WriteLog('此期间无销售订单');
+            Result     := True;
+            FOut.FData :='';
+            FOut.FBase.FResult := True;
+          end
+          else
+          begin
+            for nIdx := 0 to ArrsJa.Length - 1 do
+            begin
+              OneJo := SO(ArrsJa.S[nIdx]);
+
+              ArrsJaSub  := OneJo.A['products'];
+
+              if Pos('袋',SO(ArrsJaSub.S[0]).S['product_uom']) > 0 then
+                nType := '袋装'
+              else
+                nType := '散装';
+
+              if StrToFloatDef(SO(ArrsJaSub.S[0]).S['remainder'],0) <> 0 then
+              begin
+                //
+              end;
+
+              nO_Valid := 'Y';
+              if OneJo.B['is_closed'] then
+                nO_Valid := 'N'
+              else
+                nO_Valid := 'Y';
+
+              if (Trim(SO(ArrsJaSub.S[0]).S['specification']) <> 'null')
+                and (Trim(SO(ArrsJaSub.S[0]).S['specification']) <> '') then
+                nStockName := SO(ArrsJaSub.S[0]).S['specification']
+              else
+                nStockName := SO(ArrsJaSub.S[0]).S['product_name'];
+
+              nStr := MakeSQLByStr([SF('O_Order', OneJo.S['ordername']),
+                  SF('O_Factory', ''),
+                  SF('O_CusName', OneJo.S['partner_name']),
+                  SF('O_ConsignCusName', ''),
+                  SF('O_StockName', nStockName),
+                  SF('O_StockType', nType),
+                  SF('O_Lading', '买方自提'),
+                  SF('O_CusPY', GetPinYinOfStr(OneJo.S['partner_name'])),
+                  SF('O_PlanAmount', FloatToStr(SO(ArrsJaSub.S[0]).D['product_qty'])),        //数量
+                  SF('O_PlanDone', '0'),
+                  SF('O_PlanRemain', FloatToStr(SO(ArrsJaSub.S[0]).D['remainder'])),          //剩余未出库量
+                  SF('O_PlanBegin', StrToDateDef(OneJo.S['confirmation_date'],Now),sfDateTime),
+                  SF('O_PlanEnd', StrToDateDef(OneJo.S['confirmation_date'],Now),sfDateTime),
+                  SF('O_Company', ''),
+                  SF('O_Depart', ''),
+                  SF('O_SaleMan', OneJo.S['seller']),
+                  SF('O_Remark', ''),
+                  SF('O_Price', SO(ArrsJaSub.S[0]).D['price_unit'],sfVal),
+                  SF('O_Valid', nO_Valid),
+                  SF('O_Freeze', 0, sfVal),
+                  SF('O_HasDone', 0, sfVal),
+                  SF('O_CompanyID', ''),
+                  SF('O_CusID', OneJo.S['partner_name']),
+                  SF('O_StockID', SO(ArrsJaSub.S[0]).S['productid']),
+                  SF('O_PackingID', ''),
+                  SF('O_FactoryID', ''),
+                  SF('O_Create', Now,sfDateTime),
+                  SF('O_Modify', Now,sfDateTime)
+                  ], sTable_SalesOrder, '', True);
+              FListA.Add(nStr);
+
+              nStr := SF('O_Order', OneJo.S['ordername']);
+              nStr := MakeSQLByStr([
+                  SF('O_Factory', ''),
+                  SF('O_CusName', OneJo.S['partner_name']),
+                  SF('O_ConsignCusName', ''),
+                  SF('O_StockName', nStockName),
+                  SF('O_StockType', nType),
+                  SF('O_Lading', '买方自提'),
+                  SF('O_CusPY',      GetPinYinOfStr(OneJo.S['partner_name'])),
+                  SF('O_PlanAmount', FloatToStr(SO(ArrsJaSub.S[0]).D['product_qty'])),
+                  SF('O_PlanDone', '0'),
+                  SF('O_PlanRemain',FloatToStr(SO(ArrsJaSub.S[0]).D['remainder'])),
+                  SF('O_PlanBegin', StrToDateDef(OneJo.S['confirmation_date'],Now),sfDateTime),
+                  SF('O_PlanEnd', StrToDateDef(OneJo.S['confirmation_date'],Now),sfDateTime),
+                  SF('O_Company', ''),
+                  SF('O_Depart', ''),
+                  SF('O_SaleMan', OneJo.S['seller']),
+                  SF('O_Remark', ''),
+                  SF('O_Price', SO(ArrsJaSub.S[0]).D['price_unit'],sfVal),
+                  SF('O_Valid',  nO_Valid),
+                  SF('O_Freeze', 0, sfVal),
+                  SF('O_HasDone', 0, sfVal),
+                  SF('O_CompanyID', ''),
+                  SF('O_CusID',   OneJo.S['partner_name']),
+                  SF('O_StockID', SO(ArrsJaSub.S[0]).S['productid']),
+                  SF('O_PackingID', ''),
+                  SF('O_FactoryID', ''),
+                  SF('O_Create', Now,sfDateTime),
+                  SF('O_Modify', Now,sfDateTime)
+                  ], sTable_SalesOrder, nStr, False);
+              FListC.Add(nStr);
+
+              nStr := 'Select * from %s where O_Order = ''%s'' ';
+              nStr := Format(nStr, [sTable_SalesOrder, OneJo.S['ordername']]);
+              FListD.Add(nStr);
+            end;
+          end;
+        end
+        else
+        begin
+          WriteLog('获取销售订单失败');
+          Result     := False;
+          FOut.FData :='获取销售订单失败';
+          FOut.FBase.FResult := True;
+        end;
+      end;
+
+      if (FListD.Count > 0) then
+      try
+        FDBConn.FConn.BeginTrans;
+        //开启事务
+        for nIdx:=0 to FListD.Count - 1 do
+        begin
+          with gDBConnManager.WorkerQuery(FDBConn,FListD[nIdx]) do
+          begin
+            if nIdx = 0 then
+            begin
+              nSQL := ' Update %s Set O_Valid = ''%s'' where  O_Order = ''%s'' ';
+              nSQL := Format(nSQL, [sTable_SalesOrder,'N', nOrderName]);
+              gDBConnManager.WorkerExec(FDBConn, nSQL);
+            end;
+            if RecordCount>0 then
+            begin
+              gDBConnManager.WorkerExec(FDBConn,FListC[nIdx]);
+            end else
+            begin
+              gDBConnManager.WorkerExec(FDBConn,FListA[nIdx]);
+            end;
+          end;
+        end;
+        FDBConn.FConn.CommitTrans;
+      except
+        if FDBConn.FConn.InTransaction then
+          FDBConn.FConn.RollbackTrans;
+        raise;
+      end;
+    finally
+      ReStream.Free;
+      nDataStream.Free;
+      PostStream.Free;
+      wParam.Free;
+    end;
+  end;
+end;
 {$ENDIF}
 
 function TBusWorkerBusinessHHJY.GetOrderInfoEx(var nData: string): Boolean;
@@ -8680,6 +8960,7 @@ begin
     wParam.Free;
   end;
 end;
+
 
 initialization
   gBusinessWorkerManager.RegisteWorker(TBusWorkerBusinessHHJY, sPlug_ModuleBus);
