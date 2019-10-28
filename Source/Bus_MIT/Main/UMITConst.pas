@@ -74,6 +74,10 @@ type
 
     FDisplayDPI : Integer;                           //屏幕分辨率
     FAutoMin    : Boolean;                           //自动最小化
+
+    FWXERPUrl   : string;                            //问信服务器地址
+    FWXZhangHu  : string;                            //问信账户
+    FWXMiMa     : string;                            //问信密码
   end;
   //系统参数
 

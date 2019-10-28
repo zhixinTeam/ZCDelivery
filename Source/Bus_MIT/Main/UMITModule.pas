@@ -91,9 +91,21 @@ begin
 
       while not Eof do
       begin
-        if Fields[1].AsString = sFlag_FactoryID then
+        nStr := Fields[1].AsString;
+        if nStr = sFlag_FactoryID then
           gSysParam.FFactID := Fields[0].AsString;
         //fact id
+        if nStr = sFlag_WXErpUrl then
+          gSysParam.FWXERPUrl := Fields[0].AsString;
+         //问信服务地址
+
+        if nStr = sFlag_WXErpZhangHu then
+          gSysParam.FWXZhangHu := Fields[0].AsString;
+         //问信账户
+
+        if nStr = sFlag_WXErpMima then
+          gSysParam.FWXMiMa := Fields[0].AsString;
+         //问信账户
 
         Next;
       end;

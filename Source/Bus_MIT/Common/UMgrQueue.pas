@@ -1120,14 +1120,31 @@ var nStr: string;
 begin
   if (FParam.FPoundQueue) and (FParam.FDelayQueue) then
   begin                                      //增加厂内依据过皮时间排队 20131114
-    nStr := ' Select * From %s  ' +
-            ' Where IsNull(T_Valid,''%s'')<>''%s'' And IsNull(T_PDate,'''')<>'''' ' +
-            ' Order By T_Index ASC,T_PDate ASC,T_InTime ASC';
+    if FParam.FInTimeoutEx = 0 then
+    begin
+      nStr := ' Select * From %s  ' +
+              ' Where IsNull(T_Valid,''%s'')<>''%s'' And IsNull(T_PDate,'''')<>'''' ' +
+              ' Order By T_Index ASC,T_PDate ASC,T_InTime ASC';
+    end
+    else
+    begin
+      nStr := ' Select * From %s  ' +
+              ' Where IsNull(T_Valid,''%s'')<>''%s'' And IsNull(T_PDate,'''')<>'''' ' +
+              ' Order By T_PDate ASC,T_InTime ASC';
+    end;
     nStr := Format(nStr, [sTable_ZTTrucks, sFlag_Yes, sFlag_No]);
   end else
   begin
-    nStr := 'Select * From %s Where IsNull(T_Valid,''%s'')<>''%s'' $Ext ' +
-            'Order By T_Index ASC,T_InFact ASC,T_InTime ASC';
+    if FParam.FInTimeoutEx = 0 then
+    begin
+      nStr := 'Select * From %s Where IsNull(T_Valid,''%s'')<>''%s'' $Ext ' +
+              'Order By T_Index ASC,T_InFact ASC,T_InTime ASC';
+    end
+    else
+    begin
+      nStr := 'Select * From %s Where IsNull(T_Valid,''%s'')<>''%s'' $Ext ' +
+              'Order By T_InFact ASC,T_InTime ASC';
+    end;
     nStr := Format(nStr, [sTable_ZTTrucks, sFlag_Yes, sFlag_No]);
 
     {++++++++++++++++++++++++++++++ 注意 +++++++++++++++++++++++++
@@ -1662,7 +1679,16 @@ end;
 procedure TTruckQueueDBReader.TruckOutofQueueEx(const nTruck: string);
 var nStr: string;
 begin
-  nStr := ' Update %s Set T_Valid=''%s'',T_InTime=''%s'', T_InQueue=Null Where T_Truck=''%s''';
+  nStr := 'Select T_Index From %s where T_Truck=''%s'' ';
+  nStr := Format(nStr, [sTable_ZTTrucks, nTruck]);
+
+  with gDBConnManager.WorkerQuery(FDBConn, nStr) do
+  begin
+    if FieldByName('T_Index').AsInteger = 1000 then
+      Exit;
+  end;
+
+  nStr := ' Update %s Set T_Valid=''%s'',T_InTime=%s, T_InQueue=Null, T_Index = 1000 Where T_Truck=''%s''';
   nStr := Format(nStr, [sTable_ZTTrucks, sFlag_Yes,sField_SQLServer_Now, nTruck]);
   gDBConnManager.WorkerExec(FDBConn, nStr);
 end;

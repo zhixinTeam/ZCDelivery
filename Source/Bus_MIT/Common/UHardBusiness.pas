@@ -13,7 +13,8 @@ uses
   {$IFDEF MultiReplay}UMultiJS_Reply, {$ELSE}UMultiJS, {$ENDIF}
   UMgrHardHelper, U02NReader, UMgrERelay, UMgrRemotePrint,UMgrSendCardNo,
   {$IFDEF UseLBCModbus}UMgrLBCModusTcp, {$ENDIF}
-  UMgrLEDDisp, UMgrRFID102, UMgrTTCEM100, UMgrVoiceNet, UMgrremoteSnap;
+  UMgrLEDDisp, UMgrRFID102, UMgrTTCEM100, UMgrVoiceNet, UMgrremoteSnap,
+  uSuperObject,MsMultiPartFormData,IdHTTP;
 
 procedure WhenReaderCardArrived(const nReader: THHReaderItem);
 procedure WhenHYReaderCardArrived(const nReader: PHYReaderItem);
@@ -50,6 +51,9 @@ const
   sPost_Out  = 'out';
   sPost_ZT   = 'zt';
   sPost_FH   = 'fh';
+
+var
+  Ftoken : string;
 
 //Date: 2014-09-15
 //Parm: 命令;数据;参数;输出
@@ -365,6 +369,156 @@ begin
   //xxxxx
 end;
 
+function UnicodeToChinese(inputstr: string): string;
+var
+    i: Integer;
+    index: Integer;
+    temp, top, last: string;
+begin
+    index := 1;
+    while index >= 0 do
+    begin
+        index := Pos('\u', inputstr) - 1;
+        if index < 0 then
+        begin
+            last := inputstr;
+            Result := Result + last;
+            Exit;
+        end;
+        top := Copy(inputstr, 1, index); // 取出 编码字符前的 非 unic 编码的字符，如数字
+        temp := Copy(inputstr, index + 1, 6); // 取出编码，包括 \u,如\u4e3f
+        Delete(temp, 1, 2);
+        Delete(inputstr, 1, index + 6);
+        Result := Result + top + WideChar(StrToInt('$' + temp));
+    end;
+end;
+
+//获取订单状态是否关闭
+function GetSaleInfo_One(const nOrderNo: string): Boolean;
+var nStr, nProStr, nMatStr, nYearStr,nSQL: string;
+    nO_Valid, nStockName : string;
+    nValue: Double;
+    nYearMonth, szUrl, nType : string;
+    ReJo, OneJo : ISuperObject;
+    ArrsJa,ArrsJaSub: TSuperArray;
+    ReStream:TStringstream;
+    nYear, nMonth, nDays : Word;
+    nDataStream: TMsMultiPartFormDataStream;
+    nOut: TWorkerBusinessCommand;
+    nOrderName:string;
+    FListA: TStrings;
+    FIdHttp : TIdHTTP;
+function GetLoginToken: Boolean;
+var
+  nStr, szUrl: string;
+  ReJo, ReSubJo : ISuperObject;
+  ArrsJa: TSuperArray;
+  wParam: TStrings;
+  ReStream:TStringstream;
+begin
+  Result   := False;
+  wParam   := TStringList.Create;
+  ReStream := TStringstream.Create('');
+
+  try
+    wParam.Clear;
+    wParam.Values['username'] := gSysParam.FWXZhangHu;
+    wParam.Values['password'] := gSysParam.FWXMiMa;
+
+    szUrl := gSysParam.FWXERPUrl+'/login';
+    FidHttp.Request.ContentType := 'application/x-www-form-urlencoded';
+    FidHttp.Post(szUrl, wParam, ReStream);
+    nStr := ReStream.DataString;
+    nStr := UTF8Decode(ReStream.DataString);
+    nStr := UnicodeToChinese(nStr);
+
+    if nStr <> '' then
+    begin
+      ReJo    := SO(nStr);
+      ReSubJo := SO(ReJo.S['Response']);
+      if ReSubJo.S['token'] <> '' then
+      begin
+        Ftoken := ReSubJo.S['token'];
+        Result := True;
+      end
+      else
+      begin
+        Result := False;
+      end;
+    end;
+  finally
+    ReStream.Free;
+    wParam.Free;
+  end;
+end;
+begin
+  Result := True;
+
+  FidHttp                := TIdHTTP.Create(nil);
+  FidHttp.ConnectTimeout := 10 * 1000;
+  FidHttp.ReadTimeout    := 10 * 1000;
+
+  FListA      := TStringList.Create;
+  ReStream    := TStringstream.Create('');
+  nDataStream := TMsMultiPartFormDataStream.Create;
+
+  try
+    if GetLoginToken then
+    begin
+      nDataStream.AddFormField('token', Ftoken);
+      nDataStream.AddFormField('starttime', DateTime2Str(IncMonth(Now,-12)));
+      nDataStream.AddFormField('ordername', Ansitoutf8(nOrderNo));
+      nDataStream.AddFormField('endtime', DateTime2Str(Now) + CRLF);
+      nDataStream.done;
+
+      szUrl := gSysParam.FWXERPUrl + '/saleorder';
+      FIdHttp.HTTPOptions:=FIdHttp.HTTPOptions+[hoKeepOrigProtocol];
+      FidHttp.ProtocolVersion:= pv1_1;
+      FidHttp.Request.ContentType := nDataStream.RequestContentType;
+      FidHttp.Post(szUrl, nDataStream, ReStream);
+      nStr := ReStream.DataString;
+      nStr := UTF8Decode(ReStream.DataString);
+      nStr := UnicodeToChinese(nStr);
+
+      FListA.Clear;
+      if nStr <> '' then
+      begin
+        ReJo    := SO(nStr);
+        ReJo    := SO(ReJo.S['Response']);
+        ArrsJa  := ReJo.A['Infos'];
+        if ArrsJa <> nil then
+        begin
+          if ArrsJa.Length = 0 then
+          begin
+            Result  := False;
+            Exit;
+          end
+          else
+          begin
+            OneJo := SO(ArrsJa.S[0]);
+
+            if OneJo.B['is_closed'] then
+              Result := False
+            else
+              Result := True;
+          end;
+        end
+        else
+        begin
+          Result  := False;
+        end;
+      end;
+    end
+    else
+    begin
+      Result := True;
+    end;
+  finally
+    ReStream.Free;
+    nDataStream.Free;
+    FreeAndNil(FidHttp);
+  end;
+end;
 
 //Date: 2012-4-22
 //Parm: 卡号
@@ -521,6 +675,16 @@ begin
     Exit;
   end;
   //采购磁卡直接抬杆
+
+  {$IFDEF UseWXERP}
+    if not GetSaleInfo_One(nTrucks[0].FZhiKa) then
+    begin
+      nStr := '合同单号[ %s ]已被关闭,不能进厂提货.';
+      nStr := Format(nStr, [nTrucks[0].FZhiKa]);
+      WriteHardHelperLog(nStr, sPost_In);
+    //  Exit;
+    end;
+  {$ENDIF}
 
   nPLine := nil;
   //nPTruck := nil;
@@ -1522,12 +1686,22 @@ begin
   for nIdx:=Low(nTrucks) to High(nTrucks) do
   with nTrucks[nIdx] do
   begin
+    {$IFDEF AllowMultiM}
+    if FStatus = sFlag_TRuckBFM then
+    begin
+      FStatus := sFlag_TruckFH;
+    end;
+    //过重后允许返回(状态回溯至成皮重,防止过快出厂)
+    {$ENDIF}
+    
     if (FStatus = sFlag_TruckFH) or (FNextStatus = sFlag_TruckFH) then Continue;
     //未装或已装
 
     nStr := '车辆[ %s ]下一状态为:[ %s ],无法放灰.';
     nStr := Format(nStr, [FTruck, TruckStatusToStr(FNextStatus)]);
-    
+    //小屏显示
+    gERelayManager.ShowTxt(nTunnel, nStr);
+
     WriteHardHelperLog(nStr);
     Exit;
   end;

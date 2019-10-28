@@ -412,11 +412,11 @@ begin
       Exit;
     end;
 
-    if FieldByName('O_Valid').AsString <> sFlag_Yes then
-    begin
-      nData := Format('订单[ %s ]已无效.', [FListA.Values['ZhiKa']]);
-      Exit;
-    end;
+//    if FieldByName('O_Valid').AsString <> sFlag_Yes then
+//    begin
+//      nData := Format('订单[ %s ]已无效.', [FListA.Values['ZhiKa']]);
+//      Exit;
+//    end;
 
     with FListB do
     begin
@@ -428,10 +428,12 @@ begin
       Values['O_CusPY']    := FieldByName('O_CusPY').AsString;
       Values['Company']      := FieldByName('O_Company').AsString;
 
+      {$IFNDEF UseWXERP}
       nStr := FieldByName('O_StockType').AsString;
       if Pos('袋',nStr) > 0 then
            Values['Type'] := sFlag_Dai
       else Values['Type'] := sFlag_San;
+      {$ENDIF}
 
       {$IFDEF SyncDataByWSDL}
       Values['ConsignCusName']       := FieldByName('O_ConsignCusName').AsString;
@@ -457,7 +459,16 @@ begin
       end;
     {$ENDIF}
   end;
-  
+  {$IFDEF UseWXERP}
+  nStr := ' Select D_Memo From %s Where D_Name = ''%s''  And D_ParamB = ''%s'' ';
+  nStr := Format(nStr, [sTable_SysDict, sFlag_StockItem,FListB.Values['StockNo']]);
+
+  with gDBConnManager.WorkerQuery(FDBConn, nStr) do
+  if RecordCount > 0 then
+  begin
+    FListB.Values['Type'] := Fields[0].AsString;
+  end;
+  {$ENDIF}
   Result := True;
   //verify done
 end;
@@ -470,6 +481,7 @@ var nStr,nSQL,nPreFix: string;
     nPacker: TBusinessPackerBase;
     nIn, nOut, nTmp: TWorkerBusinessCommand;
     nLine: string;
+    nLimitValue,nLeaveValue: Double;
 begin
   Result := False;
   FListA.Text := PackerDecodeStr(FIn.FData);
@@ -543,6 +555,60 @@ begin
     {$ENDIF}
   {$ENDIF}
 
+  {$IFDEF UseTruckDayXT}
+  //按客户日限额
+  nSQL := 'select D_Value from %s where D_Name=''%s'' and D_ParamB=''%s''';
+  nSQL := Format(nSQL,[sTable_SysDict, sFlag_CusLoadLimit, FListB.Values['StockNo']]);
+  with gDBConnManager.WorkerQuery(FDBConn, nSQL) do
+  begin
+    if recordcount > 0 then
+      if FieldByName('D_Value').AsString = sFlag_Yes then  //启用发货限制
+      begin
+        nSQL := 'select * from %s where L_CusName=''%s'' and L_StockNo=''%s''';
+        nSQL := Format(nSQL,[sTable_CusLimit,FListB.Values['CusName'],FListB.Values['StockNo']]);
+        with gDBConnManager.WorkerQuery(FDBConn, nSQL) do
+        begin
+          if recordcount > 0 then
+          begin
+            nLimitValue := FieldByName('L_Value').AsFloat;
+            nSQL := 'Select sum(L_Value) as L_Value from %s where L_StockNo=''%s'''+
+                    ' and L_Date >= ''%s'' and L_Date < ''%s'' and L_CusId=''%s''';
+            nSQL := Format(nSQL,[sTable_Bill,FListB.Values['StockNo'],
+                  Date2Str(Date,True)+' 08:00:00',Date2Str(Date+1,True)+' 08:00:00',
+                  FListB.Values['CusID']]);
+            with gDBConnManager.WorkerQuery(FDBConn, nSQL) do
+            begin
+              nLeaveValue := nLimitValue - FieldByName('L_Value').AsFloat;
+              if nLeaveValue <= 0 then
+              begin
+                nData := '客户限额:物料[ %s ]已超出日发货限量，无法开单';
+                nData := Format(nData,[FListB.Values['StockNO']+'-'+FListB.Values['StockName']]);
+                exit;
+              end
+              else
+              begin
+                if nLeaveValue < StrToFloat(FListA.Values['Value']) then
+                begin
+                  nData := '客户限额:当前客户物料[ %s ]'+#13#10+'单日发货量限额：[ %s ]吨'+#13#10 +
+                           '当前剩余配额：[ %s ]吨';
+                  nData := Format(nData,[FListB.Values['StockNO']+'-'+FListB.Values['StockName'],
+                            FloatToStr(nLimitValue),FloatToStr(nLeaveValue)]);
+                  Exit;
+                end;
+              end;
+            end;
+          end
+          else
+          begin      //如果没有记录则不允许提货
+//            nData := '用户 [ %s ] 禁提 [ %s ].';
+//            nData := Format(nData,[FListA.Values['CusName'],FListC.Values['StockNO']]);
+//            Exit;
+          end;
+        end;
+      end;
+  end;
+  {$ENDIF}
+
   FDBConn.FConn.BeginTrans;
   try
     FListC.Values['Group'] :=sFlag_BusGroup;
@@ -572,6 +638,10 @@ begin
             SF('L_StockName',  FListB.Values['StockName']),
             SF('L_Value',      FListA.Values['Value'], sfVal),
             SF('L_PreValue',   FListA.Values['Value'], sfVal),
+
+            {$IFDEF UseYSKDValue}
+            SF('L_KDValue',    FListA.Values['Value'], sfVal),
+            {$ENDIF}
 
             {$IFDEF PrintGLF}
             SF('L_PrintGLF',   FListA.Values['PrintGLF']),
