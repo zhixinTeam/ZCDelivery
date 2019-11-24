@@ -39,6 +39,9 @@ type
     procedure UpdateMsgNum(const nSuccess: Boolean; nLID: string);
     //更新消息状态
     procedure UpdateMsgNumEx(const nSuccess: Boolean; nLID: string; nPurType: string);
+    //同步6次失败的重新同步
+    procedure UpdateSynFailedClear;
+
     procedure DoSaveOutFactMsg;
     //执行出厂消息插入
     function SaveSaleOutFactMsg(nList: TStrings):Boolean;
@@ -189,7 +192,7 @@ begin
 
     Inc(FNumOutFactMsg);
 
-    if FNumOutFactMsg >= 600 then
+    if FNumOutFactMsg >= 900 then
       FNumOutFactMsg := 0;
 
     //--------------------------------------------------------------------------
@@ -213,6 +216,11 @@ begin
         TBusWorkerBusinessHHJY.CallMe(cBC_GetLoginToken,
                     gSysParam.FWXZhangHu,gSysParam.FWXMiMa, @nOut);
         TBusWorkerBusinessHHJY.CallMe(cBC_GetOrderInfoEx,'','',@nOut);
+      end;
+      if FNumOutFactMsg = 600 then
+      begin
+        //同步失败后重新上传
+        UpdateSynFailedClear;
       end;
 
       nStr:= ' select top 100 *, H_PurType from %s where H_SyncNum <= %d And H_Deleted <> ''%s''';
@@ -702,6 +710,22 @@ begin
     finally
       gDBConnManager.ReleaseConnection(nUpdateDBWorker);
     end;
+  end;
+end;
+
+procedure TMessageScanThread.UpdateSynFailedClear;
+var nStr: string;
+    nUpdateDBWorker: PDBWorker;
+begin
+  nUpdateDBWorker := nil;
+  try
+    nStr := ' Update %s set H_FailedNum = H_FailedNum + 1,  H_SyncNum = 0 '
+           +' where H_Deleted = ''N'' and H_FailedNum <= 10 and H_SyncNum > 5  ';
+    nStr:= Format(nStr,[sTable_HHJYSync]);
+    gDBConnManager.ExecSQL(nStr);
+    //更新为已处理
+  finally
+    gDBConnManager.ReleaseConnection(nUpdateDBWorker);
   end;
 end;
 

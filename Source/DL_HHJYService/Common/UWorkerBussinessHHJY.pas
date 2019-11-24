@@ -7578,7 +7578,7 @@ begin
       nDataStream.AddFormField('endtime', DateTime2Str(Now) + CRLF);
     nDataStream.done;
 
-    szUrl := gSysParam.FWXERPUrl + '/saleorder';
+    szUrl     := gSysParam.FWXERPUrl + '/saleorder';
     nStr      := Ansitoutf8(wParam.Text);
     PostStream:= TStringStream.Create(nStr);
 
@@ -7640,7 +7640,7 @@ begin
               nType := 'ɢװ';
 
             nStr := MakeSQLByStr([SF('O_Order', OneJo.S['ordername']),
-                SF('O_Factory', ''),
+                SF('O_Factory', OneJo.S['partner_area']),
                 SF('O_CusName', OneJo.S['partner_name']),
                 SF('O_ConsignCusName', ''),
                 SF('O_StockName', nStockName),
@@ -7672,7 +7672,7 @@ begin
 
             nStr := SF('O_Order', OneJo.S['ordername']);
             nStr := MakeSQLByStr([
-                SF('O_Factory', ''),
+                SF('O_Factory', OneJo.S['partner_area']),
                 SF('O_CusName', OneJo.S['partner_name']),
                 SF('O_ConsignCusName', ''),
                 SF('O_StockName', nStockName),
@@ -7756,7 +7756,7 @@ end;
 
 function TBusWorkerBusinessHHJY.SynWxSalePound(var nData: string): Boolean;
 var
-  nStr, szUrl, nSQL, nType, nDate, nInTime : string;
+  nStr, szUrl, nSQL, nType, nDate, nInTime,nTruckEmpty,nValue : string;
   ReJo, OneJo : ISuperObject;
   ArrsJa: TSuperArray;
   wParam: TStrings;
@@ -7779,7 +7779,7 @@ begin
     wParam.Clear;
     wParam.Values['token']   := Ftoken;
 
-    nSQL := ' select *,(P_MValue-P_PValue) as D_NetWeight From %s a, '+
+    nSQL := ' select *,(P_MValue-P_PValue) as D_NetWeight, isnull(L_TruckEmpty,''N'') as L_TruckEmpty  From %s a, '+
     ' %s b, %s c where a.O_Order=b.L_Order and b.L_ID=c.P_Bill and c.P_Bill = ''%s'' ';
 
     nSQL := Format(nSQL,[sTable_SalesOrder,sTable_Bill,sTable_PoundLog,FIn.FData]);
@@ -7793,15 +7793,24 @@ begin
       end;
 
       try
+        nTruckEmpty := FieldByName('L_TruckEmpty').AsString;
+        if  nTruckEmpty <> 'Y' then
+        begin
+          nValue := FieldByName('D_NetWeight').AsString;
+          if Trim(FieldByName('L_Type').AsString) = 'D' then
+          begin
+            nValue := FieldByName('L_Value').AsString;
+          end;
+        end
+        else
+          nValue := '0';
+
         nInTime := FieldByName('L_InTime').AsString;
         nPDate  := FieldByName('P_PDate').AsDateTime;
         nMDate  := FieldByName('P_MDate').AsDateTime;
-        if nMDate > nPDate then
-          nDate := FieldByName('P_MDate').AsString
-        else
-          nDate := FieldByName('P_PDate').AsString;
+        nDate   := FieldByName('L_OutFact').AsString;
       except
-          nDate := FieldByName('P_PDate').AsString;
+        nDate := FieldByName('L_OutFact').AsString;
       end;
       if Length(Trim(nDate)) <= 10 then
         nDate := nDate + ' 00:00:01';
@@ -7822,9 +7831,9 @@ begin
       begin
         wParam.Values['rotorweight'] := FieldByName('L_CKValue').AsString;
       end;
-      wParam.Values['weight']        := FieldByName('D_NetWeight').AsString;
+      wParam.Values['weight']        := nValue;
       wParam.Values['remainder']     := FloatToStr(StrToFLoatDef(FieldByName('O_PlanRemain').AsString,0)
-                                         - StrToFLoatDef(FieldByName('D_NetWeight').AsString,0));
+                                         - StrToFLoatDef(nValue,0));
 
       nDataStream.AddFormField('token', Ftoken);
       nDataStream.AddFormField('yktorderno', FieldByName('L_ID').AsString);
@@ -7841,9 +7850,9 @@ begin
         nDataStream.AddFormField('rotorweight', FieldByName('L_CKValue').AsString);
       end;
 
-      nDataStream.AddFormField('weight', FieldByName('D_NetWeight').AsString);
+      nDataStream.AddFormField('weight', nValue);
       nDataStream.AddFormField('remainder', FloatToStr(StrToFLoatDef(FieldByName('O_PlanRemain').AsString,0)
-                                         - StrToFLoatDef(FieldByName('D_NetWeight').AsString,0)) + CRLF);
+                                         - StrToFLoatDef(nValue,0)) + CRLF);
 
       nDataStream.done;
     end;
@@ -8605,7 +8614,7 @@ begin
                 nStockName := SO(ArrsJaSub.S[0]).S['product_name'];
 
               nStr := MakeSQLByStr([SF('O_Order', OneJo.S['ordername']),
-                  SF('O_Factory', ''),
+                  SF('O_Factory', OneJo.S['partner_area']),
                   SF('O_CusName', OneJo.S['partner_name']),
                   SF('O_ConsignCusName', ''),
                   SF('O_StockName', nStockName),
@@ -8637,7 +8646,7 @@ begin
 
               nStr := SF('O_Order', OneJo.S['ordername']);
               nStr := MakeSQLByStr([
-                  SF('O_Factory', ''),
+                  SF('O_Factory', OneJo.S['partner_area']),
                   SF('O_CusName', OneJo.S['partner_name']),
                   SF('O_ConsignCusName', ''),
                   SF('O_StockName', nStockName),
