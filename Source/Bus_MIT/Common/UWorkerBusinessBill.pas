@@ -10,8 +10,11 @@ interface
 uses
   Windows, Classes, Controls, DB, SysUtils, UBusinessWorker, UBusinessPacker,
   UWorkerBusiness, UBusinessConst, UMgrDBConn, ULibFun, UFormCtrl, UBase64,
-  USysLoger, USysDB, UMITConst;
+  USysLoger, USysDB, UMITConst, uSuperObject, MsMultiPartFormData, IdHTTP;
 
+var
+  Ftoken : string;
+  
 type
   TStockMatchItem = record
     FStock: string;         //品种
@@ -480,7 +483,7 @@ var nStr,nSQL,nPreFix: string;
     nWorker: TBusinessWorkerBase;
     nPacker: TBusinessPackerBase;
     nIn, nOut, nTmp: TWorkerBusinessCommand;
-    nLine: string;
+    nLine, nTime: string;
     nLimitValue,nLeaveValue: Double;
 begin
   Result := False;
@@ -557,7 +560,7 @@ begin
 
   {$IFDEF UseTruckDayXT}
   //按客户日限额
-  nSQL := 'select D_Value from %s where D_Name=''%s'' and D_ParamB=''%s''';
+  nSQL := ' select D_Value from %s where D_Name=''%s'' and D_ParamB=''%s'' ';
   nSQL := Format(nSQL,[sTable_SysDict, sFlag_CusLoadLimit, FListB.Values['StockNo']]);
   with gDBConnManager.WorkerQuery(FDBConn, nSQL) do
   begin
@@ -571,29 +574,37 @@ begin
           if recordcount > 0 then
           begin
             nLimitValue := FieldByName('L_Value').AsFloat;
-            nSQL := 'Select sum(L_Value) as L_Value from %s where L_StockNo=''%s'''+
-                    ' and L_Date >= ''%s'' and L_Date < ''%s'' and L_CusId=''%s''';
-            nSQL := Format(nSQL,[sTable_Bill,FListB.Values['StockNo'],
-                  Date2Str(Date,True)+' 08:00:00',Date2Str(Date+1,True)+' 08:00:00',
-                  FListB.Values['CusID']]);
-            with gDBConnManager.WorkerQuery(FDBConn, nSQL) do
+            if  nLimitValue > 0 then
             begin
-              nLeaveValue := nLimitValue - FieldByName('L_Value').AsFloat;
-              if nLeaveValue <= 0 then
-              begin
-                nData := '客户限额:物料[ %s ]已超出日发货限量，无法开单';
-                nData := Format(nData,[FListB.Values['StockNO']+'-'+FListB.Values['StockName']]);
-                exit;
-              end
+              if Trim(FieldByName('L_StartDate').AsString) <> '' then
+                nTime := Trim(FieldByName('L_StartDate').AsString)
               else
+                nTime := '08:00:00';
+
+              nSQL := 'Select sum(L_Value) as L_Value from %s where L_StockNo=''%s'''+
+                      ' and L_Date >= ''%s'' and L_Date < ''%s'' and L_CusId=''%s''';
+              nSQL := Format(nSQL,[sTable_Bill,FListB.Values['StockNo'],
+                    Date2Str(Date,True)+' '+nTime,Date2Str(Date+1,True)+' '+nTime,
+                    FListB.Values['CusID']]);
+              with gDBConnManager.WorkerQuery(FDBConn, nSQL) do
               begin
-                if nLeaveValue < StrToFloat(FListA.Values['Value']) then
+                nLeaveValue := nLimitValue - FieldByName('L_Value').AsFloat;
+                if nLeaveValue <= 0 then
                 begin
-                  nData := '客户限额:当前客户物料[ %s ]'+#13#10+'单日发货量限额：[ %s ]吨'+#13#10 +
-                           '当前剩余配额：[ %s ]吨';
-                  nData := Format(nData,[FListB.Values['StockNO']+'-'+FListB.Values['StockName'],
-                            FloatToStr(nLimitValue),FloatToStr(nLeaveValue)]);
-                  Exit;
+                  nData := '客户限额:物料[ %s ]已超出日发货限量，无法开单';
+                  nData := Format(nData,[FListB.Values['StockNO']+'-'+FListB.Values['StockName']]);
+                  exit;
+                end
+                else
+                begin
+                  if nLeaveValue < StrToFloat(FListA.Values['Value']) then
+                  begin
+                    nData := '客户限额:当前客户物料[ %s ]'+#13#10+'单日发货量限额：[ %s ]吨'+#13#10 +
+                             '当前剩余配额：[ %s ]吨';
+                    nData := Format(nData,[FListB.Values['StockNO']+'-'+FListB.Values['StockName'],
+                              FloatToStr(nLimitValue),FloatToStr(nLeaveValue)]);
+                    Exit;
+                  end;
                 end;
               end;
             end;
@@ -1691,12 +1702,160 @@ begin
   Result := True;
 end;
 
+function UnicodeToChinese(inputstr: string): string;
+var
+    i: Integer;
+    index: Integer;
+    temp, top, last: string;
+begin
+    index := 1;
+    while index >= 0 do
+    begin
+        index := Pos('\u', inputstr) - 1;
+        if index < 0 then
+        begin
+            last := inputstr;
+            Result := Result + last;
+            Exit;
+        end;
+        top := Copy(inputstr, 1, index); // 取出 编码字符前的 非 unic 编码的字符，如数字
+        temp := Copy(inputstr, index + 1, 6); // 取出编码，包括 \u,如\u4e3f
+        Delete(temp, 1, 2);
+        Delete(inputstr, 1, index + 6);
+        Result := Result + top + WideChar(StrToInt('$' + temp));
+    end;
+end;
+
+//获取订单出厂时对应的价格
+function GetSalePrice(const nOrderNo: string): Double;
+var nStr, nProStr, nMatStr, nYearStr,nSQL: string;
+    nO_Valid, nStockName : string;
+    nValue: Double;
+    nYearMonth, szUrl, nType : string;
+    ReJo, OneJo : ISuperObject;
+    ArrsJa,ArrsJaSub: TSuperArray;
+    ReStream:TStringstream;
+    nYear, nMonth, nDays : Word;
+    nDataStream: TMsMultiPartFormDataStream;
+    nOut: TWorkerBusinessCommand;
+    nOrderName:string;
+    FListA: TStrings;
+    FIdHttp : TIdHTTP;
+function GetLoginToken: Boolean;
+var
+  nStr, szUrl: string;
+  ReJo, ReSubJo : ISuperObject;
+  ArrsJa: TSuperArray;
+  wParam: TStrings;
+  ReStream:TStringstream;
+begin
+  Result   := False;
+  wParam   := TStringList.Create;
+  ReStream := TStringstream.Create('');
+
+  try
+    wParam.Clear;
+    wParam.Values['username'] := gSysParam.FWXZhangHu;
+    wParam.Values['password'] := gSysParam.FWXMiMa;
+
+    szUrl := gSysParam.FWXERPUrl+'/login';
+    FidHttp.Request.ContentType := 'application/x-www-form-urlencoded';
+    FidHttp.Post(szUrl, wParam, ReStream);
+    nStr := ReStream.DataString;
+    nStr := UTF8Decode(ReStream.DataString);
+    nStr := UnicodeToChinese(nStr);
+
+    if nStr <> '' then
+    begin
+      ReJo    := SO(nStr);
+      ReSubJo := SO(ReJo.S['Response']);
+      if ReSubJo.S['token'] <> '' then
+      begin
+        Ftoken := ReSubJo.S['token'];
+        Result := True;
+      end
+      else
+      begin
+        Result := False;
+      end;
+    end;
+  finally
+    ReStream.Free;
+    wParam.Free;
+  end;
+end;
+begin
+  Result := 0;
+
+  FidHttp                := TIdHTTP.Create(nil);
+  FidHttp.ConnectTimeout := 10 * 1000;
+  FidHttp.ReadTimeout    := 10 * 1000;
+
+  FListA      := TStringList.Create;
+  ReStream    := TStringstream.Create('');
+  nDataStream := TMsMultiPartFormDataStream.Create;
+
+  try
+    if GetLoginToken then
+    begin
+      nDataStream.AddFormField('token', Ftoken);
+      nDataStream.AddFormField('starttime', DateTime2Str(IncMonth(Now,-12)));
+      nDataStream.AddFormField('ordername', Ansitoutf8(nOrderNo));
+      nDataStream.AddFormField('endtime', DateTime2Str(Now) + CRLF);
+      nDataStream.done;
+
+      szUrl := gSysParam.FWXERPUrl + '/saleorder';
+      FIdHttp.HTTPOptions:=FIdHttp.HTTPOptions+[hoKeepOrigProtocol];
+      FidHttp.ProtocolVersion:= pv1_1;
+      FidHttp.Request.ContentType := nDataStream.RequestContentType;
+      FidHttp.Post(szUrl, nDataStream, ReStream);
+      nStr := ReStream.DataString;
+      nStr := UTF8Decode(ReStream.DataString);
+      nStr := UnicodeToChinese(nStr);
+
+      FListA.Clear;
+      if nStr <> '' then
+      begin
+        ReJo    := SO(nStr);
+        ReJo    := SO(ReJo.S['Response']);
+        ArrsJa  := ReJo.A['Infos'];
+        if ArrsJa <> nil then
+        begin
+          if ArrsJa.Length = 0 then
+          begin
+            Result  := 0;
+            Exit;
+          end
+          else
+          begin
+            OneJo      := SO(ArrsJa.S[0]);
+            ArrsJaSub  := OneJo.A['products'];
+            Result     := SO(ArrsJaSub.S[0]).D['price_unit'];
+          end;
+        end
+        else
+        begin
+          Result  := 0;
+        end;
+      end;
+    end
+    else
+    begin
+      Result := 0;
+    end;
+  finally
+    ReStream.Free;
+    nDataStream.Free;
+    FreeAndNil(FidHttp);
+  end;
+end;
+
 //Date: 2014-09-18
 //Parm: 交货单[FIn.FData];岗位[FIn.FExtParam]
 //Desc: 保存指定岗位提交的交货单列表
 function TWorkerBusinessBills.SavePostBillItems(var nData: string): Boolean;
 var nStr,nSQL,nTmp,nPreFix: string;
-    nVal,nMVal: Double;
+    nVal,nMVal,nPrice: Double;
     i,nIdx,nInt: Integer;
     nBills: TLadingBillItems;
     nIsOtherOrder: Boolean;
@@ -1899,7 +2058,7 @@ begin
               SF_IF([SF('L_TruckEmpty', 'Null', sfVal),
                      SF('L_TruckEmpty', FYSValid)], Trim(FYSValid) = ''),
               //xxxxx
-
+              SF('L_Memo', FMemo),
               SF('L_LadeTime', sField_SQLServer_Now, sfVal),
               SF('L_LadeMan', FIn.FBase.FFrom.FUser)
               ], sTable_Bill, SF('L_ID', FID), False);
@@ -1922,7 +2081,7 @@ begin
               SF_IF([SF('L_TruckEmpty', 'Null', sfVal),
                      SF('L_TruckEmpty', FYSValid)], Trim(FYSValid) = ''),
               //xxxxx
-
+              SF('L_Memo', FMemo),
               SF('L_LadeTime', sField_SQLServer_Now, sfVal),
               SF('L_LadeMan', FIn.FBase.FFrom.FUser)
               ], sTable_Bill, SF('L_ID', FID), False);
@@ -2146,14 +2305,49 @@ begin
         nStr := FCard
       else
         nStr := '';
-      nSQL := MakeSQLByStr([SF('L_Status', sFlag_TruckOut),
-              SF('L_NextStatus', ''),
-              SF('L_Card', nStr),
-              SF('L_OutFact', sField_SQLServer_Now, sfVal),
-              SF('L_OutMan', FIn.FBase.FFrom.FUser)
-              ], sTable_Bill, SF('L_ID', FID), False);
-      FListA.Add(nSQL); //update bill
 
+      nVal := FValue;
+      {$IFDEF SaveEmptyTruck}
+      if nBills[nIdx].FYSValid = sFlag_Yes then
+        nVal := 0;
+      {$ENDIF}
+
+      {$IFDEF UseWXERP}
+      nPrice := GetSalePrice(FZhiKa);
+      if nPrice > 0 then
+      begin
+        nSQL := MakeSQLByStr([SF('L_Status', sFlag_TruckOut),
+                SF('L_Value', nVal, sfVal),
+                SF('L_Price', nPrice, sfVal),
+                SF('L_NextStatus', ''),
+                SF('L_Card', nStr),
+                SF('L_OutFact', sField_SQLServer_Now, sfVal),
+                SF('L_OutMan', FIn.FBase.FFrom.FUser)
+                ], sTable_Bill, SF('L_ID', FID), False);
+        FListA.Add(nSQL); //update bill
+      end
+      else
+      begin
+        nSQL := MakeSQLByStr([SF('L_Status', sFlag_TruckOut),
+                SF('L_Value', nVal, sfVal),
+                SF('L_NextStatus', ''),
+                SF('L_Card', nStr),
+                SF('L_OutFact', sField_SQLServer_Now, sfVal),
+                SF('L_OutMan', FIn.FBase.FFrom.FUser)
+                ], sTable_Bill, SF('L_ID', FID), False);
+        FListA.Add(nSQL); //update bill
+      end;
+      {$ELSE}
+        nSQL := MakeSQLByStr([SF('L_Status', sFlag_TruckOut),
+                SF('L_Value', nVal, sfVal),
+                SF('L_NextStatus', ''),
+                SF('L_Card', nStr),
+                SF('L_OutFact', sField_SQLServer_Now, sfVal),
+                SF('L_OutMan', FIn.FBase.FFrom.FUser)
+                ], sTable_Bill, SF('L_ID', FID), False);
+        FListA.Add(nSQL); //update bill
+      {$ENDIF}
+      
       if FYSValid = sFlag_Yes then
       begin
         nSQL := 'Update %s Set ' +

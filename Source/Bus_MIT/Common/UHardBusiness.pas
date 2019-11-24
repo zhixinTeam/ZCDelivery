@@ -682,7 +682,7 @@ begin
       nStr := '合同单号[ %s ]已被关闭,不能进厂提货.';
       nStr := Format(nStr, [nTrucks[0].FZhiKa]);
       WriteHardHelperLog(nStr, sPost_In);
-    //  Exit;
+      Exit;
     end;
   {$ENDIF}
 

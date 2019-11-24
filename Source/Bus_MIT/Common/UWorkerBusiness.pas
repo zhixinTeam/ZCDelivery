@@ -551,10 +551,18 @@ begin
 
   with gDBConnManager.WorkerQuery(FDBConn, nStr) do
   begin
-    if RecordCount<1 then Exit;
+    if RecordCount<1 then
+    begin
+      nData:='用户不存在';
+      Exit;
+    end;
 
     nStr := Fields[0].AsString;
-    if nStr <> FListA.Values['Password'] then Exit;
+    if nStr <> FListA.Values['Password'] then
+    begin
+      nData:='密码错误';
+      Exit;
+    end;
     Result := True;
   end;
 end;
@@ -1128,7 +1136,7 @@ begin
       nP := Date2Str(FieldByName('B_FirstDate').AsDateTime);
 
       if (Str2Date(nP) > Str2Date('2000-01-01')) and
-         (Str2Date(nStr) - Str2Date(nP) > FieldByName('B_Interval').AsInteger) then
+         (Str2Date(nStr) - Str2Date(nP) >= FieldByName('B_Interval').AsInteger) then
       begin
         nStr := 'Update %s Set B_Base=B_Base+%d Where R_ID=%d';
         nStr := Format(nStr, [sTable_StockBatcode, nInc, nRID]);
@@ -5212,14 +5220,14 @@ begin
   Result := False;
   FListA.Text := FIn.FData;
   nPos := sFlag_DepBangFang;
-  nDept:= sFlag_DepDaTing;
+  nDept:= sFlag_DepBangFang;
   nEvent:= '' ;
   nNeedManu := False;
 
   nTruck := FListA.Values['Truck'];
   nBill  := FListA.Values['Bill'];
 
-  nStr := 'Select D_Value From %s Where D_Name=''%s'' and D_Memo=''%s''';
+  nStr := ' Select D_Value From %s Where D_Name=''%s'' and D_Memo=''%s'' ';
   nStr := Format(nStr, [sTable_SysDict, sFlag_TruckInNeedManu,nPos]);
   //xxxxx
 

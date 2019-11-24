@@ -427,7 +427,10 @@ end;
 //Parm: 交货单[FIn.FData];通道号[FIn.FExtParam]
 //Desc: 在指定通道上喷码
 function THardwareCommander.PrintCode(var nData: string): Boolean;
-var nStr,nCode,nPrint: string;
+var
+  nStr,nCode,nPrint: string;
+  Present: TDateTime;
+  Year, Month, Day, Hour, Min, Sec, MSec:Word;
 begin
   Result := True;
   if not gCodePrinterManager.EnablePrinter then Exit;
@@ -462,11 +465,6 @@ begin
       end;
 
       {$IFDEF XGLL}
-//      nCode := FieldByName('BZIRK').AsString;
-//      if CompareText(nCode, 'null') = 0 then
-//        nCode := '';
-      //片区
-
       nStr := Date2Str(Now, False);
       System.Delete(nStr, 1, 4);
 
@@ -483,6 +481,22 @@ begin
 
       nCode := Trim(Fields[0].AsString) + ' ' + nStr;
       {$ENDIF}
+
+      {$IFDEF BLDZCode}
+        nStr := Date2Str(Now, False);
+        System.Delete(nStr, 1, 2);
+
+        Present := Now;
+        DecodeTime(Present, Hour, Min, Sec, MSec);
+
+        if Hour >= 12 then
+          nCode := Trim(Fields[0].AsString)+'-'+nStr + 'PM'
+        else
+          nCode := Trim(Fields[0].AsString)+'-'+nStr + 'AM';
+          
+      {$ENDIF}
+
+
     end;
   end;
 
