@@ -1065,7 +1065,7 @@ begin
         nDBConn.FConn.Connected := True;
 
       //销售净重
-      nSql := 'select L_Value, L_ZhiKa,l_status, L_Truck from %s where l_id=''%s''';
+      nSql := 'select L_Value, L_ZhiKa,l_status, L_Truck, isnull(L_TruckEmpty,''N'') L_TruckEmpty  from %s where l_id=''%s''';
       if FListA.Values['WOM_StatusType'] = '2' then
         nSql := Format(nSql, [sTable_BillBak, FListA.Values['WOM_LID']])
       else
@@ -1080,6 +1080,11 @@ begin
           nNetWeight    := FieldByName('L_Value').asFloat;
           ncontractNo   := FieldByName('L_ZhiKa').AsString;
           ntruckLicense := FieldByName('L_Truck').AsString;
+
+          if  FieldByName('L_TruckEmpty').AsString = 'Y' then
+          begin
+            Exit;
+          end;
         end;
       end;
       //采购净重

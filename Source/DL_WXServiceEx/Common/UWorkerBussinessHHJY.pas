@@ -517,7 +517,7 @@ begin
 end;
 
 function TBusWorkerBusinessHHJY.GetSaleInfo(var nData: string): Boolean;
-var nStr, nProStr, nMatStr, nYearStr: string;
+var nStr,nSQL, nProStr, nMatStr, nYearStr: string;
     nO_Valid, nStockName: string;
     nValue: Double;
     nYearMonth,szUrl, nType : string;
@@ -709,6 +709,12 @@ begin
       begin
         with gDBConnManager.WorkerQuery(FDBConn,FListD[nIdx]) do
         begin
+          if nIdx = 0 then
+          begin
+            nSQL := ' Update %s Set O_Valid = ''%s'' ';
+            nSQL := Format(nSQL, [sTable_SalesOrder,'N']);
+            gDBConnManager.WorkerExec(FDBConn, nSQL);
+          end;
           if RecordCount>0 then
           begin
             gDBConnManager.WorkerExec(FDBConn,FListC[nIdx]);
