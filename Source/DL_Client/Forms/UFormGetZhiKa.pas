@@ -256,6 +256,7 @@ begin
 
     {$IFDEF SyncDataByWSDL}//接口模式下开单即推单 订单量会实时扣减
     FValue       := FieldByName('O_PlanRemain').AsFloat;
+    FCusID     := FieldByName('O_CusID').AsString;
     {$ELSE}
     FValue       := FieldByName('O_PlanRemain').AsFloat -
                     FieldByName('O_Freeze').AsFloat;
@@ -342,9 +343,15 @@ begin
     nBeginDate := FormatDateTime('YYYY-MM-DD HH:MM:SS', IncMonth(Now, -2));
     nEndDate   := FormatDateTime('YYYY-MM-DD', IncDay(Now, -1)) + ' 00:00:00';
 
-    nStr := 'FCustomerID = ''%s'' and FStatus = ''1'' ' +
-            'and FRemainAmount >= 0 and FBeginDate >= ''%s'' and FEndDate >= ''%s'' ';
-    nStr := Format(nStr, [nCusID, nBeginDate, nEndDate]);
+  {$IFDEF SaleFilterBeginDate}
+  nStr := 'FCustomerID = ''%s'' and FStatus = ''1'' ' +
+          'and FRemainAmount >= 0 and FBeginDate >= ''%s'' and FEndDate >= ''%s'' ';
+  nStr := Format(nStr, [nCusID, nBeginDate, nEndDate]);
+  {$ELSE}
+  nStr := 'FCustomerID = ''%s'' and FStatus = ''1'' ' +
+          'and FRemainAmount >= 0 ';
+  nStr := Format(nStr, [nCusID]);
+  {$ENDIF}
 
     nStr := PackerEncodeStr(nStr);
     if not GetHhSalePlanWSDL(nStr, '') then

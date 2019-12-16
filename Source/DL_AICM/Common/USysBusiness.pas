@@ -10,7 +10,7 @@ uses
   Windows, DB, Classes, Controls, SysUtils, UBusinessPacker, UBusinessWorker,
   UBusinessConst, ULibFun, UAdjustForm, UFormCtrl, UDataModule, UDataReport,
   UFormBase, cxMCListBox, UMgrPoundTunnels, UMgrCamera, USysConst, HKVNetSDK,
-  USysDB, USysLoger;
+  USysDB, USysLoger, DateUtils;
 
 type
   TLadingStockItem = record
@@ -227,6 +227,9 @@ function IFHasOrder(const nTruck: string; var nID: string): Boolean;
 function IsPurOrderHasControl(nProID,nStockNo: string): Boolean;
 function GetMaxLadeValue(const nTruck: string): Double;
 function GetMinLadeValue: Double;
+function IFCanCreateBill(const nTruck: string; var nLastTime: string;
+                         nKDTime: Integer): Boolean;
+//车辆是否可以开提货单
 implementation
 uses
   UWaitItem;
@@ -1861,17 +1864,18 @@ function GetHhSaleWareNumberWSDL(const nOrder, nValue: string;
                                  var nHint: string): string;
 var nOut: TWorkerHHJYData;
     nStr: string;
-    nList: TStrings;
+    nList,nListA: TStrings;
     nEID, nEvent, nStockName, nStockType: string;
     nRestVal, nWarnVal: Double;
 begin
   Result := '';
   nHint := '';
   nList := TStringList.Create;
+  nListA := TStringList.Create;
   nRestVal := 0;
   try
     nStr := 'Select O_FactoryID, O_StockID, O_PackingID, O_StockName,' +
-            ' O_STockType From %s Where O_Order =''%s'' ';
+            ' O_STockType,O_CusID From %s Where O_Order =''%s'' ';
     nStr := Format(nStr, [sTable_SalesOrder, nOrder]);
 
     with FDM.QueryTemp(nStr) do
@@ -1880,6 +1884,8 @@ begin
       nList.Values['FactoryID'] := Fields[0].AsString;
       nList.Values['StockID']   := Fields[1].AsString;
       nList.Values['PackingID'] := Fields[2].AsString;
+      nList.Values['Amount']    := nValue;
+      nList.Values['CusID']     := Fields[5].AsString;
       nStockName := Fields[3].AsString;
       nStockType := Fields[4].AsString;
 
@@ -1887,18 +1893,18 @@ begin
       if CallBusinessHHJY(cBC_GetHhSaleWareNumber, nStr, '', '', @nOut, False) then
       begin
         nStr := PackerDecodeStr(nOut.FData);
-        nList.Clear;
-        nList.Text := nStr;
+        nListA.Clear;
+        nListA.Text := nStr;
         try
-          if IsNumber(nList.Values['FAmount'], True) and
-             IsNumber(nList.Values['FDeliveryAmount'], True) then
+          if IsNumber(nListA.Values['FAmount'], True) and
+             IsNumber(nListA.Values['FDeliveryAmount'], True) then
           begin
-            nRestVal := StrToFloat(nList.Values['FAmount']) -
-               StrToFloat(nList.Values['FDeliveryAmount']) -
+            nRestVal := StrToFloat(nListA.Values['FAmount']) -
+               StrToFloat(nListA.Values['FDeliveryAmount']) -
                StrToFloat(nValue);
             if nRestVal >= 0 then
             begin
-              Result := nList.Values['FWareNumber'];
+              Result := nListA.Values['FWareNumber'];
             end;
           end;
         except
@@ -1992,6 +1998,7 @@ begin
     end;
   finally
     nList.Free;
+    nListA.Free;
   end;
 end;
 
@@ -2159,6 +2166,31 @@ begin
   end;
 end;
 
+//Desc: 获取nStock品种的报表文件(从数据库获取模板名称)
+function GetReportFileByStockFromDB(const nStock, nBrand: string): string;
+var nStr, nWhere: string;
+begin
+  Result := '';
+  if nBrand <> '' then
+  begin
+    nWhere := ' and D_ParamB = ''%s'' ';
+    nWhere := Format(nWhere, [nBrand]);
+  end
+  else
+    nWhere := '';
+
+  nStr := 'Select D_Value From %s Where D_Name=''%s'' and D_Memo = ''%s'' %s order by D_ID desc';
+  nStr := Format(nStr, [sTable_SysDict, sFlag_ReportFileMap, nStock, nWhere]);
+
+  with FDM.QuerySQL(nStr) do
+  begin
+    if RecordCount > 0 then
+    begin
+      Result := gPath + 'Report\' + Fields[0].AsString;
+    end;
+  end;
+end;
+
 //Desc: 打印标识为nHID的化验单
 function PrintHuaYanReport(const nBill: string; var nHint: string;
  const nPrinter: string = ''): Boolean;
@@ -2222,7 +2254,9 @@ begin
     end;
 
     nStr := FieldByName('L_StockName').AsString;
-    nStr := GetReportFileByStock(nStr);
+    //nStr := GetReportFileByStock(nStr);
+
+    nStr := GetReportFileByStockFromDB(nStr, '');
 
     if not FDR.LoadReportFile(nStr) then
     begin
@@ -2368,6 +2402,39 @@ begin
       if IsNumber(nStr,True) then
         Result := StrToFloat(nStr);
     end;
+  end;
+end;
+
+//车辆是否可以开提货单
+function IFCanCreateBill(const nTruck: string; var nLastTime: string;
+                         nKDTime: Integer): Boolean;
+var nStr: string;
+begin
+  Result := True;
+  nKDTime := 5;
+  nStr := 'Select D_Value From %s ' +
+          'Where D_Name=''%s''';
+  nStr := Format(nStr, [sTable_SysDict, sFlag_KDTime]);
+  //xxxxx
+
+  with FDM.QueryTemp(nStr) do
+  begin
+    if RecordCount > 0 then
+    begin
+      nKDTime := Fields[0].AsInteger;
+    end;
+  end;
+
+  nStr :='select top 1 L_OutFact from %s where L_Status = ''%s'' and L_Truck =''%s'' order by R_ID desc ';
+  nStr := Format(nStr, [sTable_Bill, sFlag_TruckOut, nTruck]);
+  with FDM.QueryTemp(nStr) do
+  if RecordCount > 0 then
+  begin
+    nLastTime := Fields[0].AsString;
+    if nLastTime = '' then
+      Exit;
+    if MinutesBetween(Now,Fields[0].AsDateTime) < nKDTime then
+      Result := False;
   end;
 end;
 

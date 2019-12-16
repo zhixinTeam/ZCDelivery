@@ -87,10 +87,16 @@
   //微信
   {$DEFINE GetTruckNoFromERP}
   //从ERP委托单获取车号
-  {$DEFINE SyncDataByDataBase}
+  {.$DEFINE SyncDataByDataBase}
   //通过访问数据库进行数据交互
+  {$DEFINE SyncDataByWSDL}
+  //通过接口进行数据交互
   {$DEFINE TruckOutTimeOut}
   //车辆出厂超时
+  {$DEFINE SpecialSeal}
+  //特殊批次
+  {$DEFINE KSWY}
+  //特殊批次
 {$ENDIF}
 
 //株洲中材
@@ -139,6 +145,8 @@
   //袋装车辆查询EX
   {$DEFINE RemoteSnap}
   //车牌识别
+  {$DEFINE SaleFilterBeginDate}
+  //销售订单过滤起始时间
 {$ENDIF}
 
 //广西北流

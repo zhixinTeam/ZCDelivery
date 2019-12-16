@@ -127,7 +127,6 @@ begin
   N10.Visible := True;
   N12.Visible := True;
   N13.Visible := True;
-  N15.Visible := True;
   N16.Visible := False;
   N17.Visible := False;
   N14.Visible := True;
@@ -135,20 +134,15 @@ begin
   N10.Visible := False;
   N12.Visible := False;
   N13.Visible := False;
-  N15.Visible := False;
   N16.Visible := True;
   N14.Visible := False;
   {$ENDIF}
 
-  {$IFDEF UseWXERP}
-  N10.Visible := False;
-  N12.Visible := False;
-  N13.Visible := False;
-  N15.Visible := False;
-  N16.Visible := False;
-  N17.Visible := False;
+  {$IFDEF KSWY}
+  N12.Visible := True;
+  N13.Visible := True;
+  N14.Visible := True;
   {$ENDIF}
-  
   FPreFix := 'WY';
   nStr := 'Select B_Prefix From %s ' +
           'Where B_Group=''%s'' And B_Object=''%s''';

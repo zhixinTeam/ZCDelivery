@@ -492,6 +492,12 @@ begin
     Exit;
   end;
 
+  if not IFCanCreateBill(EditTruck.Text, nHint, nidx) then
+  begin
+    ShowMsg('车辆上次完成时间[' + nHint +'],开单间隔[' + IntToStr(nidx) +']分,无法开单',sHint);
+    Exit;
+  end;
+
   if (FStockType = sFlag_San) and (StrToFloatDef(EditKDMin.Text,0) > 0) then
   begin
     if StrToFloat(EditValue.Text) < StrToFloatDef(EditKDMin.Text,0) then

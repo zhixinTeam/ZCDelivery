@@ -3,7 +3,7 @@ object fFormMain: TfFormMain
   Top = 246
   Width = 892
   Height = 606
-  Caption = #19994#21153#20013#38388#20214
+  Caption = 'A'
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText

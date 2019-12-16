@@ -841,7 +841,10 @@ begin
     nP.FCommand := cCmd_EditData;
     nP.FParamA := nList.Text;
 
-    CreateBaseFormItem(cFI_FormPoundKw, '', @nP);
+    if SQLQuery.FieldByName('P_PoundIdx').AsInteger > 0 then
+      CreateBaseFormItem(cFI_FormPoundKwOther, '', @nP)
+    else
+      CreateBaseFormItem(cFI_FormPoundKw, '', @nP);
 
     if (nP.FCommand = cCmd_ModalResult) and (nP.FParamA = mrOK) then
     begin

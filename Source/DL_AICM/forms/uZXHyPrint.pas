@@ -120,11 +120,13 @@ procedure TfFormZXHyPrint.btnOKClick(Sender: TObject);
 var nMsg, nStr, nID, nHYDan: string;
     nIdx: Integer;
 begin
+  btnOK.Enabled := False;
   nID := Trim(editWebOrderNo.Text);
   if nID = '' then
   begin
     ShowMsg('请输入提货单号', sHint);
     editWebOrderNo.SetFocus;
+    editWebOrderNo.Clear;
     Exit;
   end;
 
@@ -138,6 +140,7 @@ begin
       nStr := '未找到单据,无法打印';
       ShowMsg(nStr, sHint);
       editWebOrderNo.SetFocus;
+      editWebOrderNo.Clear;
       Exit;
     end;
 
@@ -145,13 +148,14 @@ begin
     begin
       nStr := '未匹配到唯一单据,请输入准确单据号';
       editWebOrderNo.SetFocus;
+      editWebOrderNo.Clear;
       Exit;
     end;
 
     nID := Fields[0].AsString;
     nHYDan := Fields[1].AsString;
   end;
-
+  editWebOrderNo.Clear;
   {$IFDEF AHZC}
   PrintHeGeReport(nID, nMsg, gSysParam.FHYDanPrinter);
   {$ELSE}
@@ -160,6 +164,7 @@ begin
     nStr := '提货单[ %s ]批次号为空,无法打印';
     nStr := Format(nStr,[nID]);
     editWebOrderNo.SetFocus;
+    editWebOrderNo.Clear;
     Exit;
   end;
 
@@ -177,6 +182,7 @@ begin
   begin
     ShowMsg(nMsg, sHint);
     editWebOrderNo.SetFocus;
+    editWebOrderNo.Clear;
     Exit;
   end;
   editWebOrderNo.Text := '';

@@ -395,6 +395,7 @@ procedure RemoteSnapDisPlay(const nPost, nText, nSucc: string);
 function JudgePurOrder(const nID: string; var nHint: string): Boolean;
 //校正原材料订单
 function SaveSnapStatus(const nBill: TLadingBillItem; nStatus: string): Boolean;
+procedure UpdateMultMStatus(const nID: string);
 implementation
 
 //Desc: 记录日志
@@ -2150,6 +2151,31 @@ begin
   else Result := '';
 end;
 
+//Desc: 获取nStock品种的报表文件(从数据库获取模板名称)
+function GetReportFileByStockFromDB(const nStock, nBrand: string): string;
+var nStr, nWhere: string;
+begin
+  Result := '';
+  if nBrand <> '' then
+  begin
+    nWhere := ' and D_ParamB = ''%s'' ';
+    nWhere := Format(nWhere, [nBrand]);
+  end
+  else
+    nWhere := '';
+
+  nStr := 'Select D_Value From %s Where D_Name=''%s'' and D_Memo = ''%s'' %s order by D_ID desc';
+  nStr := Format(nStr, [sTable_SysDict, sFlag_ReportFileMap, nStock, nWhere]);
+
+  with FDM.QuerySQL(nStr) do
+  begin
+    if RecordCount > 0 then
+    begin
+      Result := gPath + 'Report\' + Fields[0].AsString;
+    end;
+  end;
+end;
+
 //Desc: 打印标识为nHID的化验单
 function PrintHuaYanReport(const nHID: string; const nAsk: Boolean): Boolean;
 var nStr,nSR: string;
@@ -2183,7 +2209,11 @@ begin
   end;
 
   nStr := FDM.SqlTemp.FieldByName('P_Stock').AsString;
-  nStr := GetReportFileByStock(nStr);
+  //nStr := GetReportFileByStock(nStr);
+
+  nStr := GetReportFileByStockFromDB(nStr, '');
+
+  WriteLog('报表文件路径:' + nStr);
 
   if not FDR.LoadReportFile(nStr) then
   begin
@@ -2224,7 +2254,11 @@ begin
     end;
 
     nStr := FieldByName('L_StockName').AsString;
-    nStr := GetReportFileByStock(nStr);
+    //nStr := GetReportFileByStock(nStr);
+
+    nStr := GetReportFileByStockFromDB(nStr, '');
+
+    WriteLog('报表文件路径:' + nStr);
 
     if not FDR.LoadReportFile(nStr) then
     begin
@@ -3473,7 +3507,7 @@ begin
   nRestVal := 0;
   try
     nStr := 'Select O_FactoryID, O_StockID, O_PackingID, O_StockName,' +
-            ' O_STockType From %s Where O_Order =''%s'' ';
+            ' O_STockType,O_CusID From %s Where O_Order =''%s'' ';
     nStr := Format(nStr, [sTable_SalesOrder, nOrder]);
 
     with FDM.QueryTemp(nStr) do
@@ -3482,6 +3516,8 @@ begin
       nList.Values['FactoryID'] := Fields[0].AsString;
       nList.Values['StockID']   := Fields[1].AsString;
       nList.Values['PackingID'] := Fields[2].AsString;
+      nList.Values['Amount']    := nValue;
+      nList.Values['CusID']     := Fields[5].AsString;
       nStockName := Fields[3].AsString;
       nStockType := Fields[4].AsString;
 
@@ -4176,16 +4212,17 @@ end;
 //Parm: 磅单ID
 //Desc: 校正原材料订单
 function JudgePurOrder(const nID: string; var nHint: string): Boolean;
-var nStr, nData,nDate, nYear, nStockNo, nProNo: string;
+var nStr, nData,nDate, nYear, nStockNo, nProNo, nKD: string;
     nIdx, nOrderCount: Integer;
     nListA, nListB: TStrings;
     nDateNow: TDateTime;
+    nUpdate: Boolean;
 begin
   Result := False;
   nHint := '';
 
   WriteLog('开始校验磅单是否跨记账年月:' + nID);
-  nStr := 'Select P_MID,P_CusID,P_Year From %s Where P_ID=''%s''';
+  nStr := 'Select P_MID,P_CusID,P_Year,P_KD From %s Where P_ID=''%s''';
   nStr := Format(nStr, [sTable_PoundLog, nID]);
 
   with FDM.QueryTemp(nStr) do
@@ -4198,6 +4235,7 @@ begin
     nStockNo := Fields[0].AsString;
     nProNo := Fields[1].AsString;
     nYear := Fields[2].AsString;
+    nKD := Fields[3].AsString;
   end;
 
   nListA := TStringList.Create;
@@ -4242,20 +4280,45 @@ begin
     nListA.Text := PackerDecodeStr(nData);
     nOrderCount := nListA.Count;
 
+    nUpDate := False;
     for nIdx := 0 to nOrderCount - 1 do
     begin
       nListB.Text := PackerDecodeStr(nListA.Strings[nIdx]);
 
-      nStr := 'Update %s Set P_BID=''%s'',P_Model=''%s'','+
-              ' P_Year=''%s'',P_KD=''%s'' '+
-              ' Where P_ID=''%s''';
-      nStr := Format(nStr, [sTable_PoundLog,nListB.Values['Order'],
-                                          nListB.Values['Model'],
-                                          nDate,
-                                          nListB.Values['KD'],
-                                          nID]);
-      WriteLog('磅单' + nID + '更换订单SQL:' + nStr);
-      FDM.ExecuteSQL(nStr);
+      if (nKD <> '') and (nListB.Values['KD'] = nKD) then
+      begin
+        nStr := 'Update %s Set P_BID=''%s'',P_Model=''%s'','+
+                ' P_Year=''%s'',P_KD=''%s'' '+
+                ' Where P_ID=''%s''';
+        nStr := Format(nStr, [sTable_PoundLog,nListB.Values['Order'],
+                                            nListB.Values['Model'],
+                                            nDate,
+                                            nListB.Values['KD'],
+                                            nID]);
+        WriteLog('磅单' + nID + '矿点' + nKD + '更换订单SQL:' + nStr);
+        FDM.ExecuteSQL(nStr);
+        nUpdate := True;
+        Break;
+      end;
+    end;
+
+    if not nUpdate then//物料无矿点区分或旧矿点不存在
+    begin
+      for nIdx := 0 to nOrderCount - 1 do
+      begin
+        nListB.Text := PackerDecodeStr(nListA.Strings[nIdx]);
+
+        nStr := 'Update %s Set P_BID=''%s'',P_Model=''%s'','+
+                ' P_Year=''%s'',P_KD=''%s'' '+
+                ' Where P_ID=''%s''';
+        nStr := Format(nStr, [sTable_PoundLog,nListB.Values['Order'],
+                                            nListB.Values['Model'],
+                                            nDate,
+                                            nListB.Values['KD'],
+                                            nID]);
+        WriteLog('磅单' + nID + '更换订单SQL:' + nStr);
+        FDM.ExecuteSQL(nStr);
+      end;
     end;
     Result := True;
     WriteLog('结束校验磅单是否跨记账年月:' + nID);
@@ -4264,6 +4327,16 @@ begin
     nListA.Free;
     nListB.Free;
   end;
+end;
+
+procedure UpdateMultMStatus(const nID: string);
+var nStr: string;
+begin
+  nStr := 'Update %s Set L_Status=''%s'',L_NextStatus=''%s'' ' +
+          'Where L_ID=''%s''';
+  nStr := Format(nStr, [sTable_Bill, sFlag_TruckFH, sFlag_TruckBFM, nID]);
+
+  FDM.ExecuteSQL(nStr);
 end;
 
 end.

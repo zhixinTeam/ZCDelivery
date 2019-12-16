@@ -471,9 +471,9 @@ begin
                   'T_Valid=''$Yes'' And T_StockNo=''$SN'' And T_InFact<''$IT'' And T_Vip=''$VIP''';
         end else
         begin
-          nStr := ' Select Count(*) From $TB left join S_PoundLog on S_PoundLog.P_Bill=S_ZTTrucks.T_Bill ' +
+          nStr := ' Select Count(*) From $TB left join Sys_PoundLog on Sys_PoundLog.P_Bill=S_ZTTrucks.T_Bill ' +
                   ' Where T_InQueue Is Null And ' +
-                  ' T_Valid=''$Yes'' And T_StockNo=''$SN'' And P_PDate<''$IT'' And T_Vip=''$VIP''';
+                  ' T_Valid=''$Yes'' And T_StockNo=''$SN'' And T_Vip=''$VIP''';
         end;
       end else
       begin

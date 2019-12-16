@@ -592,6 +592,7 @@ begin
     if (FStatus = sFlag_TruckBFM) and (FCardUsed = sFlag_Sale)
        and IsMulMaoStock(FStockNo) then
     begin
+      UpdateMultMStatus(FID);
       FStatus := sFlag_TruckFH;
       FNextStatus := sFlag_TruckBFM;
       WriteSysLog('交货单状态调整:'+'允许多次过重:Y,当前:'+FStatus+'下一状态:'+FNextStatus);
@@ -1117,42 +1118,88 @@ begin
     {$ENDIF}
 
     {$IFDEF SyncDataByWSDL}
-    with FUIData do
+    if IsOtherOrder(FUIData) then
     begin
+      with FUIData do
       if FType = sFlag_San then
-        nNet := Abs(FUIData.FMData.FValue - FUIData.FPData.FValue)
-      else
-        nNet := FUIData.FValue;
-      //净重
-      if not PoundVerifyHhSalePlanWSDL(FUIData.FID, nNet, '', nHint) then
       begin
-        nStr := GetTruckNO(FTruck) + '重量  ' + GetValue(FMData.FValue);
-        for nIdx := 1 to 3 do
+        nNet := FUIData.FMData.FValue - FUIData.FPData.FValue - FInnerData.FValue;
+        //净重与票重之差
+        nVal := GetSaleOrderRestValue(FUIData.FZhiKa);
+        //订单可用量
+        if nNet > nVal then
         begin
-          {$IFDEF MITTruckProber}
-          ProberShowTxt(FPoundTunnel.FID, nStr);
-          {$ELSE}
-          gProberManager.ShowTxt(FPoundTunnel.FID, nStr);
-          {$ENDIF}
+          nStr := GetTruckNO(FTruck) + '重量  ' + GetValue(FMData.FValue);
+          for nIdx := 1 to 3 do
+          begin
+            {$IFDEF MITTruckProber}
+            ProberShowTxt(FPoundTunnel.FID, nStr);
+            {$ELSE}
+            gProberManager.ShowTxt(FPoundTunnel.FID, nStr);
+            {$ENDIF}
+          end;
+
+          nStr := '车辆[ %s ]净重超出订单可用量,详情如下:' + #13#10 +
+                  '※.物料名称: [ %s ]' + #13#10 +
+                  '※.车辆净重: %.2f吨' + #13#10 +
+                  '※.订单可用量: %.2f吨' + #13#10 +
+                  '请联系客户补量或通知司机卸货.';
+          nStr := Format(nStr, [FTruck, FStockName, nNet, nVal]);
+
+          if not VerifyManualEventRecord(FID + sFlag_ManualB, nStr) then
+          begin
+            AddManualEventRecord(FID + sFlag_ManualB, FTruck, nStr,
+                sFlag_DepBangFang, sFlag_Solution_OK, sFlag_DepDaTing, True);
+            WriteSysLog(nStr);
+
+            nStr := '[n1]%s净重超出订单可用量,请下磅联系开票员处理后再次过磅';
+            nStr := Format(nStr, [FTruck]);
+            PlayVoice(nStr);
+
+            Exit;
+          end;
         end;
-
-        nStr := '车辆[ %s ]过磅校验失败,详情如下:' + #13#10 +
-                '※.物料名称: [ %s ]' + #13#10 +
-                '※.车辆净重: %.2f吨' + #13#10 +
-                '※.详细原因为:[ %s ].';
-        nStr := Format(nStr, [FTruck, FStockName, nNet, nHint]);
-
-        if not VerifyManualEventRecord(FID + sFlag_ManualB, nStr) then
+      end;
+    end
+    else
+    begin
+      with FUIData do
+      begin
+        if FType = sFlag_San then
+          nNet := Abs(FUIData.FMData.FValue - FUIData.FPData.FValue)
+        else
+          nNet := FUIData.FValue;
+        //净重
+        if not PoundVerifyHhSalePlanWSDL(FUIData.FID, nNet, '', nHint) then
         begin
-          AddManualEventRecord(FID + sFlag_ManualB, FTruck, nStr,
-              sFlag_DepBangFang, sFlag_Solution_OK, sFlag_DepDaTing, True);
-          WriteSysLog(nStr);
+          nStr := GetTruckNO(FTruck) + '重量  ' + GetValue(FMData.FValue);
+          for nIdx := 1 to 3 do
+          begin
+            {$IFDEF MITTruckProber}
+            ProberShowTxt(FPoundTunnel.FID, nStr);
+            {$ELSE}
+            gProberManager.ShowTxt(FPoundTunnel.FID, nStr);
+            {$ENDIF}
+          end;
 
-          nStr := '[n1]%s重车过磅订单校验失败,请下磅联系开票员处理后再次过磅';
-          nStr := Format(nStr, [FTruck]);
-          PlayVoice(nStr);
+          nStr := '车辆[ %s ]过磅校验失败,详情如下:' + #13#10 +
+                  '※.物料名称: [ %s ]' + #13#10 +
+                  '※.车辆净重: %.2f吨' + #13#10 +
+                  '※.详细原因为:[ %s ].';
+          nStr := Format(nStr, [FTruck, FStockName, nNet, nHint]);
 
-          Exit;
+          if not VerifyManualEventRecord(FID + sFlag_ManualB, nStr) then
+          begin
+            AddManualEventRecord(FID + sFlag_ManualB, FTruck, nStr,
+                sFlag_DepBangFang, sFlag_Solution_OK, sFlag_DepDaTing, True);
+            WriteSysLog(nStr);
+
+            nStr := '[n1]%s重车过磅订单校验失败,请下磅联系开票员处理后再次过磅';
+            nStr := Format(nStr, [FTruck]);
+            PlayVoice(nStr);
+
+            Exit;
+          end;
         end;
       end;
     end;

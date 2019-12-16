@@ -1745,7 +1745,7 @@ begin
 
 	if nCardType = sFlag_Provide then
 	begin
-	  nStr := 'Select O_ID,O_Card,O_ProID,O_ProName,O_Type,O_StockNo,O_PrintBD,' +
+	  nStr := 'Select O_ID,O_Card,O_ProID,O_ProName,O_Type,O_StockNo,O_PrintBD,O_Model,' +
 	          'O_StockName,O_Truck,O_Value,O_BRecID,O_IfNeiDao,o_ystdno,O_expiretime,o_ctype ' +
 	          'From $OO oo ';
 	  //xxxxx
@@ -1800,6 +1800,7 @@ begin
 	      Values['NeiDao']       := FieldByName('O_IfNeiDao').AsString;
         Values['expiretime']   := FieldByName('o_expiretime').asstring;
         Values['PrintBD']      := FieldByName('O_PrintBD').AsString;
+        Values['Model']        := FieldByName('O_Model').AsString;
         Values['ctype']        := nCType;
 	    end;
 	  end;
@@ -1843,6 +1844,7 @@ begin
           FCtype  := nCType;
           FPoundIdx   := 0;
           FPrintBD    := Values['PrintBD'] = sFlag_Yes;
+          FModel      := Values['Model'];
 	        FSelected := True;
 	      end;
 	    end else
@@ -1902,6 +1904,7 @@ begin
           FCtype  := nCType;
           FPoundIdx  := 0;
           FPrintBD    := Values['PrintBD'] = sFlag_Yes;
+          FModel      := Values['Model'];
 	        FSelected := True;
 
 	        Inc(nIdx);

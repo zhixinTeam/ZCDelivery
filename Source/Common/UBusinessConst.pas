@@ -248,7 +248,7 @@ type
     FPoundIdx   : Integer;          //多物料称重顺序
     FPoundMax   : Integer;          //多物料称重总次数
     FPrintBD    : Boolean;         //打印磅单
-    FSaleMan    : string;          //业务员名称
+    FModel      : string;          //型号
   end;
 
   TLadingBillItems = array of TLadingBillItem;
@@ -436,6 +436,7 @@ begin
         FPoundIdx := StrToIntDef(Values['PoundIdx'],0);
         FPoundMax := StrToIntDef(Values['PoundMax'],0);
         FPrintBD := Values['PrintBD'] = sFlag_Yes;
+        FModel   := Values['Model'];
       end;
 
       Inc(nInt);
@@ -527,6 +528,7 @@ begin
         if FPrintBD then
              Values['PrintBD'] := sFlag_Yes
         else Values['PrintBD'] := sFlag_No;
+        Values['Model'] := FModel;
       end;
 
       nListA.Add(PackerEncodeStr(nListB.Text));

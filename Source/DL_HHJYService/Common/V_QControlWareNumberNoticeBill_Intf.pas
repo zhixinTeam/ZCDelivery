@@ -26,10 +26,10 @@ uses
   uROAsync,
   uROEventReceiver, V_Sys_Materiel_Intf;
 
-const LibraryUID = '{E3FE79B0-EA2D-4968-8A88-A1A589363C1A}';
+const LibraryUID = '{7850CE83-EFAF-43F9-9741-DF6CC4F238F5}';
 const TargetNamespace = 'V_QControlWareNumberNoticeBill';
-const IV_QControlWareNumberNoticeBill_IID: TGUID = '{FD99D602-8FF8-4D55-B171-1A7E3E8CFAB1}';
-const V_QControlWareNumberNoticeBill_EndPointURI = 'http://110.52.60.19:6690/Quality/QualityControl/Business/V_QControlWareNumberNoticeBill.asmx';
+const IV_QControlWareNumberNoticeBill_IID: TGUID = '{2F4EED7A-0D65-4C8E-9AC8-8EFC1BA684DA}';
+const V_QControlWareNumberNoticeBill_EndPointURI = 'http://58.243.161.70:6690/Quality/QualityControl/Business/V_QControlWareNumberNoticeBill.asmx';
 type
   { Forward declarations }
   IV_QControlWareNumberNoticeBill = interface;
@@ -43,85 +43,101 @@ type
   TV_QControlWareNumberNoticeBill_AsyncProxyEx = class;
 
   IV_QControlWareNumberNoticeBill = interface(IROService)
-  ['{fd99d602-8ff8-4d55-b171-1a7e3e8cfab1}']
+  ['{2f4eed7a-0d65-4c8e-9ac8-8efc1ba684da}']
     function GetWareNumberNoticeBill(const _MySoapHeader: MySoapHeader; const fFactoryID: UnicodeString; const fMaterielID: UnicodeString; const fPackingID: UnicodeString): UnicodeString;
-    function P_SaleUpdateQControlWareNumber(const _MySoapHeader: MySoapHeader; const factoryID: UnicodeString; const fMaterielID: UnicodeString; const fPackingID: UTF8String; const fWareNumber: UnicodeString; 
+    function P_SaleUpdateQControlWareNumber(const _MySoapHeader: MySoapHeader; const factoryID: UnicodeString; const fMaterielID: UnicodeString; const fPackingID: UnicodeString; const fWareNumber: UnicodeString; 
                                             const consignBillID: UnicodeString): UnicodeString;
-    function InitializationModel(const _MySoapHeader: MySoapHeader): WideString_Optional;
-    function InitializationModelList(const _MySoapHeader: MySoapHeader; const length: Integer): WideString_Optional;
-    function Insert(const _MySoapHeader: MySoapHeader; const jsonString: WideString_Optional): WideString_Optional;
-    function InsertList(const _MySoapHeader: MySoapHeader; const jsonString: WideString_Optional): WideString_Optional;
-    function DeleteList(const _MySoapHeader: MySoapHeader; const jsonString: WideString_Optional): WideString_Optional;
-    function Delete(const _MySoapHeader: MySoapHeader; const jsonString: WideString_Optional): WideString_Optional;
-    function Update(const _MySoapHeader: MySoapHeader; const initJsonString: WideString_Optional; const newJsonString: WideString_Optional): WideString_Optional;
-    function UpdateList(const _MySoapHeader: MySoapHeader; const initJsonString: WideString_Optional; const newJsonString: WideString_Optional): WideString_Optional;
-    function RetrieveList(const _MySoapHeader: MySoapHeader; const where: WideString_Optional; const sort: WideString_Optional): WideString_Optional;
-    function RetrieveListByPaging(const _MySoapHeader: MySoapHeader; const where: WideString_Optional; const sort: WideString_Optional; const pageNumber: Integer; const pageSize: Integer; const groupParameters: WideString_Optional): WideString_Optional;
-    function IsExists(const _MySoapHeader: MySoapHeader; const jsonString: WideString_Optional): WideString_Optional;
+    function GetWareNumberNoticeBillAH(const _MySoapHeader: MySoapHeader; const fTransportID: UnicodeString; const fFactoryID: UnicodeString; const fMaterielID: UnicodeString; const fPackingID: UnicodeString; 
+                                       const famount: UnicodeString; const fCustomerID: UnicodeString): UnicodeString;
+    function P_SaleUpdateQControlWareNumberAH(const _MySoapHeader: MySoapHeader; const fTransportID: UnicodeString; const factoryID: UnicodeString; const fMaterielID: UnicodeString; const fPackingID: UnicodeString; 
+                                              const fWareNumber: UnicodeString; const famount: UnicodeString; const consignBillID: UnicodeString): UnicodeString;
+    function InitializationModel(const _MySoapHeader: MySoapHeader): UnicodeString;
+    function InitializationModelList(const _MySoapHeader: MySoapHeader; const length: Integer): UnicodeString;
+    function Insert(const _MySoapHeader: MySoapHeader; const jsonString: UnicodeString): UnicodeString;
+    function InsertList(const _MySoapHeader: MySoapHeader; const jsonString: UnicodeString): UnicodeString;
+    function DeleteList(const _MySoapHeader: MySoapHeader; const jsonString: UnicodeString): UnicodeString;
+    function Delete(const _MySoapHeader: MySoapHeader; const jsonString: UnicodeString): UnicodeString;
+    function Update(const _MySoapHeader: MySoapHeader; const initJsonString: UnicodeString; const newJsonString: UnicodeString): UnicodeString;
+    function UpdateList(const _MySoapHeader: MySoapHeader; const initJsonString: UnicodeString; const newJsonString: UnicodeString): UnicodeString;
+    function RetrieveList(const _MySoapHeader: MySoapHeader; const where: UnicodeString; const sort: UnicodeString): UnicodeString;
+    function RetrieveListByPaging(const _MySoapHeader: MySoapHeader; const where: UnicodeString; const sort: UnicodeString; const pageNumber: Integer; const pageSize: Integer; const groupParameters: UnicodeString): UnicodeString;
+    function IsExists(const _MySoapHeader: MySoapHeader; const jsonString: UnicodeString): UnicodeString;
   end;
 
   IV_QControlWareNumberNoticeBill_Async = interface(IROAsyncInterface)
-  ['{16acf1ef-5343-4b84-9c06-5f44c65af31d}']
+  ['{8ccbf9ef-1334-49e5-8331-8cb609cb056d}']
     procedure Invoke_GetWareNumberNoticeBill(const _MySoapHeader: MySoapHeader; const fFactoryID: UnicodeString; const fMaterielID: UnicodeString; const fPackingID: UnicodeString);
-    procedure Invoke_P_SaleUpdateQControlWareNumber(const _MySoapHeader: MySoapHeader; const factoryID: UnicodeString; const fMaterielID: UnicodeString; const fPackingID: UTF8String; const fWareNumber: UnicodeString; 
+    procedure Invoke_P_SaleUpdateQControlWareNumber(const _MySoapHeader: MySoapHeader; const factoryID: UnicodeString; const fMaterielID: UnicodeString; const fPackingID: UnicodeString; const fWareNumber: UnicodeString; 
                                                     const consignBillID: UnicodeString);
+    procedure Invoke_GetWareNumberNoticeBillAH(const _MySoapHeader: MySoapHeader; const fTransportID: UnicodeString; const fFactoryID: UnicodeString; const fMaterielID: UnicodeString; const fPackingID: UnicodeString; 
+                                               const famount: UnicodeString; const fCustomerID: UnicodeString);
+    procedure Invoke_P_SaleUpdateQControlWareNumberAH(const _MySoapHeader: MySoapHeader; const fTransportID: UnicodeString; const factoryID: UnicodeString; const fMaterielID: UnicodeString; const fPackingID: UnicodeString; 
+                                                      const fWareNumber: UnicodeString; const famount: UnicodeString; const consignBillID: UnicodeString);
     procedure Invoke_InitializationModel(const _MySoapHeader: MySoapHeader);
     procedure Invoke_InitializationModelList(const _MySoapHeader: MySoapHeader; const length: Integer);
-    procedure Invoke_Insert(const _MySoapHeader: MySoapHeader; const jsonString: WideString_Optional);
-    procedure Invoke_InsertList(const _MySoapHeader: MySoapHeader; const jsonString: WideString_Optional);
-    procedure Invoke_DeleteList(const _MySoapHeader: MySoapHeader; const jsonString: WideString_Optional);
-    procedure Invoke_Delete(const _MySoapHeader: MySoapHeader; const jsonString: WideString_Optional);
-    procedure Invoke_Update(const _MySoapHeader: MySoapHeader; const initJsonString: WideString_Optional; const newJsonString: WideString_Optional);
-    procedure Invoke_UpdateList(const _MySoapHeader: MySoapHeader; const initJsonString: WideString_Optional; const newJsonString: WideString_Optional);
-    procedure Invoke_RetrieveList(const _MySoapHeader: MySoapHeader; const where: WideString_Optional; const sort: WideString_Optional);
-    procedure Invoke_RetrieveListByPaging(const _MySoapHeader: MySoapHeader; const where: WideString_Optional; const sort: WideString_Optional; const pageNumber: Integer; const pageSize: Integer; const groupParameters: WideString_Optional);
-    procedure Invoke_IsExists(const _MySoapHeader: MySoapHeader; const jsonString: WideString_Optional);
+    procedure Invoke_Insert(const _MySoapHeader: MySoapHeader; const jsonString: UnicodeString);
+    procedure Invoke_InsertList(const _MySoapHeader: MySoapHeader; const jsonString: UnicodeString);
+    procedure Invoke_DeleteList(const _MySoapHeader: MySoapHeader; const jsonString: UnicodeString);
+    procedure Invoke_Delete(const _MySoapHeader: MySoapHeader; const jsonString: UnicodeString);
+    procedure Invoke_Update(const _MySoapHeader: MySoapHeader; const initJsonString: UnicodeString; const newJsonString: UnicodeString);
+    procedure Invoke_UpdateList(const _MySoapHeader: MySoapHeader; const initJsonString: UnicodeString; const newJsonString: UnicodeString);
+    procedure Invoke_RetrieveList(const _MySoapHeader: MySoapHeader; const where: UnicodeString; const sort: UnicodeString);
+    procedure Invoke_RetrieveListByPaging(const _MySoapHeader: MySoapHeader; const where: UnicodeString; const sort: UnicodeString; const pageNumber: Integer; const pageSize: Integer; const groupParameters: UnicodeString);
+    procedure Invoke_IsExists(const _MySoapHeader: MySoapHeader; const jsonString: UnicodeString);
     function Retrieve_GetWareNumberNoticeBill: UnicodeString;
     function Retrieve_P_SaleUpdateQControlWareNumber: UnicodeString;
-    function Retrieve_InitializationModel: WideString_Optional;
-    function Retrieve_InitializationModelList: WideString_Optional;
-    function Retrieve_Insert: WideString_Optional;
-    function Retrieve_InsertList: WideString_Optional;
-    function Retrieve_DeleteList: WideString_Optional;
-    function Retrieve_Delete: WideString_Optional;
-    function Retrieve_Update: WideString_Optional;
-    function Retrieve_UpdateList: WideString_Optional;
-    function Retrieve_RetrieveList: WideString_Optional;
-    function Retrieve_RetrieveListByPaging: WideString_Optional;
-    function Retrieve_IsExists: WideString_Optional;
+    function Retrieve_GetWareNumberNoticeBillAH: UnicodeString;
+    function Retrieve_P_SaleUpdateQControlWareNumberAH: UnicodeString;
+    function Retrieve_InitializationModel: UnicodeString;
+    function Retrieve_InitializationModelList: UnicodeString;
+    function Retrieve_Insert: UnicodeString;
+    function Retrieve_InsertList: UnicodeString;
+    function Retrieve_DeleteList: UnicodeString;
+    function Retrieve_Delete: UnicodeString;
+    function Retrieve_Update: UnicodeString;
+    function Retrieve_UpdateList: UnicodeString;
+    function Retrieve_RetrieveList: UnicodeString;
+    function Retrieve_RetrieveListByPaging: UnicodeString;
+    function Retrieve_IsExists: UnicodeString;
   end;
 
   IV_QControlWareNumberNoticeBill_AsyncEx = interface(IROAsyncInterfaceEx)
-  ['{601c5de3-0e7c-4842-a9c1-a2341f33d09c}']
+  ['{7f94fde5-a031-475e-b11a-accb802363bf}']
     function BeginGetWareNumberNoticeBill(const _MySoapHeader: MySoapHeader; const fFactoryID: UnicodeString; const fMaterielID: UnicodeString; const fPackingID: UnicodeString; const aCallback: TROAsyncCallback; 
                                           const aUserData: Pointer = nil): IROAsyncRequest;
-    function BeginP_SaleUpdateQControlWareNumber(const _MySoapHeader: MySoapHeader; const factoryID: UnicodeString; const fMaterielID: UnicodeString; const fPackingID: UTF8String; const fWareNumber: UnicodeString; 
+    function BeginP_SaleUpdateQControlWareNumber(const _MySoapHeader: MySoapHeader; const factoryID: UnicodeString; const fMaterielID: UnicodeString; const fPackingID: UnicodeString; const fWareNumber: UnicodeString; 
                                                  const consignBillID: UnicodeString; const aCallback: TROAsyncCallback; const aUserData: Pointer = nil): IROAsyncRequest;
+    function BeginGetWareNumberNoticeBillAH(const _MySoapHeader: MySoapHeader; const fTransportID: UnicodeString; const fFactoryID: UnicodeString; const fMaterielID: UnicodeString; const fPackingID: UnicodeString; 
+                                            const famount: UnicodeString; const fCustomerID: UnicodeString; const aCallback: TROAsyncCallback; const aUserData: Pointer = nil): IROAsyncRequest;
+    function BeginP_SaleUpdateQControlWareNumberAH(const _MySoapHeader: MySoapHeader; const fTransportID: UnicodeString; const factoryID: UnicodeString; const fMaterielID: UnicodeString; const fPackingID: UnicodeString; 
+                                                   const fWareNumber: UnicodeString; const famount: UnicodeString; const consignBillID: UnicodeString; const aCallback: TROAsyncCallback; const aUserData: Pointer = nil): IROAsyncRequest;
     function BeginInitializationModel(const _MySoapHeader: MySoapHeader; const aCallback: TROAsyncCallback; const aUserData: Pointer = nil): IROAsyncRequest;
     function BeginInitializationModelList(const _MySoapHeader: MySoapHeader; const length: Integer; const aCallback: TROAsyncCallback; const aUserData: Pointer = nil): IROAsyncRequest;
-    function BeginInsert(const _MySoapHeader: MySoapHeader; const jsonString: WideString_Optional; const aCallback: TROAsyncCallback; const aUserData: Pointer = nil): IROAsyncRequest;
-    function BeginInsertList(const _MySoapHeader: MySoapHeader; const jsonString: WideString_Optional; const aCallback: TROAsyncCallback; const aUserData: Pointer = nil): IROAsyncRequest;
-    function BeginDeleteList(const _MySoapHeader: MySoapHeader; const jsonString: WideString_Optional; const aCallback: TROAsyncCallback; const aUserData: Pointer = nil): IROAsyncRequest;
-    function BeginDelete(const _MySoapHeader: MySoapHeader; const jsonString: WideString_Optional; const aCallback: TROAsyncCallback; const aUserData: Pointer = nil): IROAsyncRequest;
-    function BeginUpdate(const _MySoapHeader: MySoapHeader; const initJsonString: WideString_Optional; const newJsonString: WideString_Optional; const aCallback: TROAsyncCallback; const aUserData: Pointer = nil): IROAsyncRequest;
-    function BeginUpdateList(const _MySoapHeader: MySoapHeader; const initJsonString: WideString_Optional; const newJsonString: WideString_Optional; const aCallback: TROAsyncCallback; const aUserData: Pointer = nil): IROAsyncRequest;
-    function BeginRetrieveList(const _MySoapHeader: MySoapHeader; const where: WideString_Optional; const sort: WideString_Optional; const aCallback: TROAsyncCallback; const aUserData: Pointer = nil): IROAsyncRequest;
-    function BeginRetrieveListByPaging(const _MySoapHeader: MySoapHeader; const where: WideString_Optional; const sort: WideString_Optional; const pageNumber: Integer; const pageSize: Integer; const groupParameters: WideString_Optional; 
+    function BeginInsert(const _MySoapHeader: MySoapHeader; const jsonString: UnicodeString; const aCallback: TROAsyncCallback; const aUserData: Pointer = nil): IROAsyncRequest;
+    function BeginInsertList(const _MySoapHeader: MySoapHeader; const jsonString: UnicodeString; const aCallback: TROAsyncCallback; const aUserData: Pointer = nil): IROAsyncRequest;
+    function BeginDeleteList(const _MySoapHeader: MySoapHeader; const jsonString: UnicodeString; const aCallback: TROAsyncCallback; const aUserData: Pointer = nil): IROAsyncRequest;
+    function BeginDelete(const _MySoapHeader: MySoapHeader; const jsonString: UnicodeString; const aCallback: TROAsyncCallback; const aUserData: Pointer = nil): IROAsyncRequest;
+    function BeginUpdate(const _MySoapHeader: MySoapHeader; const initJsonString: UnicodeString; const newJsonString: UnicodeString; const aCallback: TROAsyncCallback; const aUserData: Pointer = nil): IROAsyncRequest;
+    function BeginUpdateList(const _MySoapHeader: MySoapHeader; const initJsonString: UnicodeString; const newJsonString: UnicodeString; const aCallback: TROAsyncCallback; const aUserData: Pointer = nil): IROAsyncRequest;
+    function BeginRetrieveList(const _MySoapHeader: MySoapHeader; const where: UnicodeString; const sort: UnicodeString; const aCallback: TROAsyncCallback; const aUserData: Pointer = nil): IROAsyncRequest;
+    function BeginRetrieveListByPaging(const _MySoapHeader: MySoapHeader; const where: UnicodeString; const sort: UnicodeString; const pageNumber: Integer; const pageSize: Integer; const groupParameters: UnicodeString; 
                                        const aCallback: TROAsyncCallback; const aUserData: Pointer = nil): IROAsyncRequest;
-    function BeginIsExists(const _MySoapHeader: MySoapHeader; const jsonString: WideString_Optional; const aCallback: TROAsyncCallback; const aUserData: Pointer = nil): IROAsyncRequest;
+    function BeginIsExists(const _MySoapHeader: MySoapHeader; const jsonString: UnicodeString; const aCallback: TROAsyncCallback; const aUserData: Pointer = nil): IROAsyncRequest;
     function EndGetWareNumberNoticeBill(const aRequest: IROAsyncRequest): UnicodeString;
     function EndP_SaleUpdateQControlWareNumber(const aRequest: IROAsyncRequest): UnicodeString;
-    function EndInitializationModel(const aRequest: IROAsyncRequest): WideString_Optional;
-    function EndInitializationModelList(const aRequest: IROAsyncRequest): WideString_Optional;
-    function EndInsert(const aRequest: IROAsyncRequest): WideString_Optional;
-    function EndInsertList(const aRequest: IROAsyncRequest): WideString_Optional;
-    function EndDeleteList(const aRequest: IROAsyncRequest): WideString_Optional;
-    function EndDelete(const aRequest: IROAsyncRequest): WideString_Optional;
-    function EndUpdate(const aRequest: IROAsyncRequest): WideString_Optional;
-    function EndUpdateList(const aRequest: IROAsyncRequest): WideString_Optional;
-    function EndRetrieveList(const aRequest: IROAsyncRequest): WideString_Optional;
-    function EndRetrieveListByPaging(const aRequest: IROAsyncRequest): WideString_Optional;
-    function EndIsExists(const aRequest: IROAsyncRequest): WideString_Optional;
+    function EndGetWareNumberNoticeBillAH(const aRequest: IROAsyncRequest): UnicodeString;
+    function EndP_SaleUpdateQControlWareNumberAH(const aRequest: IROAsyncRequest): UnicodeString;
+    function EndInitializationModel(const aRequest: IROAsyncRequest): UnicodeString;
+    function EndInitializationModelList(const aRequest: IROAsyncRequest): UnicodeString;
+    function EndInsert(const aRequest: IROAsyncRequest): UnicodeString;
+    function EndInsertList(const aRequest: IROAsyncRequest): UnicodeString;
+    function EndDeleteList(const aRequest: IROAsyncRequest): UnicodeString;
+    function EndDelete(const aRequest: IROAsyncRequest): UnicodeString;
+    function EndUpdate(const aRequest: IROAsyncRequest): UnicodeString;
+    function EndUpdateList(const aRequest: IROAsyncRequest): UnicodeString;
+    function EndRetrieveList(const aRequest: IROAsyncRequest): UnicodeString;
+    function EndRetrieveListByPaging(const aRequest: IROAsyncRequest): UnicodeString;
+    function EndIsExists(const aRequest: IROAsyncRequest): UnicodeString;
   end;
 
   CoV_QControlWareNumberNoticeBill = class(System.TObject)
@@ -149,51 +165,61 @@ type
   protected
     function __GetInterfaceName: String; override; 
     function GetWareNumberNoticeBill(const _MySoapHeader: MySoapHeader; const fFactoryID: UnicodeString; const fMaterielID: UnicodeString; const fPackingID: UnicodeString): UnicodeString;
-    function P_SaleUpdateQControlWareNumber(const _MySoapHeader: MySoapHeader; const factoryID: UnicodeString; const fMaterielID: UnicodeString; const fPackingID: UTF8String; const fWareNumber: UnicodeString; 
+    function P_SaleUpdateQControlWareNumber(const _MySoapHeader: MySoapHeader; const factoryID: UnicodeString; const fMaterielID: UnicodeString; const fPackingID: UnicodeString; const fWareNumber: UnicodeString; 
                                             const consignBillID: UnicodeString): UnicodeString;
-    function InitializationModel(const _MySoapHeader: MySoapHeader): WideString_Optional;
-    function InitializationModelList(const _MySoapHeader: MySoapHeader; const length: Integer): WideString_Optional;
-    function Insert(const _MySoapHeader: MySoapHeader; const jsonString: WideString_Optional): WideString_Optional;
-    function InsertList(const _MySoapHeader: MySoapHeader; const jsonString: WideString_Optional): WideString_Optional;
-    function DeleteList(const _MySoapHeader: MySoapHeader; const jsonString: WideString_Optional): WideString_Optional;
-    function Delete(const _MySoapHeader: MySoapHeader; const jsonString: WideString_Optional): WideString_Optional;
-    function Update(const _MySoapHeader: MySoapHeader; const initJsonString: WideString_Optional; const newJsonString: WideString_Optional): WideString_Optional;
-    function UpdateList(const _MySoapHeader: MySoapHeader; const initJsonString: WideString_Optional; const newJsonString: WideString_Optional): WideString_Optional;
-    function RetrieveList(const _MySoapHeader: MySoapHeader; const where: WideString_Optional; const sort: WideString_Optional): WideString_Optional;
-    function RetrieveListByPaging(const _MySoapHeader: MySoapHeader; const where: WideString_Optional; const sort: WideString_Optional; const pageNumber: Integer; const pageSize: Integer; const groupParameters: WideString_Optional): WideString_Optional;
-    function IsExists(const _MySoapHeader: MySoapHeader; const jsonString: WideString_Optional): WideString_Optional;
+    function GetWareNumberNoticeBillAH(const _MySoapHeader: MySoapHeader; const fTransportID: UnicodeString; const fFactoryID: UnicodeString; const fMaterielID: UnicodeString; const fPackingID: UnicodeString; 
+                                       const famount: UnicodeString; const fCustomerID: UnicodeString): UnicodeString;
+    function P_SaleUpdateQControlWareNumberAH(const _MySoapHeader: MySoapHeader; const fTransportID: UnicodeString; const factoryID: UnicodeString; const fMaterielID: UnicodeString; const fPackingID: UnicodeString; 
+                                              const fWareNumber: UnicodeString; const famount: UnicodeString; const consignBillID: UnicodeString): UnicodeString;
+    function InitializationModel(const _MySoapHeader: MySoapHeader): UnicodeString;
+    function InitializationModelList(const _MySoapHeader: MySoapHeader; const length: Integer): UnicodeString;
+    function Insert(const _MySoapHeader: MySoapHeader; const jsonString: UnicodeString): UnicodeString;
+    function InsertList(const _MySoapHeader: MySoapHeader; const jsonString: UnicodeString): UnicodeString;
+    function DeleteList(const _MySoapHeader: MySoapHeader; const jsonString: UnicodeString): UnicodeString;
+    function Delete(const _MySoapHeader: MySoapHeader; const jsonString: UnicodeString): UnicodeString;
+    function Update(const _MySoapHeader: MySoapHeader; const initJsonString: UnicodeString; const newJsonString: UnicodeString): UnicodeString;
+    function UpdateList(const _MySoapHeader: MySoapHeader; const initJsonString: UnicodeString; const newJsonString: UnicodeString): UnicodeString;
+    function RetrieveList(const _MySoapHeader: MySoapHeader; const where: UnicodeString; const sort: UnicodeString): UnicodeString;
+    function RetrieveListByPaging(const _MySoapHeader: MySoapHeader; const where: UnicodeString; const sort: UnicodeString; const pageNumber: Integer; const pageSize: Integer; const groupParameters: UnicodeString): UnicodeString;
+    function IsExists(const _MySoapHeader: MySoapHeader; const jsonString: UnicodeString): UnicodeString;
   end;
 
   TV_QControlWareNumberNoticeBill_AsyncProxy = class(TROAsyncProxy, IV_QControlWareNumberNoticeBill_Async)
   protected
     function __GetInterfaceName: String; override; 
     procedure Invoke_GetWareNumberNoticeBill(const _MySoapHeader: MySoapHeader; const fFactoryID: UnicodeString; const fMaterielID: UnicodeString; const fPackingID: UnicodeString);
-    procedure Invoke_P_SaleUpdateQControlWareNumber(const _MySoapHeader: MySoapHeader; const factoryID: UnicodeString; const fMaterielID: UnicodeString; const fPackingID: UTF8String; const fWareNumber: UnicodeString; 
+    procedure Invoke_P_SaleUpdateQControlWareNumber(const _MySoapHeader: MySoapHeader; const factoryID: UnicodeString; const fMaterielID: UnicodeString; const fPackingID: UnicodeString; const fWareNumber: UnicodeString; 
                                                     const consignBillID: UnicodeString);
+    procedure Invoke_GetWareNumberNoticeBillAH(const _MySoapHeader: MySoapHeader; const fTransportID: UnicodeString; const fFactoryID: UnicodeString; const fMaterielID: UnicodeString; const fPackingID: UnicodeString; 
+                                               const famount: UnicodeString; const fCustomerID: UnicodeString);
+    procedure Invoke_P_SaleUpdateQControlWareNumberAH(const _MySoapHeader: MySoapHeader; const fTransportID: UnicodeString; const factoryID: UnicodeString; const fMaterielID: UnicodeString; const fPackingID: UnicodeString; 
+                                                      const fWareNumber: UnicodeString; const famount: UnicodeString; const consignBillID: UnicodeString);
     procedure Invoke_InitializationModel(const _MySoapHeader: MySoapHeader);
     procedure Invoke_InitializationModelList(const _MySoapHeader: MySoapHeader; const length: Integer);
-    procedure Invoke_Insert(const _MySoapHeader: MySoapHeader; const jsonString: WideString_Optional);
-    procedure Invoke_InsertList(const _MySoapHeader: MySoapHeader; const jsonString: WideString_Optional);
-    procedure Invoke_DeleteList(const _MySoapHeader: MySoapHeader; const jsonString: WideString_Optional);
-    procedure Invoke_Delete(const _MySoapHeader: MySoapHeader; const jsonString: WideString_Optional);
-    procedure Invoke_Update(const _MySoapHeader: MySoapHeader; const initJsonString: WideString_Optional; const newJsonString: WideString_Optional);
-    procedure Invoke_UpdateList(const _MySoapHeader: MySoapHeader; const initJsonString: WideString_Optional; const newJsonString: WideString_Optional);
-    procedure Invoke_RetrieveList(const _MySoapHeader: MySoapHeader; const where: WideString_Optional; const sort: WideString_Optional);
-    procedure Invoke_RetrieveListByPaging(const _MySoapHeader: MySoapHeader; const where: WideString_Optional; const sort: WideString_Optional; const pageNumber: Integer; const pageSize: Integer; const groupParameters: WideString_Optional);
-    procedure Invoke_IsExists(const _MySoapHeader: MySoapHeader; const jsonString: WideString_Optional);
+    procedure Invoke_Insert(const _MySoapHeader: MySoapHeader; const jsonString: UnicodeString);
+    procedure Invoke_InsertList(const _MySoapHeader: MySoapHeader; const jsonString: UnicodeString);
+    procedure Invoke_DeleteList(const _MySoapHeader: MySoapHeader; const jsonString: UnicodeString);
+    procedure Invoke_Delete(const _MySoapHeader: MySoapHeader; const jsonString: UnicodeString);
+    procedure Invoke_Update(const _MySoapHeader: MySoapHeader; const initJsonString: UnicodeString; const newJsonString: UnicodeString);
+    procedure Invoke_UpdateList(const _MySoapHeader: MySoapHeader; const initJsonString: UnicodeString; const newJsonString: UnicodeString);
+    procedure Invoke_RetrieveList(const _MySoapHeader: MySoapHeader; const where: UnicodeString; const sort: UnicodeString);
+    procedure Invoke_RetrieveListByPaging(const _MySoapHeader: MySoapHeader; const where: UnicodeString; const sort: UnicodeString; const pageNumber: Integer; const pageSize: Integer; const groupParameters: UnicodeString);
+    procedure Invoke_IsExists(const _MySoapHeader: MySoapHeader; const jsonString: UnicodeString);
     function Retrieve_GetWareNumberNoticeBill: UnicodeString;
     function Retrieve_P_SaleUpdateQControlWareNumber: UnicodeString;
-    function Retrieve_InitializationModel: WideString_Optional;
-    function Retrieve_InitializationModelList: WideString_Optional;
-    function Retrieve_Insert: WideString_Optional;
-    function Retrieve_InsertList: WideString_Optional;
-    function Retrieve_DeleteList: WideString_Optional;
-    function Retrieve_Delete: WideString_Optional;
-    function Retrieve_Update: WideString_Optional;
-    function Retrieve_UpdateList: WideString_Optional;
-    function Retrieve_RetrieveList: WideString_Optional;
-    function Retrieve_RetrieveListByPaging: WideString_Optional;
-    function Retrieve_IsExists: WideString_Optional;
+    function Retrieve_GetWareNumberNoticeBillAH: UnicodeString;
+    function Retrieve_P_SaleUpdateQControlWareNumberAH: UnicodeString;
+    function Retrieve_InitializationModel: UnicodeString;
+    function Retrieve_InitializationModelList: UnicodeString;
+    function Retrieve_Insert: UnicodeString;
+    function Retrieve_InsertList: UnicodeString;
+    function Retrieve_DeleteList: UnicodeString;
+    function Retrieve_Delete: UnicodeString;
+    function Retrieve_Update: UnicodeString;
+    function Retrieve_UpdateList: UnicodeString;
+    function Retrieve_RetrieveList: UnicodeString;
+    function Retrieve_RetrieveListByPaging: UnicodeString;
+    function Retrieve_IsExists: UnicodeString;
   end;
 
   TV_QControlWareNumberNoticeBill_AsyncProxyEx = class(TROAsyncProxyEx, IV_QControlWareNumberNoticeBill_AsyncEx)
@@ -201,33 +227,39 @@ type
     function __GetInterfaceName: String; override; 
     function BeginGetWareNumberNoticeBill(const _MySoapHeader: MySoapHeader; const fFactoryID: UnicodeString; const fMaterielID: UnicodeString; const fPackingID: UnicodeString; const aCallback: TROAsyncCallback; 
                                           const aUserData: Pointer = nil): IROAsyncRequest;
-    function BeginP_SaleUpdateQControlWareNumber(const _MySoapHeader: MySoapHeader; const factoryID: UnicodeString; const fMaterielID: UnicodeString; const fPackingID: UTF8String; const fWareNumber: UnicodeString; 
+    function BeginP_SaleUpdateQControlWareNumber(const _MySoapHeader: MySoapHeader; const factoryID: UnicodeString; const fMaterielID: UnicodeString; const fPackingID: UnicodeString; const fWareNumber: UnicodeString; 
                                                  const consignBillID: UnicodeString; const aCallback: TROAsyncCallback; const aUserData: Pointer = nil): IROAsyncRequest;
+    function BeginGetWareNumberNoticeBillAH(const _MySoapHeader: MySoapHeader; const fTransportID: UnicodeString; const fFactoryID: UnicodeString; const fMaterielID: UnicodeString; const fPackingID: UnicodeString; 
+                                            const famount: UnicodeString; const fCustomerID: UnicodeString; const aCallback: TROAsyncCallback; const aUserData: Pointer = nil): IROAsyncRequest;
+    function BeginP_SaleUpdateQControlWareNumberAH(const _MySoapHeader: MySoapHeader; const fTransportID: UnicodeString; const factoryID: UnicodeString; const fMaterielID: UnicodeString; const fPackingID: UnicodeString; 
+                                                   const fWareNumber: UnicodeString; const famount: UnicodeString; const consignBillID: UnicodeString; const aCallback: TROAsyncCallback; const aUserData: Pointer = nil): IROAsyncRequest;
     function BeginInitializationModel(const _MySoapHeader: MySoapHeader; const aCallback: TROAsyncCallback; const aUserData: Pointer = nil): IROAsyncRequest;
     function BeginInitializationModelList(const _MySoapHeader: MySoapHeader; const length: Integer; const aCallback: TROAsyncCallback; const aUserData: Pointer = nil): IROAsyncRequest;
-    function BeginInsert(const _MySoapHeader: MySoapHeader; const jsonString: WideString_Optional; const aCallback: TROAsyncCallback; const aUserData: Pointer = nil): IROAsyncRequest;
-    function BeginInsertList(const _MySoapHeader: MySoapHeader; const jsonString: WideString_Optional; const aCallback: TROAsyncCallback; const aUserData: Pointer = nil): IROAsyncRequest;
-    function BeginDeleteList(const _MySoapHeader: MySoapHeader; const jsonString: WideString_Optional; const aCallback: TROAsyncCallback; const aUserData: Pointer = nil): IROAsyncRequest;
-    function BeginDelete(const _MySoapHeader: MySoapHeader; const jsonString: WideString_Optional; const aCallback: TROAsyncCallback; const aUserData: Pointer = nil): IROAsyncRequest;
-    function BeginUpdate(const _MySoapHeader: MySoapHeader; const initJsonString: WideString_Optional; const newJsonString: WideString_Optional; const aCallback: TROAsyncCallback; const aUserData: Pointer = nil): IROAsyncRequest;
-    function BeginUpdateList(const _MySoapHeader: MySoapHeader; const initJsonString: WideString_Optional; const newJsonString: WideString_Optional; const aCallback: TROAsyncCallback; const aUserData: Pointer = nil): IROAsyncRequest;
-    function BeginRetrieveList(const _MySoapHeader: MySoapHeader; const where: WideString_Optional; const sort: WideString_Optional; const aCallback: TROAsyncCallback; const aUserData: Pointer = nil): IROAsyncRequest;
-    function BeginRetrieveListByPaging(const _MySoapHeader: MySoapHeader; const where: WideString_Optional; const sort: WideString_Optional; const pageNumber: Integer; const pageSize: Integer; const groupParameters: WideString_Optional; 
+    function BeginInsert(const _MySoapHeader: MySoapHeader; const jsonString: UnicodeString; const aCallback: TROAsyncCallback; const aUserData: Pointer = nil): IROAsyncRequest;
+    function BeginInsertList(const _MySoapHeader: MySoapHeader; const jsonString: UnicodeString; const aCallback: TROAsyncCallback; const aUserData: Pointer = nil): IROAsyncRequest;
+    function BeginDeleteList(const _MySoapHeader: MySoapHeader; const jsonString: UnicodeString; const aCallback: TROAsyncCallback; const aUserData: Pointer = nil): IROAsyncRequest;
+    function BeginDelete(const _MySoapHeader: MySoapHeader; const jsonString: UnicodeString; const aCallback: TROAsyncCallback; const aUserData: Pointer = nil): IROAsyncRequest;
+    function BeginUpdate(const _MySoapHeader: MySoapHeader; const initJsonString: UnicodeString; const newJsonString: UnicodeString; const aCallback: TROAsyncCallback; const aUserData: Pointer = nil): IROAsyncRequest;
+    function BeginUpdateList(const _MySoapHeader: MySoapHeader; const initJsonString: UnicodeString; const newJsonString: UnicodeString; const aCallback: TROAsyncCallback; const aUserData: Pointer = nil): IROAsyncRequest;
+    function BeginRetrieveList(const _MySoapHeader: MySoapHeader; const where: UnicodeString; const sort: UnicodeString; const aCallback: TROAsyncCallback; const aUserData: Pointer = nil): IROAsyncRequest;
+    function BeginRetrieveListByPaging(const _MySoapHeader: MySoapHeader; const where: UnicodeString; const sort: UnicodeString; const pageNumber: Integer; const pageSize: Integer; const groupParameters: UnicodeString; 
                                        const aCallback: TROAsyncCallback; const aUserData: Pointer = nil): IROAsyncRequest;
-    function BeginIsExists(const _MySoapHeader: MySoapHeader; const jsonString: WideString_Optional; const aCallback: TROAsyncCallback; const aUserData: Pointer = nil): IROAsyncRequest;
+    function BeginIsExists(const _MySoapHeader: MySoapHeader; const jsonString: UnicodeString; const aCallback: TROAsyncCallback; const aUserData: Pointer = nil): IROAsyncRequest;
     function EndGetWareNumberNoticeBill(const aRequest: IROAsyncRequest): UnicodeString;
     function EndP_SaleUpdateQControlWareNumber(const aRequest: IROAsyncRequest): UnicodeString;
-    function EndInitializationModel(const aRequest: IROAsyncRequest): WideString_Optional;
-    function EndInitializationModelList(const aRequest: IROAsyncRequest): WideString_Optional;
-    function EndInsert(const aRequest: IROAsyncRequest): WideString_Optional;
-    function EndInsertList(const aRequest: IROAsyncRequest): WideString_Optional;
-    function EndDeleteList(const aRequest: IROAsyncRequest): WideString_Optional;
-    function EndDelete(const aRequest: IROAsyncRequest): WideString_Optional;
-    function EndUpdate(const aRequest: IROAsyncRequest): WideString_Optional;
-    function EndUpdateList(const aRequest: IROAsyncRequest): WideString_Optional;
-    function EndRetrieveList(const aRequest: IROAsyncRequest): WideString_Optional;
-    function EndRetrieveListByPaging(const aRequest: IROAsyncRequest): WideString_Optional;
-    function EndIsExists(const aRequest: IROAsyncRequest): WideString_Optional;
+    function EndGetWareNumberNoticeBillAH(const aRequest: IROAsyncRequest): UnicodeString;
+    function EndP_SaleUpdateQControlWareNumberAH(const aRequest: IROAsyncRequest): UnicodeString;
+    function EndInitializationModel(const aRequest: IROAsyncRequest): UnicodeString;
+    function EndInitializationModelList(const aRequest: IROAsyncRequest): UnicodeString;
+    function EndInsert(const aRequest: IROAsyncRequest): UnicodeString;
+    function EndInsertList(const aRequest: IROAsyncRequest): UnicodeString;
+    function EndDeleteList(const aRequest: IROAsyncRequest): UnicodeString;
+    function EndDelete(const aRequest: IROAsyncRequest): UnicodeString;
+    function EndUpdate(const aRequest: IROAsyncRequest): UnicodeString;
+    function EndUpdateList(const aRequest: IROAsyncRequest): UnicodeString;
+    function EndRetrieveList(const aRequest: IROAsyncRequest): UnicodeString;
+    function EndRetrieveListByPaging(const aRequest: IROAsyncRequest): UnicodeString;
+    function EndIsExists(const aRequest: IROAsyncRequest): UnicodeString;
   end;
 
 implementation
@@ -313,12 +345,13 @@ var
 begin
   lMessage := __GetMessage();
   lTransportChannel := __TransportChannel;
-  lMessage.SetAttributes(lTransportChannel, ['action', 'headerparams', 'location', 'outputchildrennamespace', 'remap_delete', 'remap_deletelist', 'remap_getwarenumbernoticebill', 'remap_initializationmodel', 
-                                             'remap_initializationmodellist', 'remap_insert', 'remap_insertlist', 'remap_isexists', 'remap_p_saleupdateqcontrolwarenumber', 'remap_retrievelist', 'remap_retrievelistbypaging', 
-                                             'remap_update', 'remap_updatelist', 'soapinputmessagenamespace', 'soapinputnameoverride', 'soapoutputmessagenamespace', 'style', 'type', 'use'], ['http://tempuri.org/GetWareNumberNoticeBill', 
-                                             'MySoapHeader', 'http://110.52.60.19:6690/Quality/QualityControl/Business/V_QControlWareNumberNoticeBill.asmx', '*', 'http://tempuri.org/Delete', 'http://tempuri.org/DeleteList', 
-                                             'http://tempuri.org/GetWareNumberNoticeBill', 'http://tempuri.org/InitializationModel', 'http://tempuri.org/InitializationModelList', 'http://tempuri.org/Insert', 
-                                             'http://tempuri.org/InsertList', 'http://tempuri.org/IsExists', 'http://tempuri.org/P_SaleUpdateQControlWareNumber', 'http://tempuri.org/RetrieveList', 'http://tempuri.org/RetrieveListByPaging', 
+  lMessage.SetAttributes(lTransportChannel, ['action', 'headerparams', 'location', 'outputchildrennamespace', 'remap_delete', 'remap_deletelist', 'remap_getwarenumbernoticebill', 'remap_getwarenumbernoticebillah', 
+                                             'remap_initializationmodel', 'remap_initializationmodellist', 'remap_insert', 'remap_insertlist', 'remap_isexists', 'remap_p_saleupdateqcontrolwarenumber', 
+                                             'remap_p_saleupdateqcontrolwarenumberah', 'remap_retrievelist', 'remap_retrievelistbypaging', 'remap_update', 'remap_updatelist', 'soapinputmessagenamespace', 
+                                             'soapinputnameoverride', 'soapoutputmessagenamespace', 'style', 'type', 'use'], ['http://tempuri.org/GetWareNumberNoticeBill', 'MySoapHeader', 'http://58.243.161.70:6690/Quality/QualityControl/Business/V_QControlWareNumberNoticeBill.asmx', 
+                                             '*', 'http://tempuri.org/Delete', 'http://tempuri.org/DeleteList', 'http://tempuri.org/GetWareNumberNoticeBill', 'http://tempuri.org/GetWareNumberNoticeBillAH', 
+                                             'http://tempuri.org/InitializationModel', 'http://tempuri.org/InitializationModelList', 'http://tempuri.org/Insert', 'http://tempuri.org/InsertList', 'http://tempuri.org/IsExists', 
+                                             'http://tempuri.org/P_SaleUpdateQControlWareNumber', 'http://tempuri.org/P_SaleUpdateQControlWareNumberAH', 'http://tempuri.org/RetrieveList', 'http://tempuri.org/RetrieveListByPaging', 
                                              'http://tempuri.org/Update', 'http://tempuri.org/UpdateList', 'http://tempuri.org/', 'GetWareNumberNoticeBill', 'http://tempuri.org/', 'document', 'SOAP', 'literal']);
   try
     lMessage.InitializeRequestMessage(lTransportChannel, 'V_QControlWareNumberNoticeBill', __InterfaceName, 'GetWareNumberNoticeBill');
@@ -341,7 +374,7 @@ begin
   exit;
 end;
 
-function TV_QControlWareNumberNoticeBill_Proxy.P_SaleUpdateQControlWareNumber(const _MySoapHeader: MySoapHeader; const factoryID: UnicodeString; const fMaterielID: UnicodeString; const fPackingID: UTF8String; 
+function TV_QControlWareNumberNoticeBill_Proxy.P_SaleUpdateQControlWareNumber(const _MySoapHeader: MySoapHeader; const factoryID: UnicodeString; const fMaterielID: UnicodeString; const fPackingID: UnicodeString; 
                                                                               const fWareNumber: UnicodeString; const consignBillID: UnicodeString): UnicodeString;
 var
   lMessage: IROMessage;
@@ -350,12 +383,13 @@ var
 begin
   lMessage := __GetMessage();
   lTransportChannel := __TransportChannel;
-  lMessage.SetAttributes(lTransportChannel, ['action', 'headerparams', 'location', 'outputchildrennamespace', 'remap_delete', 'remap_deletelist', 'remap_getwarenumbernoticebill', 'remap_initializationmodel', 
-                                             'remap_initializationmodellist', 'remap_insert', 'remap_insertlist', 'remap_isexists', 'remap_p_saleupdateqcontrolwarenumber', 'remap_retrievelist', 'remap_retrievelistbypaging', 
-                                             'remap_update', 'remap_updatelist', 'soapinputmessagenamespace', 'soapinputnameoverride', 'soapoutputmessagenamespace', 'style', 'type', 'use'], ['http://tempuri.org/P_SaleUpdateQControlWareNumber', 
-                                             'MySoapHeader', 'http://110.52.60.19:6690/Quality/QualityControl/Business/V_QControlWareNumberNoticeBill.asmx', '*', 'http://tempuri.org/Delete', 'http://tempuri.org/DeleteList', 
-                                             'http://tempuri.org/GetWareNumberNoticeBill', 'http://tempuri.org/InitializationModel', 'http://tempuri.org/InitializationModelList', 'http://tempuri.org/Insert', 
-                                             'http://tempuri.org/InsertList', 'http://tempuri.org/IsExists', 'http://tempuri.org/P_SaleUpdateQControlWareNumber', 'http://tempuri.org/RetrieveList', 'http://tempuri.org/RetrieveListByPaging', 
+  lMessage.SetAttributes(lTransportChannel, ['action', 'headerparams', 'location', 'outputchildrennamespace', 'remap_delete', 'remap_deletelist', 'remap_getwarenumbernoticebill', 'remap_getwarenumbernoticebillah', 
+                                             'remap_initializationmodel', 'remap_initializationmodellist', 'remap_insert', 'remap_insertlist', 'remap_isexists', 'remap_p_saleupdateqcontrolwarenumber', 
+                                             'remap_p_saleupdateqcontrolwarenumberah', 'remap_retrievelist', 'remap_retrievelistbypaging', 'remap_update', 'remap_updatelist', 'soapinputmessagenamespace', 
+                                             'soapinputnameoverride', 'soapoutputmessagenamespace', 'style', 'type', 'use'], ['http://tempuri.org/P_SaleUpdateQControlWareNumber', 'MySoapHeader', 'http://58.243.161.70:6690/Quality/QualityControl/Business/V_QControlWareNumberNoticeBill.asmx', 
+                                             '*', 'http://tempuri.org/Delete', 'http://tempuri.org/DeleteList', 'http://tempuri.org/GetWareNumberNoticeBill', 'http://tempuri.org/GetWareNumberNoticeBillAH', 
+                                             'http://tempuri.org/InitializationModel', 'http://tempuri.org/InitializationModelList', 'http://tempuri.org/Insert', 'http://tempuri.org/InsertList', 'http://tempuri.org/IsExists', 
+                                             'http://tempuri.org/P_SaleUpdateQControlWareNumber', 'http://tempuri.org/P_SaleUpdateQControlWareNumberAH', 'http://tempuri.org/RetrieveList', 'http://tempuri.org/RetrieveListByPaging', 
                                              'http://tempuri.org/Update', 'http://tempuri.org/UpdateList', 'http://tempuri.org/', 'P_SaleUpdateQControlWareNumber', 'http://tempuri.org/', 'document', 'SOAP', 
                                              'literal']);
   try
@@ -363,7 +397,7 @@ begin
     lMessage.Write('_MySoapHeader', System.TypeInfo(MySoapHeader), _MySoapHeader, []);
     lMessage.Write('factoryID', System.TypeInfo(UnicodeString), factoryID, []);
     lMessage.Write('fMaterielID', System.TypeInfo(UnicodeString), fMaterielID, []);
-    lMessage.Write('fPackingID', System.TypeInfo(UTF8String), fPackingID, []);
+    lMessage.Write('fPackingID', System.TypeInfo(UnicodeString), fPackingID, []);
     lMessage.Write('fWareNumber', System.TypeInfo(UnicodeString), fWareNumber, []);
     lMessage.Write('consignBillID', System.TypeInfo(UnicodeString), consignBillID, []);
     lMessage.Finalize();
@@ -381,29 +415,38 @@ begin
   exit;
 end;
 
-function TV_QControlWareNumberNoticeBill_Proxy.InitializationModel(const _MySoapHeader: MySoapHeader): WideString_Optional;
+function TV_QControlWareNumberNoticeBill_Proxy.GetWareNumberNoticeBillAH(const _MySoapHeader: MySoapHeader; const fTransportID: UnicodeString; const fFactoryID: UnicodeString; const fMaterielID: UnicodeString; 
+                                                                         const fPackingID: UnicodeString; const famount: UnicodeString; const fCustomerID: UnicodeString): UnicodeString;
 var
   lMessage: IROMessage;
   lTransportChannel: IROTransportChannel;
-  lResult: WideString_Optional;
+  lResult: UnicodeString;
 begin
   lMessage := __GetMessage();
   lTransportChannel := __TransportChannel;
-  lMessage.SetAttributes(lTransportChannel, ['action', 'headerparams', 'location', 'outputchildrennamespace', 'remap_delete', 'remap_deletelist', 'remap_getwarenumbernoticebill', 'remap_initializationmodel', 
-                                             'remap_initializationmodellist', 'remap_insert', 'remap_insertlist', 'remap_isexists', 'remap_p_saleupdateqcontrolwarenumber', 'remap_retrievelist', 'remap_retrievelistbypaging', 
-                                             'remap_update', 'remap_updatelist', 'soapinputmessagenamespace', 'soapinputnameoverride', 'soapoutputmessagenamespace', 'style', 'type', 'use'], ['http://tempuri.org/InitializationModel', 
-                                             'MySoapHeader', 'http://110.52.60.19:6690/Quality/QualityControl/Business/V_QControlWareNumberNoticeBill.asmx', '*', 'http://tempuri.org/Delete', 'http://tempuri.org/DeleteList', 
-                                             'http://tempuri.org/GetWareNumberNoticeBill', 'http://tempuri.org/InitializationModel', 'http://tempuri.org/InitializationModelList', 'http://tempuri.org/Insert', 
-                                             'http://tempuri.org/InsertList', 'http://tempuri.org/IsExists', 'http://tempuri.org/P_SaleUpdateQControlWareNumber', 'http://tempuri.org/RetrieveList', 'http://tempuri.org/RetrieveListByPaging', 
-                                             'http://tempuri.org/Update', 'http://tempuri.org/UpdateList', 'http://tempuri.org/', 'InitializationModel', 'http://tempuri.org/', 'document', 'SOAP', 'literal']);
+  lMessage.SetAttributes(lTransportChannel, ['action', 'headerparams', 'location', 'outputchildrennamespace', 'remap_delete', 'remap_deletelist', 'remap_getwarenumbernoticebill', 'remap_getwarenumbernoticebillah', 
+                                             'remap_initializationmodel', 'remap_initializationmodellist', 'remap_insert', 'remap_insertlist', 'remap_isexists', 'remap_p_saleupdateqcontrolwarenumber', 
+                                             'remap_p_saleupdateqcontrolwarenumberah', 'remap_retrievelist', 'remap_retrievelistbypaging', 'remap_update', 'remap_updatelist', 'soapinputmessagenamespace', 
+                                             'soapinputnameoverride', 'soapoutputmessagenamespace', 'style', 'type', 'use'], ['http://tempuri.org/GetWareNumberNoticeBillAH', 'MySoapHeader', 'http://58.243.161.70:6690/Quality/QualityControl/Business/V_QControlWareNumberNoticeBill.asmx', 
+                                             '*', 'http://tempuri.org/Delete', 'http://tempuri.org/DeleteList', 'http://tempuri.org/GetWareNumberNoticeBill', 'http://tempuri.org/GetWareNumberNoticeBillAH', 
+                                             'http://tempuri.org/InitializationModel', 'http://tempuri.org/InitializationModelList', 'http://tempuri.org/Insert', 'http://tempuri.org/InsertList', 'http://tempuri.org/IsExists', 
+                                             'http://tempuri.org/P_SaleUpdateQControlWareNumber', 'http://tempuri.org/P_SaleUpdateQControlWareNumberAH', 'http://tempuri.org/RetrieveList', 'http://tempuri.org/RetrieveListByPaging', 
+                                             'http://tempuri.org/Update', 'http://tempuri.org/UpdateList', 'http://tempuri.org/', 'GetWareNumberNoticeBillAH', 'http://tempuri.org/', 'document', 'SOAP', 
+                                             'literal']);
   try
-    lMessage.InitializeRequestMessage(lTransportChannel, 'V_QControlWareNumberNoticeBill', __InterfaceName, 'InitializationModel');
+    lMessage.InitializeRequestMessage(lTransportChannel, 'V_QControlWareNumberNoticeBill', __InterfaceName, 'GetWareNumberNoticeBillAH');
     lMessage.Write('_MySoapHeader', System.TypeInfo(MySoapHeader), _MySoapHeader, []);
+    lMessage.Write('fTransportID', System.TypeInfo(UnicodeString), fTransportID, []);
+    lMessage.Write('fFactoryID', System.TypeInfo(UnicodeString), fFactoryID, []);
+    lMessage.Write('fMaterielID', System.TypeInfo(UnicodeString), fMaterielID, []);
+    lMessage.Write('fPackingID', System.TypeInfo(UnicodeString), fPackingID, []);
+    lMessage.Write('famount', System.TypeInfo(UnicodeString), famount, []);
+    lMessage.Write('fCustomerID', System.TypeInfo(UnicodeString), fCustomerID, []);
     lMessage.Finalize();
 
     lTransportChannel.Dispatch(lMessage);
 
-    lMessage.Read('InitializationModelResult', System.TypeInfo(WideString_Optional), lResult, []);
+    lMessage.Read('GetWareNumberNoticeBillAHResult', System.TypeInfo(UnicodeString), lResult, []);
   finally
     lMessage.UnsetAttributes(lTransportChannel);
     lMessage.FreeStream();
@@ -414,20 +457,98 @@ begin
   exit;
 end;
 
-function TV_QControlWareNumberNoticeBill_Proxy.InitializationModelList(const _MySoapHeader: MySoapHeader; const length: Integer): WideString_Optional;
+function TV_QControlWareNumberNoticeBill_Proxy.P_SaleUpdateQControlWareNumberAH(const _MySoapHeader: MySoapHeader; const fTransportID: UnicodeString; const factoryID: UnicodeString; const fMaterielID: UnicodeString; 
+                                                                                const fPackingID: UnicodeString; const fWareNumber: UnicodeString; const famount: UnicodeString; const consignBillID: UnicodeString): UnicodeString;
 var
   lMessage: IROMessage;
   lTransportChannel: IROTransportChannel;
-  lResult: WideString_Optional;
+  lResult: UnicodeString;
 begin
   lMessage := __GetMessage();
   lTransportChannel := __TransportChannel;
-  lMessage.SetAttributes(lTransportChannel, ['action', 'headerparams', 'location', 'outputchildrennamespace', 'remap_delete', 'remap_deletelist', 'remap_getwarenumbernoticebill', 'remap_initializationmodel', 
-                                             'remap_initializationmodellist', 'remap_insert', 'remap_insertlist', 'remap_isexists', 'remap_p_saleupdateqcontrolwarenumber', 'remap_retrievelist', 'remap_retrievelistbypaging', 
-                                             'remap_update', 'remap_updatelist', 'soapinputmessagenamespace', 'soapinputnameoverride', 'soapoutputmessagenamespace', 'style', 'type', 'use'], ['http://tempuri.org/InitializationModelList', 
-                                             'MySoapHeader', 'http://110.52.60.19:6690/Quality/QualityControl/Business/V_QControlWareNumberNoticeBill.asmx', '*', 'http://tempuri.org/Delete', 'http://tempuri.org/DeleteList', 
-                                             'http://tempuri.org/GetWareNumberNoticeBill', 'http://tempuri.org/InitializationModel', 'http://tempuri.org/InitializationModelList', 'http://tempuri.org/Insert', 
-                                             'http://tempuri.org/InsertList', 'http://tempuri.org/IsExists', 'http://tempuri.org/P_SaleUpdateQControlWareNumber', 'http://tempuri.org/RetrieveList', 'http://tempuri.org/RetrieveListByPaging', 
+  lMessage.SetAttributes(lTransportChannel, ['action', 'headerparams', 'location', 'outputchildrennamespace', 'remap_delete', 'remap_deletelist', 'remap_getwarenumbernoticebill', 'remap_getwarenumbernoticebillah', 
+                                             'remap_initializationmodel', 'remap_initializationmodellist', 'remap_insert', 'remap_insertlist', 'remap_isexists', 'remap_p_saleupdateqcontrolwarenumber', 
+                                             'remap_p_saleupdateqcontrolwarenumberah', 'remap_retrievelist', 'remap_retrievelistbypaging', 'remap_update', 'remap_updatelist', 'soapinputmessagenamespace', 
+                                             'soapinputnameoverride', 'soapoutputmessagenamespace', 'style', 'type', 'use'], ['http://tempuri.org/P_SaleUpdateQControlWareNumberAH', 'MySoapHeader', 'http://58.243.161.70:6690/Quality/QualityControl/Business/V_QControlWareNumberNoticeBill.asmx', 
+                                             '*', 'http://tempuri.org/Delete', 'http://tempuri.org/DeleteList', 'http://tempuri.org/GetWareNumberNoticeBill', 'http://tempuri.org/GetWareNumberNoticeBillAH', 
+                                             'http://tempuri.org/InitializationModel', 'http://tempuri.org/InitializationModelList', 'http://tempuri.org/Insert', 'http://tempuri.org/InsertList', 'http://tempuri.org/IsExists', 
+                                             'http://tempuri.org/P_SaleUpdateQControlWareNumber', 'http://tempuri.org/P_SaleUpdateQControlWareNumberAH', 'http://tempuri.org/RetrieveList', 'http://tempuri.org/RetrieveListByPaging', 
+                                             'http://tempuri.org/Update', 'http://tempuri.org/UpdateList', 'http://tempuri.org/', 'P_SaleUpdateQControlWareNumberAH', 'http://tempuri.org/', 'document', 
+                                             'SOAP', 'literal']);
+  try
+    lMessage.InitializeRequestMessage(lTransportChannel, 'V_QControlWareNumberNoticeBill', __InterfaceName, 'P_SaleUpdateQControlWareNumberAH');
+    lMessage.Write('_MySoapHeader', System.TypeInfo(MySoapHeader), _MySoapHeader, []);
+    lMessage.Write('fTransportID', System.TypeInfo(UnicodeString), fTransportID, []);
+    lMessage.Write('factoryID', System.TypeInfo(UnicodeString), factoryID, []);
+    lMessage.Write('fMaterielID', System.TypeInfo(UnicodeString), fMaterielID, []);
+    lMessage.Write('fPackingID', System.TypeInfo(UnicodeString), fPackingID, []);
+    lMessage.Write('fWareNumber', System.TypeInfo(UnicodeString), fWareNumber, []);
+    lMessage.Write('famount', System.TypeInfo(UnicodeString), famount, []);
+    lMessage.Write('consignBillID', System.TypeInfo(UnicodeString), consignBillID, []);
+    lMessage.Finalize();
+
+    lTransportChannel.Dispatch(lMessage);
+
+    lMessage.Read('P_SaleUpdateQControlWareNumberAHResult', System.TypeInfo(UnicodeString), lResult, []);
+  finally
+    lMessage.UnsetAttributes(lTransportChannel);
+    lMessage.FreeStream();
+    lMessage := nil;
+    lTransportChannel := nil;
+  end;
+  result := lResult;
+  exit;
+end;
+
+function TV_QControlWareNumberNoticeBill_Proxy.InitializationModel(const _MySoapHeader: MySoapHeader): UnicodeString;
+var
+  lMessage: IROMessage;
+  lTransportChannel: IROTransportChannel;
+  lResult: UnicodeString;
+begin
+  lMessage := __GetMessage();
+  lTransportChannel := __TransportChannel;
+  lMessage.SetAttributes(lTransportChannel, ['action', 'headerparams', 'location', 'outputchildrennamespace', 'remap_delete', 'remap_deletelist', 'remap_getwarenumbernoticebill', 'remap_getwarenumbernoticebillah', 
+                                             'remap_initializationmodel', 'remap_initializationmodellist', 'remap_insert', 'remap_insertlist', 'remap_isexists', 'remap_p_saleupdateqcontrolwarenumber', 
+                                             'remap_p_saleupdateqcontrolwarenumberah', 'remap_retrievelist', 'remap_retrievelistbypaging', 'remap_update', 'remap_updatelist', 'soapinputmessagenamespace', 
+                                             'soapinputnameoverride', 'soapoutputmessagenamespace', 'style', 'type', 'use'], ['http://tempuri.org/InitializationModel', 'MySoapHeader', 'http://58.243.161.70:6690/Quality/QualityControl/Business/V_QControlWareNumberNoticeBill.asmx', 
+                                             '*', 'http://tempuri.org/Delete', 'http://tempuri.org/DeleteList', 'http://tempuri.org/GetWareNumberNoticeBill', 'http://tempuri.org/GetWareNumberNoticeBillAH', 
+                                             'http://tempuri.org/InitializationModel', 'http://tempuri.org/InitializationModelList', 'http://tempuri.org/Insert', 'http://tempuri.org/InsertList', 'http://tempuri.org/IsExists', 
+                                             'http://tempuri.org/P_SaleUpdateQControlWareNumber', 'http://tempuri.org/P_SaleUpdateQControlWareNumberAH', 'http://tempuri.org/RetrieveList', 'http://tempuri.org/RetrieveListByPaging', 
+                                             'http://tempuri.org/Update', 'http://tempuri.org/UpdateList', 'http://tempuri.org/', 'InitializationModel', 'http://tempuri.org/', 'document', 'SOAP', 'literal']);
+  try
+    lMessage.InitializeRequestMessage(lTransportChannel, 'V_QControlWareNumberNoticeBill', __InterfaceName, 'InitializationModel');
+    lMessage.Write('_MySoapHeader', System.TypeInfo(MySoapHeader), _MySoapHeader, []);
+    lMessage.Finalize();
+
+    lTransportChannel.Dispatch(lMessage);
+
+    lMessage.Read('InitializationModelResult', System.TypeInfo(UnicodeString), lResult, []);
+  finally
+    lMessage.UnsetAttributes(lTransportChannel);
+    lMessage.FreeStream();
+    lMessage := nil;
+    lTransportChannel := nil;
+  end;
+  result := lResult;
+  exit;
+end;
+
+function TV_QControlWareNumberNoticeBill_Proxy.InitializationModelList(const _MySoapHeader: MySoapHeader; const length: Integer): UnicodeString;
+var
+  lMessage: IROMessage;
+  lTransportChannel: IROTransportChannel;
+  lResult: UnicodeString;
+begin
+  lMessage := __GetMessage();
+  lTransportChannel := __TransportChannel;
+  lMessage.SetAttributes(lTransportChannel, ['action', 'headerparams', 'location', 'outputchildrennamespace', 'remap_delete', 'remap_deletelist', 'remap_getwarenumbernoticebill', 'remap_getwarenumbernoticebillah', 
+                                             'remap_initializationmodel', 'remap_initializationmodellist', 'remap_insert', 'remap_insertlist', 'remap_isexists', 'remap_p_saleupdateqcontrolwarenumber', 
+                                             'remap_p_saleupdateqcontrolwarenumberah', 'remap_retrievelist', 'remap_retrievelistbypaging', 'remap_update', 'remap_updatelist', 'soapinputmessagenamespace', 
+                                             'soapinputnameoverride', 'soapoutputmessagenamespace', 'style', 'type', 'use'], ['http://tempuri.org/InitializationModelList', 'MySoapHeader', 'http://58.243.161.70:6690/Quality/QualityControl/Business/V_QControlWareNumberNoticeBill.asmx', 
+                                             '*', 'http://tempuri.org/Delete', 'http://tempuri.org/DeleteList', 'http://tempuri.org/GetWareNumberNoticeBill', 'http://tempuri.org/GetWareNumberNoticeBillAH', 
+                                             'http://tempuri.org/InitializationModel', 'http://tempuri.org/InitializationModelList', 'http://tempuri.org/Insert', 'http://tempuri.org/InsertList', 'http://tempuri.org/IsExists', 
+                                             'http://tempuri.org/P_SaleUpdateQControlWareNumber', 'http://tempuri.org/P_SaleUpdateQControlWareNumberAH', 'http://tempuri.org/RetrieveList', 'http://tempuri.org/RetrieveListByPaging', 
                                              'http://tempuri.org/Update', 'http://tempuri.org/UpdateList', 'http://tempuri.org/', 'InitializationModelList', 'http://tempuri.org/', 'document', 'SOAP', 'literal']);
   try
     lMessage.InitializeRequestMessage(lTransportChannel, 'V_QControlWareNumberNoticeBill', __InterfaceName, 'InitializationModelList');
@@ -437,7 +558,7 @@ begin
 
     lTransportChannel.Dispatch(lMessage);
 
-    lMessage.Read('InitializationModelListResult', System.TypeInfo(WideString_Optional), lResult, []);
+    lMessage.Read('InitializationModelListResult', System.TypeInfo(UnicodeString), lResult, []);
   finally
     lMessage.UnsetAttributes(lTransportChannel);
     lMessage.FreeStream();
@@ -448,30 +569,31 @@ begin
   exit;
 end;
 
-function TV_QControlWareNumberNoticeBill_Proxy.Insert(const _MySoapHeader: MySoapHeader; const jsonString: WideString_Optional): WideString_Optional;
+function TV_QControlWareNumberNoticeBill_Proxy.Insert(const _MySoapHeader: MySoapHeader; const jsonString: UnicodeString): UnicodeString;
 var
   lMessage: IROMessage;
   lTransportChannel: IROTransportChannel;
-  lResult: WideString_Optional;
+  lResult: UnicodeString;
 begin
   lMessage := __GetMessage();
   lTransportChannel := __TransportChannel;
-  lMessage.SetAttributes(lTransportChannel, ['action', 'headerparams', 'location', 'outputchildrennamespace', 'remap_delete', 'remap_deletelist', 'remap_getwarenumbernoticebill', 'remap_initializationmodel', 
-                                             'remap_initializationmodellist', 'remap_insert', 'remap_insertlist', 'remap_isexists', 'remap_p_saleupdateqcontrolwarenumber', 'remap_retrievelist', 'remap_retrievelistbypaging', 
-                                             'remap_update', 'remap_updatelist', 'soapinputmessagenamespace', 'soapinputnameoverride', 'soapoutputmessagenamespace', 'style', 'type', 'use'], ['http://tempuri.org/Insert', 
-                                             'MySoapHeader', 'http://110.52.60.19:6690/Quality/QualityControl/Business/V_QControlWareNumberNoticeBill.asmx', '*', 'http://tempuri.org/Delete', 'http://tempuri.org/DeleteList', 
-                                             'http://tempuri.org/GetWareNumberNoticeBill', 'http://tempuri.org/InitializationModel', 'http://tempuri.org/InitializationModelList', 'http://tempuri.org/Insert', 
-                                             'http://tempuri.org/InsertList', 'http://tempuri.org/IsExists', 'http://tempuri.org/P_SaleUpdateQControlWareNumber', 'http://tempuri.org/RetrieveList', 'http://tempuri.org/RetrieveListByPaging', 
+  lMessage.SetAttributes(lTransportChannel, ['action', 'headerparams', 'location', 'outputchildrennamespace', 'remap_delete', 'remap_deletelist', 'remap_getwarenumbernoticebill', 'remap_getwarenumbernoticebillah', 
+                                             'remap_initializationmodel', 'remap_initializationmodellist', 'remap_insert', 'remap_insertlist', 'remap_isexists', 'remap_p_saleupdateqcontrolwarenumber', 
+                                             'remap_p_saleupdateqcontrolwarenumberah', 'remap_retrievelist', 'remap_retrievelistbypaging', 'remap_update', 'remap_updatelist', 'soapinputmessagenamespace', 
+                                             'soapinputnameoverride', 'soapoutputmessagenamespace', 'style', 'type', 'use'], ['http://tempuri.org/Insert', 'MySoapHeader', 'http://58.243.161.70:6690/Quality/QualityControl/Business/V_QControlWareNumberNoticeBill.asmx', 
+                                             '*', 'http://tempuri.org/Delete', 'http://tempuri.org/DeleteList', 'http://tempuri.org/GetWareNumberNoticeBill', 'http://tempuri.org/GetWareNumberNoticeBillAH', 
+                                             'http://tempuri.org/InitializationModel', 'http://tempuri.org/InitializationModelList', 'http://tempuri.org/Insert', 'http://tempuri.org/InsertList', 'http://tempuri.org/IsExists', 
+                                             'http://tempuri.org/P_SaleUpdateQControlWareNumber', 'http://tempuri.org/P_SaleUpdateQControlWareNumberAH', 'http://tempuri.org/RetrieveList', 'http://tempuri.org/RetrieveListByPaging', 
                                              'http://tempuri.org/Update', 'http://tempuri.org/UpdateList', 'http://tempuri.org/', 'Insert', 'http://tempuri.org/', 'document', 'SOAP', 'literal']);
   try
     lMessage.InitializeRequestMessage(lTransportChannel, 'V_QControlWareNumberNoticeBill', __InterfaceName, 'Insert');
     lMessage.Write('_MySoapHeader', System.TypeInfo(MySoapHeader), _MySoapHeader, []);
-    lMessage.Write('jsonString', System.TypeInfo(WideString_Optional), jsonString, []);
+    lMessage.Write('jsonString', System.TypeInfo(UnicodeString), jsonString, []);
     lMessage.Finalize();
 
     lTransportChannel.Dispatch(lMessage);
 
-    lMessage.Read('InsertResult', System.TypeInfo(WideString_Optional), lResult, []);
+    lMessage.Read('InsertResult', System.TypeInfo(UnicodeString), lResult, []);
   finally
     lMessage.UnsetAttributes(lTransportChannel);
     lMessage.FreeStream();
@@ -482,30 +604,31 @@ begin
   exit;
 end;
 
-function TV_QControlWareNumberNoticeBill_Proxy.InsertList(const _MySoapHeader: MySoapHeader; const jsonString: WideString_Optional): WideString_Optional;
+function TV_QControlWareNumberNoticeBill_Proxy.InsertList(const _MySoapHeader: MySoapHeader; const jsonString: UnicodeString): UnicodeString;
 var
   lMessage: IROMessage;
   lTransportChannel: IROTransportChannel;
-  lResult: WideString_Optional;
+  lResult: UnicodeString;
 begin
   lMessage := __GetMessage();
   lTransportChannel := __TransportChannel;
-  lMessage.SetAttributes(lTransportChannel, ['action', 'headerparams', 'location', 'outputchildrennamespace', 'remap_delete', 'remap_deletelist', 'remap_getwarenumbernoticebill', 'remap_initializationmodel', 
-                                             'remap_initializationmodellist', 'remap_insert', 'remap_insertlist', 'remap_isexists', 'remap_p_saleupdateqcontrolwarenumber', 'remap_retrievelist', 'remap_retrievelistbypaging', 
-                                             'remap_update', 'remap_updatelist', 'soapinputmessagenamespace', 'soapinputnameoverride', 'soapoutputmessagenamespace', 'style', 'type', 'use'], ['http://tempuri.org/InsertList', 
-                                             'MySoapHeader', 'http://110.52.60.19:6690/Quality/QualityControl/Business/V_QControlWareNumberNoticeBill.asmx', '*', 'http://tempuri.org/Delete', 'http://tempuri.org/DeleteList', 
-                                             'http://tempuri.org/GetWareNumberNoticeBill', 'http://tempuri.org/InitializationModel', 'http://tempuri.org/InitializationModelList', 'http://tempuri.org/Insert', 
-                                             'http://tempuri.org/InsertList', 'http://tempuri.org/IsExists', 'http://tempuri.org/P_SaleUpdateQControlWareNumber', 'http://tempuri.org/RetrieveList', 'http://tempuri.org/RetrieveListByPaging', 
+  lMessage.SetAttributes(lTransportChannel, ['action', 'headerparams', 'location', 'outputchildrennamespace', 'remap_delete', 'remap_deletelist', 'remap_getwarenumbernoticebill', 'remap_getwarenumbernoticebillah', 
+                                             'remap_initializationmodel', 'remap_initializationmodellist', 'remap_insert', 'remap_insertlist', 'remap_isexists', 'remap_p_saleupdateqcontrolwarenumber', 
+                                             'remap_p_saleupdateqcontrolwarenumberah', 'remap_retrievelist', 'remap_retrievelistbypaging', 'remap_update', 'remap_updatelist', 'soapinputmessagenamespace', 
+                                             'soapinputnameoverride', 'soapoutputmessagenamespace', 'style', 'type', 'use'], ['http://tempuri.org/InsertList', 'MySoapHeader', 'http://58.243.161.70:6690/Quality/QualityControl/Business/V_QControlWareNumberNoticeBill.asmx', 
+                                             '*', 'http://tempuri.org/Delete', 'http://tempuri.org/DeleteList', 'http://tempuri.org/GetWareNumberNoticeBill', 'http://tempuri.org/GetWareNumberNoticeBillAH', 
+                                             'http://tempuri.org/InitializationModel', 'http://tempuri.org/InitializationModelList', 'http://tempuri.org/Insert', 'http://tempuri.org/InsertList', 'http://tempuri.org/IsExists', 
+                                             'http://tempuri.org/P_SaleUpdateQControlWareNumber', 'http://tempuri.org/P_SaleUpdateQControlWareNumberAH', 'http://tempuri.org/RetrieveList', 'http://tempuri.org/RetrieveListByPaging', 
                                              'http://tempuri.org/Update', 'http://tempuri.org/UpdateList', 'http://tempuri.org/', 'InsertList', 'http://tempuri.org/', 'document', 'SOAP', 'literal']);
   try
     lMessage.InitializeRequestMessage(lTransportChannel, 'V_QControlWareNumberNoticeBill', __InterfaceName, 'InsertList');
     lMessage.Write('_MySoapHeader', System.TypeInfo(MySoapHeader), _MySoapHeader, []);
-    lMessage.Write('jsonString', System.TypeInfo(WideString_Optional), jsonString, []);
+    lMessage.Write('jsonString', System.TypeInfo(UnicodeString), jsonString, []);
     lMessage.Finalize();
 
     lTransportChannel.Dispatch(lMessage);
 
-    lMessage.Read('InsertListResult', System.TypeInfo(WideString_Optional), lResult, []);
+    lMessage.Read('InsertListResult', System.TypeInfo(UnicodeString), lResult, []);
   finally
     lMessage.UnsetAttributes(lTransportChannel);
     lMessage.FreeStream();
@@ -516,30 +639,31 @@ begin
   exit;
 end;
 
-function TV_QControlWareNumberNoticeBill_Proxy.DeleteList(const _MySoapHeader: MySoapHeader; const jsonString: WideString_Optional): WideString_Optional;
+function TV_QControlWareNumberNoticeBill_Proxy.DeleteList(const _MySoapHeader: MySoapHeader; const jsonString: UnicodeString): UnicodeString;
 var
   lMessage: IROMessage;
   lTransportChannel: IROTransportChannel;
-  lResult: WideString_Optional;
+  lResult: UnicodeString;
 begin
   lMessage := __GetMessage();
   lTransportChannel := __TransportChannel;
-  lMessage.SetAttributes(lTransportChannel, ['action', 'headerparams', 'location', 'outputchildrennamespace', 'remap_delete', 'remap_deletelist', 'remap_getwarenumbernoticebill', 'remap_initializationmodel', 
-                                             'remap_initializationmodellist', 'remap_insert', 'remap_insertlist', 'remap_isexists', 'remap_p_saleupdateqcontrolwarenumber', 'remap_retrievelist', 'remap_retrievelistbypaging', 
-                                             'remap_update', 'remap_updatelist', 'soapinputmessagenamespace', 'soapinputnameoverride', 'soapoutputmessagenamespace', 'style', 'type', 'use'], ['http://tempuri.org/DeleteList', 
-                                             'MySoapHeader', 'http://110.52.60.19:6690/Quality/QualityControl/Business/V_QControlWareNumberNoticeBill.asmx', '*', 'http://tempuri.org/Delete', 'http://tempuri.org/DeleteList', 
-                                             'http://tempuri.org/GetWareNumberNoticeBill', 'http://tempuri.org/InitializationModel', 'http://tempuri.org/InitializationModelList', 'http://tempuri.org/Insert', 
-                                             'http://tempuri.org/InsertList', 'http://tempuri.org/IsExists', 'http://tempuri.org/P_SaleUpdateQControlWareNumber', 'http://tempuri.org/RetrieveList', 'http://tempuri.org/RetrieveListByPaging', 
+  lMessage.SetAttributes(lTransportChannel, ['action', 'headerparams', 'location', 'outputchildrennamespace', 'remap_delete', 'remap_deletelist', 'remap_getwarenumbernoticebill', 'remap_getwarenumbernoticebillah', 
+                                             'remap_initializationmodel', 'remap_initializationmodellist', 'remap_insert', 'remap_insertlist', 'remap_isexists', 'remap_p_saleupdateqcontrolwarenumber', 
+                                             'remap_p_saleupdateqcontrolwarenumberah', 'remap_retrievelist', 'remap_retrievelistbypaging', 'remap_update', 'remap_updatelist', 'soapinputmessagenamespace', 
+                                             'soapinputnameoverride', 'soapoutputmessagenamespace', 'style', 'type', 'use'], ['http://tempuri.org/DeleteList', 'MySoapHeader', 'http://58.243.161.70:6690/Quality/QualityControl/Business/V_QControlWareNumberNoticeBill.asmx', 
+                                             '*', 'http://tempuri.org/Delete', 'http://tempuri.org/DeleteList', 'http://tempuri.org/GetWareNumberNoticeBill', 'http://tempuri.org/GetWareNumberNoticeBillAH', 
+                                             'http://tempuri.org/InitializationModel', 'http://tempuri.org/InitializationModelList', 'http://tempuri.org/Insert', 'http://tempuri.org/InsertList', 'http://tempuri.org/IsExists', 
+                                             'http://tempuri.org/P_SaleUpdateQControlWareNumber', 'http://tempuri.org/P_SaleUpdateQControlWareNumberAH', 'http://tempuri.org/RetrieveList', 'http://tempuri.org/RetrieveListByPaging', 
                                              'http://tempuri.org/Update', 'http://tempuri.org/UpdateList', 'http://tempuri.org/', 'DeleteList', 'http://tempuri.org/', 'document', 'SOAP', 'literal']);
   try
     lMessage.InitializeRequestMessage(lTransportChannel, 'V_QControlWareNumberNoticeBill', __InterfaceName, 'DeleteList');
     lMessage.Write('_MySoapHeader', System.TypeInfo(MySoapHeader), _MySoapHeader, []);
-    lMessage.Write('jsonString', System.TypeInfo(WideString_Optional), jsonString, []);
+    lMessage.Write('jsonString', System.TypeInfo(UnicodeString), jsonString, []);
     lMessage.Finalize();
 
     lTransportChannel.Dispatch(lMessage);
 
-    lMessage.Read('DeleteListResult', System.TypeInfo(WideString_Optional), lResult, []);
+    lMessage.Read('DeleteListResult', System.TypeInfo(UnicodeString), lResult, []);
   finally
     lMessage.UnsetAttributes(lTransportChannel);
     lMessage.FreeStream();
@@ -550,30 +674,31 @@ begin
   exit;
 end;
 
-function TV_QControlWareNumberNoticeBill_Proxy.Delete(const _MySoapHeader: MySoapHeader; const jsonString: WideString_Optional): WideString_Optional;
+function TV_QControlWareNumberNoticeBill_Proxy.Delete(const _MySoapHeader: MySoapHeader; const jsonString: UnicodeString): UnicodeString;
 var
   lMessage: IROMessage;
   lTransportChannel: IROTransportChannel;
-  lResult: WideString_Optional;
+  lResult: UnicodeString;
 begin
   lMessage := __GetMessage();
   lTransportChannel := __TransportChannel;
-  lMessage.SetAttributes(lTransportChannel, ['action', 'headerparams', 'location', 'outputchildrennamespace', 'remap_delete', 'remap_deletelist', 'remap_getwarenumbernoticebill', 'remap_initializationmodel', 
-                                             'remap_initializationmodellist', 'remap_insert', 'remap_insertlist', 'remap_isexists', 'remap_p_saleupdateqcontrolwarenumber', 'remap_retrievelist', 'remap_retrievelistbypaging', 
-                                             'remap_update', 'remap_updatelist', 'soapinputmessagenamespace', 'soapinputnameoverride', 'soapoutputmessagenamespace', 'style', 'type', 'use'], ['http://tempuri.org/Delete', 
-                                             'MySoapHeader', 'http://110.52.60.19:6690/Quality/QualityControl/Business/V_QControlWareNumberNoticeBill.asmx', '*', 'http://tempuri.org/Delete', 'http://tempuri.org/DeleteList', 
-                                             'http://tempuri.org/GetWareNumberNoticeBill', 'http://tempuri.org/InitializationModel', 'http://tempuri.org/InitializationModelList', 'http://tempuri.org/Insert', 
-                                             'http://tempuri.org/InsertList', 'http://tempuri.org/IsExists', 'http://tempuri.org/P_SaleUpdateQControlWareNumber', 'http://tempuri.org/RetrieveList', 'http://tempuri.org/RetrieveListByPaging', 
+  lMessage.SetAttributes(lTransportChannel, ['action', 'headerparams', 'location', 'outputchildrennamespace', 'remap_delete', 'remap_deletelist', 'remap_getwarenumbernoticebill', 'remap_getwarenumbernoticebillah', 
+                                             'remap_initializationmodel', 'remap_initializationmodellist', 'remap_insert', 'remap_insertlist', 'remap_isexists', 'remap_p_saleupdateqcontrolwarenumber', 
+                                             'remap_p_saleupdateqcontrolwarenumberah', 'remap_retrievelist', 'remap_retrievelistbypaging', 'remap_update', 'remap_updatelist', 'soapinputmessagenamespace', 
+                                             'soapinputnameoverride', 'soapoutputmessagenamespace', 'style', 'type', 'use'], ['http://tempuri.org/Delete', 'MySoapHeader', 'http://58.243.161.70:6690/Quality/QualityControl/Business/V_QControlWareNumberNoticeBill.asmx', 
+                                             '*', 'http://tempuri.org/Delete', 'http://tempuri.org/DeleteList', 'http://tempuri.org/GetWareNumberNoticeBill', 'http://tempuri.org/GetWareNumberNoticeBillAH', 
+                                             'http://tempuri.org/InitializationModel', 'http://tempuri.org/InitializationModelList', 'http://tempuri.org/Insert', 'http://tempuri.org/InsertList', 'http://tempuri.org/IsExists', 
+                                             'http://tempuri.org/P_SaleUpdateQControlWareNumber', 'http://tempuri.org/P_SaleUpdateQControlWareNumberAH', 'http://tempuri.org/RetrieveList', 'http://tempuri.org/RetrieveListByPaging', 
                                              'http://tempuri.org/Update', 'http://tempuri.org/UpdateList', 'http://tempuri.org/', 'Delete', 'http://tempuri.org/', 'document', 'SOAP', 'literal']);
   try
     lMessage.InitializeRequestMessage(lTransportChannel, 'V_QControlWareNumberNoticeBill', __InterfaceName, 'Delete');
     lMessage.Write('_MySoapHeader', System.TypeInfo(MySoapHeader), _MySoapHeader, []);
-    lMessage.Write('jsonString', System.TypeInfo(WideString_Optional), jsonString, []);
+    lMessage.Write('jsonString', System.TypeInfo(UnicodeString), jsonString, []);
     lMessage.Finalize();
 
     lTransportChannel.Dispatch(lMessage);
 
-    lMessage.Read('DeleteResult', System.TypeInfo(WideString_Optional), lResult, []);
+    lMessage.Read('DeleteResult', System.TypeInfo(UnicodeString), lResult, []);
   finally
     lMessage.UnsetAttributes(lTransportChannel);
     lMessage.FreeStream();
@@ -584,31 +709,32 @@ begin
   exit;
 end;
 
-function TV_QControlWareNumberNoticeBill_Proxy.Update(const _MySoapHeader: MySoapHeader; const initJsonString: WideString_Optional; const newJsonString: WideString_Optional): WideString_Optional;
+function TV_QControlWareNumberNoticeBill_Proxy.Update(const _MySoapHeader: MySoapHeader; const initJsonString: UnicodeString; const newJsonString: UnicodeString): UnicodeString;
 var
   lMessage: IROMessage;
   lTransportChannel: IROTransportChannel;
-  lResult: WideString_Optional;
+  lResult: UnicodeString;
 begin
   lMessage := __GetMessage();
   lTransportChannel := __TransportChannel;
-  lMessage.SetAttributes(lTransportChannel, ['action', 'headerparams', 'location', 'outputchildrennamespace', 'remap_delete', 'remap_deletelist', 'remap_getwarenumbernoticebill', 'remap_initializationmodel', 
-                                             'remap_initializationmodellist', 'remap_insert', 'remap_insertlist', 'remap_isexists', 'remap_p_saleupdateqcontrolwarenumber', 'remap_retrievelist', 'remap_retrievelistbypaging', 
-                                             'remap_update', 'remap_updatelist', 'soapinputmessagenamespace', 'soapinputnameoverride', 'soapoutputmessagenamespace', 'style', 'type', 'use'], ['http://tempuri.org/Update', 
-                                             'MySoapHeader', 'http://110.52.60.19:6690/Quality/QualityControl/Business/V_QControlWareNumberNoticeBill.asmx', '*', 'http://tempuri.org/Delete', 'http://tempuri.org/DeleteList', 
-                                             'http://tempuri.org/GetWareNumberNoticeBill', 'http://tempuri.org/InitializationModel', 'http://tempuri.org/InitializationModelList', 'http://tempuri.org/Insert', 
-                                             'http://tempuri.org/InsertList', 'http://tempuri.org/IsExists', 'http://tempuri.org/P_SaleUpdateQControlWareNumber', 'http://tempuri.org/RetrieveList', 'http://tempuri.org/RetrieveListByPaging', 
+  lMessage.SetAttributes(lTransportChannel, ['action', 'headerparams', 'location', 'outputchildrennamespace', 'remap_delete', 'remap_deletelist', 'remap_getwarenumbernoticebill', 'remap_getwarenumbernoticebillah', 
+                                             'remap_initializationmodel', 'remap_initializationmodellist', 'remap_insert', 'remap_insertlist', 'remap_isexists', 'remap_p_saleupdateqcontrolwarenumber', 
+                                             'remap_p_saleupdateqcontrolwarenumberah', 'remap_retrievelist', 'remap_retrievelistbypaging', 'remap_update', 'remap_updatelist', 'soapinputmessagenamespace', 
+                                             'soapinputnameoverride', 'soapoutputmessagenamespace', 'style', 'type', 'use'], ['http://tempuri.org/Update', 'MySoapHeader', 'http://58.243.161.70:6690/Quality/QualityControl/Business/V_QControlWareNumberNoticeBill.asmx', 
+                                             '*', 'http://tempuri.org/Delete', 'http://tempuri.org/DeleteList', 'http://tempuri.org/GetWareNumberNoticeBill', 'http://tempuri.org/GetWareNumberNoticeBillAH', 
+                                             'http://tempuri.org/InitializationModel', 'http://tempuri.org/InitializationModelList', 'http://tempuri.org/Insert', 'http://tempuri.org/InsertList', 'http://tempuri.org/IsExists', 
+                                             'http://tempuri.org/P_SaleUpdateQControlWareNumber', 'http://tempuri.org/P_SaleUpdateQControlWareNumberAH', 'http://tempuri.org/RetrieveList', 'http://tempuri.org/RetrieveListByPaging', 
                                              'http://tempuri.org/Update', 'http://tempuri.org/UpdateList', 'http://tempuri.org/', 'Update', 'http://tempuri.org/', 'document', 'SOAP', 'literal']);
   try
     lMessage.InitializeRequestMessage(lTransportChannel, 'V_QControlWareNumberNoticeBill', __InterfaceName, 'Update');
     lMessage.Write('_MySoapHeader', System.TypeInfo(MySoapHeader), _MySoapHeader, []);
-    lMessage.Write('initJsonString', System.TypeInfo(WideString_Optional), initJsonString, []);
-    lMessage.Write('newJsonString', System.TypeInfo(WideString_Optional), newJsonString, []);
+    lMessage.Write('initJsonString', System.TypeInfo(UnicodeString), initJsonString, []);
+    lMessage.Write('newJsonString', System.TypeInfo(UnicodeString), newJsonString, []);
     lMessage.Finalize();
 
     lTransportChannel.Dispatch(lMessage);
 
-    lMessage.Read('UpdateResult', System.TypeInfo(WideString_Optional), lResult, []);
+    lMessage.Read('UpdateResult', System.TypeInfo(UnicodeString), lResult, []);
   finally
     lMessage.UnsetAttributes(lTransportChannel);
     lMessage.FreeStream();
@@ -619,31 +745,32 @@ begin
   exit;
 end;
 
-function TV_QControlWareNumberNoticeBill_Proxy.UpdateList(const _MySoapHeader: MySoapHeader; const initJsonString: WideString_Optional; const newJsonString: WideString_Optional): WideString_Optional;
+function TV_QControlWareNumberNoticeBill_Proxy.UpdateList(const _MySoapHeader: MySoapHeader; const initJsonString: UnicodeString; const newJsonString: UnicodeString): UnicodeString;
 var
   lMessage: IROMessage;
   lTransportChannel: IROTransportChannel;
-  lResult: WideString_Optional;
+  lResult: UnicodeString;
 begin
   lMessage := __GetMessage();
   lTransportChannel := __TransportChannel;
-  lMessage.SetAttributes(lTransportChannel, ['action', 'headerparams', 'location', 'outputchildrennamespace', 'remap_delete', 'remap_deletelist', 'remap_getwarenumbernoticebill', 'remap_initializationmodel', 
-                                             'remap_initializationmodellist', 'remap_insert', 'remap_insertlist', 'remap_isexists', 'remap_p_saleupdateqcontrolwarenumber', 'remap_retrievelist', 'remap_retrievelistbypaging', 
-                                             'remap_update', 'remap_updatelist', 'soapinputmessagenamespace', 'soapinputnameoverride', 'soapoutputmessagenamespace', 'style', 'type', 'use'], ['http://tempuri.org/UpdateList', 
-                                             'MySoapHeader', 'http://110.52.60.19:6690/Quality/QualityControl/Business/V_QControlWareNumberNoticeBill.asmx', '*', 'http://tempuri.org/Delete', 'http://tempuri.org/DeleteList', 
-                                             'http://tempuri.org/GetWareNumberNoticeBill', 'http://tempuri.org/InitializationModel', 'http://tempuri.org/InitializationModelList', 'http://tempuri.org/Insert', 
-                                             'http://tempuri.org/InsertList', 'http://tempuri.org/IsExists', 'http://tempuri.org/P_SaleUpdateQControlWareNumber', 'http://tempuri.org/RetrieveList', 'http://tempuri.org/RetrieveListByPaging', 
+  lMessage.SetAttributes(lTransportChannel, ['action', 'headerparams', 'location', 'outputchildrennamespace', 'remap_delete', 'remap_deletelist', 'remap_getwarenumbernoticebill', 'remap_getwarenumbernoticebillah', 
+                                             'remap_initializationmodel', 'remap_initializationmodellist', 'remap_insert', 'remap_insertlist', 'remap_isexists', 'remap_p_saleupdateqcontrolwarenumber', 
+                                             'remap_p_saleupdateqcontrolwarenumberah', 'remap_retrievelist', 'remap_retrievelistbypaging', 'remap_update', 'remap_updatelist', 'soapinputmessagenamespace', 
+                                             'soapinputnameoverride', 'soapoutputmessagenamespace', 'style', 'type', 'use'], ['http://tempuri.org/UpdateList', 'MySoapHeader', 'http://58.243.161.70:6690/Quality/QualityControl/Business/V_QControlWareNumberNoticeBill.asmx', 
+                                             '*', 'http://tempuri.org/Delete', 'http://tempuri.org/DeleteList', 'http://tempuri.org/GetWareNumberNoticeBill', 'http://tempuri.org/GetWareNumberNoticeBillAH', 
+                                             'http://tempuri.org/InitializationModel', 'http://tempuri.org/InitializationModelList', 'http://tempuri.org/Insert', 'http://tempuri.org/InsertList', 'http://tempuri.org/IsExists', 
+                                             'http://tempuri.org/P_SaleUpdateQControlWareNumber', 'http://tempuri.org/P_SaleUpdateQControlWareNumberAH', 'http://tempuri.org/RetrieveList', 'http://tempuri.org/RetrieveListByPaging', 
                                              'http://tempuri.org/Update', 'http://tempuri.org/UpdateList', 'http://tempuri.org/', 'UpdateList', 'http://tempuri.org/', 'document', 'SOAP', 'literal']);
   try
     lMessage.InitializeRequestMessage(lTransportChannel, 'V_QControlWareNumberNoticeBill', __InterfaceName, 'UpdateList');
     lMessage.Write('_MySoapHeader', System.TypeInfo(MySoapHeader), _MySoapHeader, []);
-    lMessage.Write('initJsonString', System.TypeInfo(WideString_Optional), initJsonString, []);
-    lMessage.Write('newJsonString', System.TypeInfo(WideString_Optional), newJsonString, []);
+    lMessage.Write('initJsonString', System.TypeInfo(UnicodeString), initJsonString, []);
+    lMessage.Write('newJsonString', System.TypeInfo(UnicodeString), newJsonString, []);
     lMessage.Finalize();
 
     lTransportChannel.Dispatch(lMessage);
 
-    lMessage.Read('UpdateListResult', System.TypeInfo(WideString_Optional), lResult, []);
+    lMessage.Read('UpdateListResult', System.TypeInfo(UnicodeString), lResult, []);
   finally
     lMessage.UnsetAttributes(lTransportChannel);
     lMessage.FreeStream();
@@ -654,31 +781,32 @@ begin
   exit;
 end;
 
-function TV_QControlWareNumberNoticeBill_Proxy.RetrieveList(const _MySoapHeader: MySoapHeader; const where: WideString_Optional; const sort: WideString_Optional): WideString_Optional;
+function TV_QControlWareNumberNoticeBill_Proxy.RetrieveList(const _MySoapHeader: MySoapHeader; const where: UnicodeString; const sort: UnicodeString): UnicodeString;
 var
   lMessage: IROMessage;
   lTransportChannel: IROTransportChannel;
-  lResult: WideString_Optional;
+  lResult: UnicodeString;
 begin
   lMessage := __GetMessage();
   lTransportChannel := __TransportChannel;
-  lMessage.SetAttributes(lTransportChannel, ['action', 'headerparams', 'location', 'outputchildrennamespace', 'remap_delete', 'remap_deletelist', 'remap_getwarenumbernoticebill', 'remap_initializationmodel', 
-                                             'remap_initializationmodellist', 'remap_insert', 'remap_insertlist', 'remap_isexists', 'remap_p_saleupdateqcontrolwarenumber', 'remap_retrievelist', 'remap_retrievelistbypaging', 
-                                             'remap_update', 'remap_updatelist', 'soapinputmessagenamespace', 'soapinputnameoverride', 'soapoutputmessagenamespace', 'style', 'type', 'use'], ['http://tempuri.org/RetrieveList', 
-                                             'MySoapHeader', 'http://110.52.60.19:6690/Quality/QualityControl/Business/V_QControlWareNumberNoticeBill.asmx', '*', 'http://tempuri.org/Delete', 'http://tempuri.org/DeleteList', 
-                                             'http://tempuri.org/GetWareNumberNoticeBill', 'http://tempuri.org/InitializationModel', 'http://tempuri.org/InitializationModelList', 'http://tempuri.org/Insert', 
-                                             'http://tempuri.org/InsertList', 'http://tempuri.org/IsExists', 'http://tempuri.org/P_SaleUpdateQControlWareNumber', 'http://tempuri.org/RetrieveList', 'http://tempuri.org/RetrieveListByPaging', 
+  lMessage.SetAttributes(lTransportChannel, ['action', 'headerparams', 'location', 'outputchildrennamespace', 'remap_delete', 'remap_deletelist', 'remap_getwarenumbernoticebill', 'remap_getwarenumbernoticebillah', 
+                                             'remap_initializationmodel', 'remap_initializationmodellist', 'remap_insert', 'remap_insertlist', 'remap_isexists', 'remap_p_saleupdateqcontrolwarenumber', 
+                                             'remap_p_saleupdateqcontrolwarenumberah', 'remap_retrievelist', 'remap_retrievelistbypaging', 'remap_update', 'remap_updatelist', 'soapinputmessagenamespace', 
+                                             'soapinputnameoverride', 'soapoutputmessagenamespace', 'style', 'type', 'use'], ['http://tempuri.org/RetrieveList', 'MySoapHeader', 'http://58.243.161.70:6690/Quality/QualityControl/Business/V_QControlWareNumberNoticeBill.asmx', 
+                                             '*', 'http://tempuri.org/Delete', 'http://tempuri.org/DeleteList', 'http://tempuri.org/GetWareNumberNoticeBill', 'http://tempuri.org/GetWareNumberNoticeBillAH', 
+                                             'http://tempuri.org/InitializationModel', 'http://tempuri.org/InitializationModelList', 'http://tempuri.org/Insert', 'http://tempuri.org/InsertList', 'http://tempuri.org/IsExists', 
+                                             'http://tempuri.org/P_SaleUpdateQControlWareNumber', 'http://tempuri.org/P_SaleUpdateQControlWareNumberAH', 'http://tempuri.org/RetrieveList', 'http://tempuri.org/RetrieveListByPaging', 
                                              'http://tempuri.org/Update', 'http://tempuri.org/UpdateList', 'http://tempuri.org/', 'RetrieveList', 'http://tempuri.org/', 'document', 'SOAP', 'literal']);
   try
     lMessage.InitializeRequestMessage(lTransportChannel, 'V_QControlWareNumberNoticeBill', __InterfaceName, 'RetrieveList');
     lMessage.Write('_MySoapHeader', System.TypeInfo(MySoapHeader), _MySoapHeader, []);
-    lMessage.Write('where', System.TypeInfo(WideString_Optional), where, []);
-    lMessage.Write('sort', System.TypeInfo(WideString_Optional), sort, []);
+    lMessage.Write('where', System.TypeInfo(UnicodeString), where, []);
+    lMessage.Write('sort', System.TypeInfo(UnicodeString), sort, []);
     lMessage.Finalize();
 
     lTransportChannel.Dispatch(lMessage);
 
-    lMessage.Read('RetrieveListResult', System.TypeInfo(WideString_Optional), lResult, []);
+    lMessage.Read('RetrieveListResult', System.TypeInfo(UnicodeString), lResult, []);
   finally
     lMessage.UnsetAttributes(lTransportChannel);
     lMessage.FreeStream();
@@ -689,35 +817,36 @@ begin
   exit;
 end;
 
-function TV_QControlWareNumberNoticeBill_Proxy.RetrieveListByPaging(const _MySoapHeader: MySoapHeader; const where: WideString_Optional; const sort: WideString_Optional; const pageNumber: Integer; const pageSize: Integer; 
-                                                                    const groupParameters: WideString_Optional): WideString_Optional;
+function TV_QControlWareNumberNoticeBill_Proxy.RetrieveListByPaging(const _MySoapHeader: MySoapHeader; const where: UnicodeString; const sort: UnicodeString; const pageNumber: Integer; const pageSize: Integer; 
+                                                                    const groupParameters: UnicodeString): UnicodeString;
 var
   lMessage: IROMessage;
   lTransportChannel: IROTransportChannel;
-  lResult: WideString_Optional;
+  lResult: UnicodeString;
 begin
   lMessage := __GetMessage();
   lTransportChannel := __TransportChannel;
-  lMessage.SetAttributes(lTransportChannel, ['action', 'headerparams', 'location', 'outputchildrennamespace', 'remap_delete', 'remap_deletelist', 'remap_getwarenumbernoticebill', 'remap_initializationmodel', 
-                                             'remap_initializationmodellist', 'remap_insert', 'remap_insertlist', 'remap_isexists', 'remap_p_saleupdateqcontrolwarenumber', 'remap_retrievelist', 'remap_retrievelistbypaging', 
-                                             'remap_update', 'remap_updatelist', 'soapinputmessagenamespace', 'soapinputnameoverride', 'soapoutputmessagenamespace', 'style', 'type', 'use'], ['http://tempuri.org/RetrieveListByPaging', 
-                                             'MySoapHeader', 'http://110.52.60.19:6690/Quality/QualityControl/Business/V_QControlWareNumberNoticeBill.asmx', '*', 'http://tempuri.org/Delete', 'http://tempuri.org/DeleteList', 
-                                             'http://tempuri.org/GetWareNumberNoticeBill', 'http://tempuri.org/InitializationModel', 'http://tempuri.org/InitializationModelList', 'http://tempuri.org/Insert', 
-                                             'http://tempuri.org/InsertList', 'http://tempuri.org/IsExists', 'http://tempuri.org/P_SaleUpdateQControlWareNumber', 'http://tempuri.org/RetrieveList', 'http://tempuri.org/RetrieveListByPaging', 
+  lMessage.SetAttributes(lTransportChannel, ['action', 'headerparams', 'location', 'outputchildrennamespace', 'remap_delete', 'remap_deletelist', 'remap_getwarenumbernoticebill', 'remap_getwarenumbernoticebillah', 
+                                             'remap_initializationmodel', 'remap_initializationmodellist', 'remap_insert', 'remap_insertlist', 'remap_isexists', 'remap_p_saleupdateqcontrolwarenumber', 
+                                             'remap_p_saleupdateqcontrolwarenumberah', 'remap_retrievelist', 'remap_retrievelistbypaging', 'remap_update', 'remap_updatelist', 'soapinputmessagenamespace', 
+                                             'soapinputnameoverride', 'soapoutputmessagenamespace', 'style', 'type', 'use'], ['http://tempuri.org/RetrieveListByPaging', 'MySoapHeader', 'http://58.243.161.70:6690/Quality/QualityControl/Business/V_QControlWareNumberNoticeBill.asmx', 
+                                             '*', 'http://tempuri.org/Delete', 'http://tempuri.org/DeleteList', 'http://tempuri.org/GetWareNumberNoticeBill', 'http://tempuri.org/GetWareNumberNoticeBillAH', 
+                                             'http://tempuri.org/InitializationModel', 'http://tempuri.org/InitializationModelList', 'http://tempuri.org/Insert', 'http://tempuri.org/InsertList', 'http://tempuri.org/IsExists', 
+                                             'http://tempuri.org/P_SaleUpdateQControlWareNumber', 'http://tempuri.org/P_SaleUpdateQControlWareNumberAH', 'http://tempuri.org/RetrieveList', 'http://tempuri.org/RetrieveListByPaging', 
                                              'http://tempuri.org/Update', 'http://tempuri.org/UpdateList', 'http://tempuri.org/', 'RetrieveListByPaging', 'http://tempuri.org/', 'document', 'SOAP', 'literal']);
   try
     lMessage.InitializeRequestMessage(lTransportChannel, 'V_QControlWareNumberNoticeBill', __InterfaceName, 'RetrieveListByPaging');
     lMessage.Write('_MySoapHeader', System.TypeInfo(MySoapHeader), _MySoapHeader, []);
-    lMessage.Write('where', System.TypeInfo(WideString_Optional), where, []);
-    lMessage.Write('sort', System.TypeInfo(WideString_Optional), sort, []);
+    lMessage.Write('where', System.TypeInfo(UnicodeString), where, []);
+    lMessage.Write('sort', System.TypeInfo(UnicodeString), sort, []);
     lMessage.Write('pageNumber', System.TypeInfo(Integer), pageNumber, []);
     lMessage.Write('pageSize', System.TypeInfo(Integer), pageSize, []);
-    lMessage.Write('groupParameters', System.TypeInfo(WideString_Optional), groupParameters, []);
+    lMessage.Write('groupParameters', System.TypeInfo(UnicodeString), groupParameters, []);
     lMessage.Finalize();
 
     lTransportChannel.Dispatch(lMessage);
 
-    lMessage.Read('RetrieveListByPagingResult', System.TypeInfo(WideString_Optional), lResult, []);
+    lMessage.Read('RetrieveListByPagingResult', System.TypeInfo(UnicodeString), lResult, []);
   finally
     lMessage.UnsetAttributes(lTransportChannel);
     lMessage.FreeStream();
@@ -728,30 +857,31 @@ begin
   exit;
 end;
 
-function TV_QControlWareNumberNoticeBill_Proxy.IsExists(const _MySoapHeader: MySoapHeader; const jsonString: WideString_Optional): WideString_Optional;
+function TV_QControlWareNumberNoticeBill_Proxy.IsExists(const _MySoapHeader: MySoapHeader; const jsonString: UnicodeString): UnicodeString;
 var
   lMessage: IROMessage;
   lTransportChannel: IROTransportChannel;
-  lResult: WideString_Optional;
+  lResult: UnicodeString;
 begin
   lMessage := __GetMessage();
   lTransportChannel := __TransportChannel;
-  lMessage.SetAttributes(lTransportChannel, ['action', 'headerparams', 'location', 'outputchildrennamespace', 'remap_delete', 'remap_deletelist', 'remap_getwarenumbernoticebill', 'remap_initializationmodel', 
-                                             'remap_initializationmodellist', 'remap_insert', 'remap_insertlist', 'remap_isexists', 'remap_p_saleupdateqcontrolwarenumber', 'remap_retrievelist', 'remap_retrievelistbypaging', 
-                                             'remap_update', 'remap_updatelist', 'soapinputmessagenamespace', 'soapinputnameoverride', 'soapoutputmessagenamespace', 'style', 'type', 'use'], ['http://tempuri.org/IsExists', 
-                                             'MySoapHeader', 'http://110.52.60.19:6690/Quality/QualityControl/Business/V_QControlWareNumberNoticeBill.asmx', '*', 'http://tempuri.org/Delete', 'http://tempuri.org/DeleteList', 
-                                             'http://tempuri.org/GetWareNumberNoticeBill', 'http://tempuri.org/InitializationModel', 'http://tempuri.org/InitializationModelList', 'http://tempuri.org/Insert', 
-                                             'http://tempuri.org/InsertList', 'http://tempuri.org/IsExists', 'http://tempuri.org/P_SaleUpdateQControlWareNumber', 'http://tempuri.org/RetrieveList', 'http://tempuri.org/RetrieveListByPaging', 
+  lMessage.SetAttributes(lTransportChannel, ['action', 'headerparams', 'location', 'outputchildrennamespace', 'remap_delete', 'remap_deletelist', 'remap_getwarenumbernoticebill', 'remap_getwarenumbernoticebillah', 
+                                             'remap_initializationmodel', 'remap_initializationmodellist', 'remap_insert', 'remap_insertlist', 'remap_isexists', 'remap_p_saleupdateqcontrolwarenumber', 
+                                             'remap_p_saleupdateqcontrolwarenumberah', 'remap_retrievelist', 'remap_retrievelistbypaging', 'remap_update', 'remap_updatelist', 'soapinputmessagenamespace', 
+                                             'soapinputnameoverride', 'soapoutputmessagenamespace', 'style', 'type', 'use'], ['http://tempuri.org/IsExists', 'MySoapHeader', 'http://58.243.161.70:6690/Quality/QualityControl/Business/V_QControlWareNumberNoticeBill.asmx', 
+                                             '*', 'http://tempuri.org/Delete', 'http://tempuri.org/DeleteList', 'http://tempuri.org/GetWareNumberNoticeBill', 'http://tempuri.org/GetWareNumberNoticeBillAH', 
+                                             'http://tempuri.org/InitializationModel', 'http://tempuri.org/InitializationModelList', 'http://tempuri.org/Insert', 'http://tempuri.org/InsertList', 'http://tempuri.org/IsExists', 
+                                             'http://tempuri.org/P_SaleUpdateQControlWareNumber', 'http://tempuri.org/P_SaleUpdateQControlWareNumberAH', 'http://tempuri.org/RetrieveList', 'http://tempuri.org/RetrieveListByPaging', 
                                              'http://tempuri.org/Update', 'http://tempuri.org/UpdateList', 'http://tempuri.org/', 'IsExists', 'http://tempuri.org/', 'document', 'SOAP', 'literal']);
   try
     lMessage.InitializeRequestMessage(lTransportChannel, 'V_QControlWareNumberNoticeBill', __InterfaceName, 'IsExists');
     lMessage.Write('_MySoapHeader', System.TypeInfo(MySoapHeader), _MySoapHeader, []);
-    lMessage.Write('jsonString', System.TypeInfo(WideString_Optional), jsonString, []);
+    lMessage.Write('jsonString', System.TypeInfo(UnicodeString), jsonString, []);
     lMessage.Finalize();
 
     lTransportChannel.Dispatch(lMessage);
 
-    lMessage.Read('IsExistsResult', System.TypeInfo(WideString_Optional), lResult, []);
+    lMessage.Read('IsExistsResult', System.TypeInfo(UnicodeString), lResult, []);
   finally
     lMessage.UnsetAttributes(lTransportChannel);
     lMessage.FreeStream();
@@ -778,12 +908,13 @@ begin
   try
     __AssertProxyNotBusy('GetWareNumberNoticeBill');
 
-    lMessage.SetAttributes(lTransportChannel, ['action', 'headerparams', 'location', 'outputchildrennamespace', 'remap_delete', 'remap_deletelist', 'remap_getwarenumbernoticebill', 'remap_initializationmodel', 
-                                               'remap_initializationmodellist', 'remap_insert', 'remap_insertlist', 'remap_isexists', 'remap_p_saleupdateqcontrolwarenumber', 'remap_retrievelist', 'remap_retrievelistbypaging', 
-                                               'remap_update', 'remap_updatelist', 'soapinputmessagenamespace', 'soapinputnameoverride', 'soapoutputmessagenamespace', 'style', 'type', 'use'], ['http://tempuri.org/GetWareNumberNoticeBill', 
-                                               'MySoapHeader', 'http://110.52.60.19:6690/Quality/QualityControl/Business/V_QControlWareNumberNoticeBill.asmx', '*', 'http://tempuri.org/Delete', 'http://tempuri.org/DeleteList', 
-                                               'http://tempuri.org/GetWareNumberNoticeBill', 'http://tempuri.org/InitializationModel', 'http://tempuri.org/InitializationModelList', 'http://tempuri.org/Insert', 
-                                               'http://tempuri.org/InsertList', 'http://tempuri.org/IsExists', 'http://tempuri.org/P_SaleUpdateQControlWareNumber', 'http://tempuri.org/RetrieveList', 'http://tempuri.org/RetrieveListByPaging', 
+    lMessage.SetAttributes(lTransportChannel, ['action', 'headerparams', 'location', 'outputchildrennamespace', 'remap_delete', 'remap_deletelist', 'remap_getwarenumbernoticebill', 'remap_getwarenumbernoticebillah', 
+                                               'remap_initializationmodel', 'remap_initializationmodellist', 'remap_insert', 'remap_insertlist', 'remap_isexists', 'remap_p_saleupdateqcontrolwarenumber', 
+                                               'remap_p_saleupdateqcontrolwarenumberah', 'remap_retrievelist', 'remap_retrievelistbypaging', 'remap_update', 'remap_updatelist', 'soapinputmessagenamespace', 
+                                               'soapinputnameoverride', 'soapoutputmessagenamespace', 'style', 'type', 'use'], ['http://tempuri.org/GetWareNumberNoticeBill', 'MySoapHeader', 'http://58.243.161.70:6690/Quality/QualityControl/Business/V_QControlWareNumberNoticeBill.asmx', 
+                                               '*', 'http://tempuri.org/Delete', 'http://tempuri.org/DeleteList', 'http://tempuri.org/GetWareNumberNoticeBill', 'http://tempuri.org/GetWareNumberNoticeBillAH', 
+                                               'http://tempuri.org/InitializationModel', 'http://tempuri.org/InitializationModelList', 'http://tempuri.org/Insert', 'http://tempuri.org/InsertList', 'http://tempuri.org/IsExists', 
+                                               'http://tempuri.org/P_SaleUpdateQControlWareNumber', 'http://tempuri.org/P_SaleUpdateQControlWareNumberAH', 'http://tempuri.org/RetrieveList', 'http://tempuri.org/RetrieveListByPaging', 
                                                'http://tempuri.org/Update', 'http://tempuri.org/UpdateList', 'http://tempuri.org/', 'GetWareNumberNoticeBill', 'http://tempuri.org/', 'document', 'SOAP', 
                                                'literal']);
     lMessage.InitializeRequestMessage(lTransportChannel, 'V_QControlWareNumberNoticeBill', __InterfaceName, 'GetWareNumberNoticeBill');
@@ -799,7 +930,7 @@ begin
   end;
 end;
 
-procedure TV_QControlWareNumberNoticeBill_AsyncProxy.Invoke_P_SaleUpdateQControlWareNumber(const _MySoapHeader: MySoapHeader; const factoryID: UnicodeString; const fMaterielID: UnicodeString; const fPackingID: UTF8String; 
+procedure TV_QControlWareNumberNoticeBill_AsyncProxy.Invoke_P_SaleUpdateQControlWareNumber(const _MySoapHeader: MySoapHeader; const factoryID: UnicodeString; const fMaterielID: UnicodeString; const fPackingID: UnicodeString; 
                                                                                            const fWareNumber: UnicodeString; const consignBillID: UnicodeString);
 var
   lMessage: IROMessage;
@@ -810,22 +941,96 @@ begin
   try
     __AssertProxyNotBusy('P_SaleUpdateQControlWareNumber');
 
-    lMessage.SetAttributes(lTransportChannel, ['action', 'headerparams', 'location', 'outputchildrennamespace', 'remap_delete', 'remap_deletelist', 'remap_getwarenumbernoticebill', 'remap_initializationmodel', 
-                                               'remap_initializationmodellist', 'remap_insert', 'remap_insertlist', 'remap_isexists', 'remap_p_saleupdateqcontrolwarenumber', 'remap_retrievelist', 'remap_retrievelistbypaging', 
-                                               'remap_update', 'remap_updatelist', 'soapinputmessagenamespace', 'soapinputnameoverride', 'soapoutputmessagenamespace', 'style', 'type', 'use'], ['http://tempuri.org/P_SaleUpdateQControlWareNumber', 
-                                               'MySoapHeader', 'http://110.52.60.19:6690/Quality/QualityControl/Business/V_QControlWareNumberNoticeBill.asmx', '*', 'http://tempuri.org/Delete', 'http://tempuri.org/DeleteList', 
-                                               'http://tempuri.org/GetWareNumberNoticeBill', 'http://tempuri.org/InitializationModel', 'http://tempuri.org/InitializationModelList', 'http://tempuri.org/Insert', 
-                                               'http://tempuri.org/InsertList', 'http://tempuri.org/IsExists', 'http://tempuri.org/P_SaleUpdateQControlWareNumber', 'http://tempuri.org/RetrieveList', 'http://tempuri.org/RetrieveListByPaging', 
+    lMessage.SetAttributes(lTransportChannel, ['action', 'headerparams', 'location', 'outputchildrennamespace', 'remap_delete', 'remap_deletelist', 'remap_getwarenumbernoticebill', 'remap_getwarenumbernoticebillah', 
+                                               'remap_initializationmodel', 'remap_initializationmodellist', 'remap_insert', 'remap_insertlist', 'remap_isexists', 'remap_p_saleupdateqcontrolwarenumber', 
+                                               'remap_p_saleupdateqcontrolwarenumberah', 'remap_retrievelist', 'remap_retrievelistbypaging', 'remap_update', 'remap_updatelist', 'soapinputmessagenamespace', 
+                                               'soapinputnameoverride', 'soapoutputmessagenamespace', 'style', 'type', 'use'], ['http://tempuri.org/P_SaleUpdateQControlWareNumber', 'MySoapHeader', 'http://58.243.161.70:6690/Quality/QualityControl/Business/V_QControlWareNumberNoticeBill.asmx', 
+                                               '*', 'http://tempuri.org/Delete', 'http://tempuri.org/DeleteList', 'http://tempuri.org/GetWareNumberNoticeBill', 'http://tempuri.org/GetWareNumberNoticeBillAH', 
+                                               'http://tempuri.org/InitializationModel', 'http://tempuri.org/InitializationModelList', 'http://tempuri.org/Insert', 'http://tempuri.org/InsertList', 'http://tempuri.org/IsExists', 
+                                               'http://tempuri.org/P_SaleUpdateQControlWareNumber', 'http://tempuri.org/P_SaleUpdateQControlWareNumberAH', 'http://tempuri.org/RetrieveList', 'http://tempuri.org/RetrieveListByPaging', 
                                                'http://tempuri.org/Update', 'http://tempuri.org/UpdateList', 'http://tempuri.org/', 'P_SaleUpdateQControlWareNumber', 'http://tempuri.org/', 'document', 
                                                'SOAP', 'literal']);
     lMessage.InitializeRequestMessage(lTransportChannel, 'V_QControlWareNumberNoticeBill', __InterfaceName, 'P_SaleUpdateQControlWareNumber');
     lMessage.Write('_MySoapHeader', System.TypeInfo(MySoapHeader), _MySoapHeader, []);
     lMessage.Write('factoryID', System.TypeInfo(UnicodeString), factoryID, []);
     lMessage.Write('fMaterielID', System.TypeInfo(UnicodeString), fMaterielID, []);
-    lMessage.Write('fPackingID', System.TypeInfo(UTF8String), fPackingID, []);
+    lMessage.Write('fPackingID', System.TypeInfo(UnicodeString), fPackingID, []);
     lMessage.Write('fWareNumber', System.TypeInfo(UnicodeString), fWareNumber, []);
     lMessage.Write('consignBillID', System.TypeInfo(UnicodeString), consignBillID, []);
     __DispatchAsyncRequest('P_SaleUpdateQControlWareNumber', lMessage);
+  finally
+    lMessage.UnsetAttributes(lTransportChannel);
+    lMessage := nil;
+    lTransportChannel := nil;
+  end;
+end;
+
+procedure TV_QControlWareNumberNoticeBill_AsyncProxy.Invoke_GetWareNumberNoticeBillAH(const _MySoapHeader: MySoapHeader; const fTransportID: UnicodeString; const fFactoryID: UnicodeString; const fMaterielID: UnicodeString; 
+                                                                                      const fPackingID: UnicodeString; const famount: UnicodeString; const fCustomerID: UnicodeString);
+var
+  lMessage: IROMessage;
+  lTransportChannel: IROTransportChannel;
+begin
+  lMessage := __GetMessage();
+  lTransportChannel := __TransportChannel;
+  try
+    __AssertProxyNotBusy('GetWareNumberNoticeBillAH');
+
+    lMessage.SetAttributes(lTransportChannel, ['action', 'headerparams', 'location', 'outputchildrennamespace', 'remap_delete', 'remap_deletelist', 'remap_getwarenumbernoticebill', 'remap_getwarenumbernoticebillah', 
+                                               'remap_initializationmodel', 'remap_initializationmodellist', 'remap_insert', 'remap_insertlist', 'remap_isexists', 'remap_p_saleupdateqcontrolwarenumber', 
+                                               'remap_p_saleupdateqcontrolwarenumberah', 'remap_retrievelist', 'remap_retrievelistbypaging', 'remap_update', 'remap_updatelist', 'soapinputmessagenamespace', 
+                                               'soapinputnameoverride', 'soapoutputmessagenamespace', 'style', 'type', 'use'], ['http://tempuri.org/GetWareNumberNoticeBillAH', 'MySoapHeader', 'http://58.243.161.70:6690/Quality/QualityControl/Business/V_QControlWareNumberNoticeBill.asmx', 
+                                               '*', 'http://tempuri.org/Delete', 'http://tempuri.org/DeleteList', 'http://tempuri.org/GetWareNumberNoticeBill', 'http://tempuri.org/GetWareNumberNoticeBillAH', 
+                                               'http://tempuri.org/InitializationModel', 'http://tempuri.org/InitializationModelList', 'http://tempuri.org/Insert', 'http://tempuri.org/InsertList', 'http://tempuri.org/IsExists', 
+                                               'http://tempuri.org/P_SaleUpdateQControlWareNumber', 'http://tempuri.org/P_SaleUpdateQControlWareNumberAH', 'http://tempuri.org/RetrieveList', 'http://tempuri.org/RetrieveListByPaging', 
+                                               'http://tempuri.org/Update', 'http://tempuri.org/UpdateList', 'http://tempuri.org/', 'GetWareNumberNoticeBillAH', 'http://tempuri.org/', 'document', 'SOAP', 
+                                               'literal']);
+    lMessage.InitializeRequestMessage(lTransportChannel, 'V_QControlWareNumberNoticeBill', __InterfaceName, 'GetWareNumberNoticeBillAH');
+    lMessage.Write('_MySoapHeader', System.TypeInfo(MySoapHeader), _MySoapHeader, []);
+    lMessage.Write('fTransportID', System.TypeInfo(UnicodeString), fTransportID, []);
+    lMessage.Write('fFactoryID', System.TypeInfo(UnicodeString), fFactoryID, []);
+    lMessage.Write('fMaterielID', System.TypeInfo(UnicodeString), fMaterielID, []);
+    lMessage.Write('fPackingID', System.TypeInfo(UnicodeString), fPackingID, []);
+    lMessage.Write('famount', System.TypeInfo(UnicodeString), famount, []);
+    lMessage.Write('fCustomerID', System.TypeInfo(UnicodeString), fCustomerID, []);
+    __DispatchAsyncRequest('GetWareNumberNoticeBillAH', lMessage);
+  finally
+    lMessage.UnsetAttributes(lTransportChannel);
+    lMessage := nil;
+    lTransportChannel := nil;
+  end;
+end;
+
+procedure TV_QControlWareNumberNoticeBill_AsyncProxy.Invoke_P_SaleUpdateQControlWareNumberAH(const _MySoapHeader: MySoapHeader; const fTransportID: UnicodeString; const factoryID: UnicodeString; const fMaterielID: UnicodeString; 
+                                                                                             const fPackingID: UnicodeString; const fWareNumber: UnicodeString; const famount: UnicodeString; const consignBillID: UnicodeString);
+var
+  lMessage: IROMessage;
+  lTransportChannel: IROTransportChannel;
+begin
+  lMessage := __GetMessage();
+  lTransportChannel := __TransportChannel;
+  try
+    __AssertProxyNotBusy('P_SaleUpdateQControlWareNumberAH');
+
+    lMessage.SetAttributes(lTransportChannel, ['action', 'headerparams', 'location', 'outputchildrennamespace', 'remap_delete', 'remap_deletelist', 'remap_getwarenumbernoticebill', 'remap_getwarenumbernoticebillah', 
+                                               'remap_initializationmodel', 'remap_initializationmodellist', 'remap_insert', 'remap_insertlist', 'remap_isexists', 'remap_p_saleupdateqcontrolwarenumber', 
+                                               'remap_p_saleupdateqcontrolwarenumberah', 'remap_retrievelist', 'remap_retrievelistbypaging', 'remap_update', 'remap_updatelist', 'soapinputmessagenamespace', 
+                                               'soapinputnameoverride', 'soapoutputmessagenamespace', 'style', 'type', 'use'], ['http://tempuri.org/P_SaleUpdateQControlWareNumberAH', 'MySoapHeader', 'http://58.243.161.70:6690/Quality/QualityControl/Business/V_QControlWareNumberNoticeBill.asmx', 
+                                               '*', 'http://tempuri.org/Delete', 'http://tempuri.org/DeleteList', 'http://tempuri.org/GetWareNumberNoticeBill', 'http://tempuri.org/GetWareNumberNoticeBillAH', 
+                                               'http://tempuri.org/InitializationModel', 'http://tempuri.org/InitializationModelList', 'http://tempuri.org/Insert', 'http://tempuri.org/InsertList', 'http://tempuri.org/IsExists', 
+                                               'http://tempuri.org/P_SaleUpdateQControlWareNumber', 'http://tempuri.org/P_SaleUpdateQControlWareNumberAH', 'http://tempuri.org/RetrieveList', 'http://tempuri.org/RetrieveListByPaging', 
+                                               'http://tempuri.org/Update', 'http://tempuri.org/UpdateList', 'http://tempuri.org/', 'P_SaleUpdateQControlWareNumberAH', 'http://tempuri.org/', 'document', 
+                                               'SOAP', 'literal']);
+    lMessage.InitializeRequestMessage(lTransportChannel, 'V_QControlWareNumberNoticeBill', __InterfaceName, 'P_SaleUpdateQControlWareNumberAH');
+    lMessage.Write('_MySoapHeader', System.TypeInfo(MySoapHeader), _MySoapHeader, []);
+    lMessage.Write('fTransportID', System.TypeInfo(UnicodeString), fTransportID, []);
+    lMessage.Write('factoryID', System.TypeInfo(UnicodeString), factoryID, []);
+    lMessage.Write('fMaterielID', System.TypeInfo(UnicodeString), fMaterielID, []);
+    lMessage.Write('fPackingID', System.TypeInfo(UnicodeString), fPackingID, []);
+    lMessage.Write('fWareNumber', System.TypeInfo(UnicodeString), fWareNumber, []);
+    lMessage.Write('famount', System.TypeInfo(UnicodeString), famount, []);
+    lMessage.Write('consignBillID', System.TypeInfo(UnicodeString), consignBillID, []);
+    __DispatchAsyncRequest('P_SaleUpdateQControlWareNumberAH', lMessage);
   finally
     lMessage.UnsetAttributes(lTransportChannel);
     lMessage := nil;
@@ -843,12 +1048,13 @@ begin
   try
     __AssertProxyNotBusy('InitializationModel');
 
-    lMessage.SetAttributes(lTransportChannel, ['action', 'headerparams', 'location', 'outputchildrennamespace', 'remap_delete', 'remap_deletelist', 'remap_getwarenumbernoticebill', 'remap_initializationmodel', 
-                                               'remap_initializationmodellist', 'remap_insert', 'remap_insertlist', 'remap_isexists', 'remap_p_saleupdateqcontrolwarenumber', 'remap_retrievelist', 'remap_retrievelistbypaging', 
-                                               'remap_update', 'remap_updatelist', 'soapinputmessagenamespace', 'soapinputnameoverride', 'soapoutputmessagenamespace', 'style', 'type', 'use'], ['http://tempuri.org/InitializationModel', 
-                                               'MySoapHeader', 'http://110.52.60.19:6690/Quality/QualityControl/Business/V_QControlWareNumberNoticeBill.asmx', '*', 'http://tempuri.org/Delete', 'http://tempuri.org/DeleteList', 
-                                               'http://tempuri.org/GetWareNumberNoticeBill', 'http://tempuri.org/InitializationModel', 'http://tempuri.org/InitializationModelList', 'http://tempuri.org/Insert', 
-                                               'http://tempuri.org/InsertList', 'http://tempuri.org/IsExists', 'http://tempuri.org/P_SaleUpdateQControlWareNumber', 'http://tempuri.org/RetrieveList', 'http://tempuri.org/RetrieveListByPaging', 
+    lMessage.SetAttributes(lTransportChannel, ['action', 'headerparams', 'location', 'outputchildrennamespace', 'remap_delete', 'remap_deletelist', 'remap_getwarenumbernoticebill', 'remap_getwarenumbernoticebillah', 
+                                               'remap_initializationmodel', 'remap_initializationmodellist', 'remap_insert', 'remap_insertlist', 'remap_isexists', 'remap_p_saleupdateqcontrolwarenumber', 
+                                               'remap_p_saleupdateqcontrolwarenumberah', 'remap_retrievelist', 'remap_retrievelistbypaging', 'remap_update', 'remap_updatelist', 'soapinputmessagenamespace', 
+                                               'soapinputnameoverride', 'soapoutputmessagenamespace', 'style', 'type', 'use'], ['http://tempuri.org/InitializationModel', 'MySoapHeader', 'http://58.243.161.70:6690/Quality/QualityControl/Business/V_QControlWareNumberNoticeBill.asmx', 
+                                               '*', 'http://tempuri.org/Delete', 'http://tempuri.org/DeleteList', 'http://tempuri.org/GetWareNumberNoticeBill', 'http://tempuri.org/GetWareNumberNoticeBillAH', 
+                                               'http://tempuri.org/InitializationModel', 'http://tempuri.org/InitializationModelList', 'http://tempuri.org/Insert', 'http://tempuri.org/InsertList', 'http://tempuri.org/IsExists', 
+                                               'http://tempuri.org/P_SaleUpdateQControlWareNumber', 'http://tempuri.org/P_SaleUpdateQControlWareNumberAH', 'http://tempuri.org/RetrieveList', 'http://tempuri.org/RetrieveListByPaging', 
                                                'http://tempuri.org/Update', 'http://tempuri.org/UpdateList', 'http://tempuri.org/', 'InitializationModel', 'http://tempuri.org/', 'document', 'SOAP', 'literal']);
     lMessage.InitializeRequestMessage(lTransportChannel, 'V_QControlWareNumberNoticeBill', __InterfaceName, 'InitializationModel');
     lMessage.Write('_MySoapHeader', System.TypeInfo(MySoapHeader), _MySoapHeader, []);
@@ -870,12 +1076,13 @@ begin
   try
     __AssertProxyNotBusy('InitializationModelList');
 
-    lMessage.SetAttributes(lTransportChannel, ['action', 'headerparams', 'location', 'outputchildrennamespace', 'remap_delete', 'remap_deletelist', 'remap_getwarenumbernoticebill', 'remap_initializationmodel', 
-                                               'remap_initializationmodellist', 'remap_insert', 'remap_insertlist', 'remap_isexists', 'remap_p_saleupdateqcontrolwarenumber', 'remap_retrievelist', 'remap_retrievelistbypaging', 
-                                               'remap_update', 'remap_updatelist', 'soapinputmessagenamespace', 'soapinputnameoverride', 'soapoutputmessagenamespace', 'style', 'type', 'use'], ['http://tempuri.org/InitializationModelList', 
-                                               'MySoapHeader', 'http://110.52.60.19:6690/Quality/QualityControl/Business/V_QControlWareNumberNoticeBill.asmx', '*', 'http://tempuri.org/Delete', 'http://tempuri.org/DeleteList', 
-                                               'http://tempuri.org/GetWareNumberNoticeBill', 'http://tempuri.org/InitializationModel', 'http://tempuri.org/InitializationModelList', 'http://tempuri.org/Insert', 
-                                               'http://tempuri.org/InsertList', 'http://tempuri.org/IsExists', 'http://tempuri.org/P_SaleUpdateQControlWareNumber', 'http://tempuri.org/RetrieveList', 'http://tempuri.org/RetrieveListByPaging', 
+    lMessage.SetAttributes(lTransportChannel, ['action', 'headerparams', 'location', 'outputchildrennamespace', 'remap_delete', 'remap_deletelist', 'remap_getwarenumbernoticebill', 'remap_getwarenumbernoticebillah', 
+                                               'remap_initializationmodel', 'remap_initializationmodellist', 'remap_insert', 'remap_insertlist', 'remap_isexists', 'remap_p_saleupdateqcontrolwarenumber', 
+                                               'remap_p_saleupdateqcontrolwarenumberah', 'remap_retrievelist', 'remap_retrievelistbypaging', 'remap_update', 'remap_updatelist', 'soapinputmessagenamespace', 
+                                               'soapinputnameoverride', 'soapoutputmessagenamespace', 'style', 'type', 'use'], ['http://tempuri.org/InitializationModelList', 'MySoapHeader', 'http://58.243.161.70:6690/Quality/QualityControl/Business/V_QControlWareNumberNoticeBill.asmx', 
+                                               '*', 'http://tempuri.org/Delete', 'http://tempuri.org/DeleteList', 'http://tempuri.org/GetWareNumberNoticeBill', 'http://tempuri.org/GetWareNumberNoticeBillAH', 
+                                               'http://tempuri.org/InitializationModel', 'http://tempuri.org/InitializationModelList', 'http://tempuri.org/Insert', 'http://tempuri.org/InsertList', 'http://tempuri.org/IsExists', 
+                                               'http://tempuri.org/P_SaleUpdateQControlWareNumber', 'http://tempuri.org/P_SaleUpdateQControlWareNumberAH', 'http://tempuri.org/RetrieveList', 'http://tempuri.org/RetrieveListByPaging', 
                                                'http://tempuri.org/Update', 'http://tempuri.org/UpdateList', 'http://tempuri.org/', 'InitializationModelList', 'http://tempuri.org/', 'document', 'SOAP', 
                                                'literal']);
     lMessage.InitializeRequestMessage(lTransportChannel, 'V_QControlWareNumberNoticeBill', __InterfaceName, 'InitializationModelList');
@@ -889,7 +1096,7 @@ begin
   end;
 end;
 
-procedure TV_QControlWareNumberNoticeBill_AsyncProxy.Invoke_Insert(const _MySoapHeader: MySoapHeader; const jsonString: WideString_Optional);
+procedure TV_QControlWareNumberNoticeBill_AsyncProxy.Invoke_Insert(const _MySoapHeader: MySoapHeader; const jsonString: UnicodeString);
 var
   lMessage: IROMessage;
   lTransportChannel: IROTransportChannel;
@@ -899,16 +1106,17 @@ begin
   try
     __AssertProxyNotBusy('Insert');
 
-    lMessage.SetAttributes(lTransportChannel, ['action', 'headerparams', 'location', 'outputchildrennamespace', 'remap_delete', 'remap_deletelist', 'remap_getwarenumbernoticebill', 'remap_initializationmodel', 
-                                               'remap_initializationmodellist', 'remap_insert', 'remap_insertlist', 'remap_isexists', 'remap_p_saleupdateqcontrolwarenumber', 'remap_retrievelist', 'remap_retrievelistbypaging', 
-                                               'remap_update', 'remap_updatelist', 'soapinputmessagenamespace', 'soapinputnameoverride', 'soapoutputmessagenamespace', 'style', 'type', 'use'], ['http://tempuri.org/Insert', 
-                                               'MySoapHeader', 'http://110.52.60.19:6690/Quality/QualityControl/Business/V_QControlWareNumberNoticeBill.asmx', '*', 'http://tempuri.org/Delete', 'http://tempuri.org/DeleteList', 
-                                               'http://tempuri.org/GetWareNumberNoticeBill', 'http://tempuri.org/InitializationModel', 'http://tempuri.org/InitializationModelList', 'http://tempuri.org/Insert', 
-                                               'http://tempuri.org/InsertList', 'http://tempuri.org/IsExists', 'http://tempuri.org/P_SaleUpdateQControlWareNumber', 'http://tempuri.org/RetrieveList', 'http://tempuri.org/RetrieveListByPaging', 
+    lMessage.SetAttributes(lTransportChannel, ['action', 'headerparams', 'location', 'outputchildrennamespace', 'remap_delete', 'remap_deletelist', 'remap_getwarenumbernoticebill', 'remap_getwarenumbernoticebillah', 
+                                               'remap_initializationmodel', 'remap_initializationmodellist', 'remap_insert', 'remap_insertlist', 'remap_isexists', 'remap_p_saleupdateqcontrolwarenumber', 
+                                               'remap_p_saleupdateqcontrolwarenumberah', 'remap_retrievelist', 'remap_retrievelistbypaging', 'remap_update', 'remap_updatelist', 'soapinputmessagenamespace', 
+                                               'soapinputnameoverride', 'soapoutputmessagenamespace', 'style', 'type', 'use'], ['http://tempuri.org/Insert', 'MySoapHeader', 'http://58.243.161.70:6690/Quality/QualityControl/Business/V_QControlWareNumberNoticeBill.asmx', 
+                                               '*', 'http://tempuri.org/Delete', 'http://tempuri.org/DeleteList', 'http://tempuri.org/GetWareNumberNoticeBill', 'http://tempuri.org/GetWareNumberNoticeBillAH', 
+                                               'http://tempuri.org/InitializationModel', 'http://tempuri.org/InitializationModelList', 'http://tempuri.org/Insert', 'http://tempuri.org/InsertList', 'http://tempuri.org/IsExists', 
+                                               'http://tempuri.org/P_SaleUpdateQControlWareNumber', 'http://tempuri.org/P_SaleUpdateQControlWareNumberAH', 'http://tempuri.org/RetrieveList', 'http://tempuri.org/RetrieveListByPaging', 
                                                'http://tempuri.org/Update', 'http://tempuri.org/UpdateList', 'http://tempuri.org/', 'Insert', 'http://tempuri.org/', 'document', 'SOAP', 'literal']);
     lMessage.InitializeRequestMessage(lTransportChannel, 'V_QControlWareNumberNoticeBill', __InterfaceName, 'Insert');
     lMessage.Write('_MySoapHeader', System.TypeInfo(MySoapHeader), _MySoapHeader, []);
-    lMessage.Write('jsonString', System.TypeInfo(WideString_Optional), jsonString, []);
+    lMessage.Write('jsonString', System.TypeInfo(UnicodeString), jsonString, []);
     __DispatchAsyncRequest('Insert', lMessage);
   finally
     lMessage.UnsetAttributes(lTransportChannel);
@@ -917,7 +1125,7 @@ begin
   end;
 end;
 
-procedure TV_QControlWareNumberNoticeBill_AsyncProxy.Invoke_InsertList(const _MySoapHeader: MySoapHeader; const jsonString: WideString_Optional);
+procedure TV_QControlWareNumberNoticeBill_AsyncProxy.Invoke_InsertList(const _MySoapHeader: MySoapHeader; const jsonString: UnicodeString);
 var
   lMessage: IROMessage;
   lTransportChannel: IROTransportChannel;
@@ -927,16 +1135,17 @@ begin
   try
     __AssertProxyNotBusy('InsertList');
 
-    lMessage.SetAttributes(lTransportChannel, ['action', 'headerparams', 'location', 'outputchildrennamespace', 'remap_delete', 'remap_deletelist', 'remap_getwarenumbernoticebill', 'remap_initializationmodel', 
-                                               'remap_initializationmodellist', 'remap_insert', 'remap_insertlist', 'remap_isexists', 'remap_p_saleupdateqcontrolwarenumber', 'remap_retrievelist', 'remap_retrievelistbypaging', 
-                                               'remap_update', 'remap_updatelist', 'soapinputmessagenamespace', 'soapinputnameoverride', 'soapoutputmessagenamespace', 'style', 'type', 'use'], ['http://tempuri.org/InsertList', 
-                                               'MySoapHeader', 'http://110.52.60.19:6690/Quality/QualityControl/Business/V_QControlWareNumberNoticeBill.asmx', '*', 'http://tempuri.org/Delete', 'http://tempuri.org/DeleteList', 
-                                               'http://tempuri.org/GetWareNumberNoticeBill', 'http://tempuri.org/InitializationModel', 'http://tempuri.org/InitializationModelList', 'http://tempuri.org/Insert', 
-                                               'http://tempuri.org/InsertList', 'http://tempuri.org/IsExists', 'http://tempuri.org/P_SaleUpdateQControlWareNumber', 'http://tempuri.org/RetrieveList', 'http://tempuri.org/RetrieveListByPaging', 
+    lMessage.SetAttributes(lTransportChannel, ['action', 'headerparams', 'location', 'outputchildrennamespace', 'remap_delete', 'remap_deletelist', 'remap_getwarenumbernoticebill', 'remap_getwarenumbernoticebillah', 
+                                               'remap_initializationmodel', 'remap_initializationmodellist', 'remap_insert', 'remap_insertlist', 'remap_isexists', 'remap_p_saleupdateqcontrolwarenumber', 
+                                               'remap_p_saleupdateqcontrolwarenumberah', 'remap_retrievelist', 'remap_retrievelistbypaging', 'remap_update', 'remap_updatelist', 'soapinputmessagenamespace', 
+                                               'soapinputnameoverride', 'soapoutputmessagenamespace', 'style', 'type', 'use'], ['http://tempuri.org/InsertList', 'MySoapHeader', 'http://58.243.161.70:6690/Quality/QualityControl/Business/V_QControlWareNumberNoticeBill.asmx', 
+                                               '*', 'http://tempuri.org/Delete', 'http://tempuri.org/DeleteList', 'http://tempuri.org/GetWareNumberNoticeBill', 'http://tempuri.org/GetWareNumberNoticeBillAH', 
+                                               'http://tempuri.org/InitializationModel', 'http://tempuri.org/InitializationModelList', 'http://tempuri.org/Insert', 'http://tempuri.org/InsertList', 'http://tempuri.org/IsExists', 
+                                               'http://tempuri.org/P_SaleUpdateQControlWareNumber', 'http://tempuri.org/P_SaleUpdateQControlWareNumberAH', 'http://tempuri.org/RetrieveList', 'http://tempuri.org/RetrieveListByPaging', 
                                                'http://tempuri.org/Update', 'http://tempuri.org/UpdateList', 'http://tempuri.org/', 'InsertList', 'http://tempuri.org/', 'document', 'SOAP', 'literal']);
     lMessage.InitializeRequestMessage(lTransportChannel, 'V_QControlWareNumberNoticeBill', __InterfaceName, 'InsertList');
     lMessage.Write('_MySoapHeader', System.TypeInfo(MySoapHeader), _MySoapHeader, []);
-    lMessage.Write('jsonString', System.TypeInfo(WideString_Optional), jsonString, []);
+    lMessage.Write('jsonString', System.TypeInfo(UnicodeString), jsonString, []);
     __DispatchAsyncRequest('InsertList', lMessage);
   finally
     lMessage.UnsetAttributes(lTransportChannel);
@@ -945,7 +1154,7 @@ begin
   end;
 end;
 
-procedure TV_QControlWareNumberNoticeBill_AsyncProxy.Invoke_DeleteList(const _MySoapHeader: MySoapHeader; const jsonString: WideString_Optional);
+procedure TV_QControlWareNumberNoticeBill_AsyncProxy.Invoke_DeleteList(const _MySoapHeader: MySoapHeader; const jsonString: UnicodeString);
 var
   lMessage: IROMessage;
   lTransportChannel: IROTransportChannel;
@@ -955,16 +1164,17 @@ begin
   try
     __AssertProxyNotBusy('DeleteList');
 
-    lMessage.SetAttributes(lTransportChannel, ['action', 'headerparams', 'location', 'outputchildrennamespace', 'remap_delete', 'remap_deletelist', 'remap_getwarenumbernoticebill', 'remap_initializationmodel', 
-                                               'remap_initializationmodellist', 'remap_insert', 'remap_insertlist', 'remap_isexists', 'remap_p_saleupdateqcontrolwarenumber', 'remap_retrievelist', 'remap_retrievelistbypaging', 
-                                               'remap_update', 'remap_updatelist', 'soapinputmessagenamespace', 'soapinputnameoverride', 'soapoutputmessagenamespace', 'style', 'type', 'use'], ['http://tempuri.org/DeleteList', 
-                                               'MySoapHeader', 'http://110.52.60.19:6690/Quality/QualityControl/Business/V_QControlWareNumberNoticeBill.asmx', '*', 'http://tempuri.org/Delete', 'http://tempuri.org/DeleteList', 
-                                               'http://tempuri.org/GetWareNumberNoticeBill', 'http://tempuri.org/InitializationModel', 'http://tempuri.org/InitializationModelList', 'http://tempuri.org/Insert', 
-                                               'http://tempuri.org/InsertList', 'http://tempuri.org/IsExists', 'http://tempuri.org/P_SaleUpdateQControlWareNumber', 'http://tempuri.org/RetrieveList', 'http://tempuri.org/RetrieveListByPaging', 
+    lMessage.SetAttributes(lTransportChannel, ['action', 'headerparams', 'location', 'outputchildrennamespace', 'remap_delete', 'remap_deletelist', 'remap_getwarenumbernoticebill', 'remap_getwarenumbernoticebillah', 
+                                               'remap_initializationmodel', 'remap_initializationmodellist', 'remap_insert', 'remap_insertlist', 'remap_isexists', 'remap_p_saleupdateqcontrolwarenumber', 
+                                               'remap_p_saleupdateqcontrolwarenumberah', 'remap_retrievelist', 'remap_retrievelistbypaging', 'remap_update', 'remap_updatelist', 'soapinputmessagenamespace', 
+                                               'soapinputnameoverride', 'soapoutputmessagenamespace', 'style', 'type', 'use'], ['http://tempuri.org/DeleteList', 'MySoapHeader', 'http://58.243.161.70:6690/Quality/QualityControl/Business/V_QControlWareNumberNoticeBill.asmx', 
+                                               '*', 'http://tempuri.org/Delete', 'http://tempuri.org/DeleteList', 'http://tempuri.org/GetWareNumberNoticeBill', 'http://tempuri.org/GetWareNumberNoticeBillAH', 
+                                               'http://tempuri.org/InitializationModel', 'http://tempuri.org/InitializationModelList', 'http://tempuri.org/Insert', 'http://tempuri.org/InsertList', 'http://tempuri.org/IsExists', 
+                                               'http://tempuri.org/P_SaleUpdateQControlWareNumber', 'http://tempuri.org/P_SaleUpdateQControlWareNumberAH', 'http://tempuri.org/RetrieveList', 'http://tempuri.org/RetrieveListByPaging', 
                                                'http://tempuri.org/Update', 'http://tempuri.org/UpdateList', 'http://tempuri.org/', 'DeleteList', 'http://tempuri.org/', 'document', 'SOAP', 'literal']);
     lMessage.InitializeRequestMessage(lTransportChannel, 'V_QControlWareNumberNoticeBill', __InterfaceName, 'DeleteList');
     lMessage.Write('_MySoapHeader', System.TypeInfo(MySoapHeader), _MySoapHeader, []);
-    lMessage.Write('jsonString', System.TypeInfo(WideString_Optional), jsonString, []);
+    lMessage.Write('jsonString', System.TypeInfo(UnicodeString), jsonString, []);
     __DispatchAsyncRequest('DeleteList', lMessage);
   finally
     lMessage.UnsetAttributes(lTransportChannel);
@@ -973,7 +1183,7 @@ begin
   end;
 end;
 
-procedure TV_QControlWareNumberNoticeBill_AsyncProxy.Invoke_Delete(const _MySoapHeader: MySoapHeader; const jsonString: WideString_Optional);
+procedure TV_QControlWareNumberNoticeBill_AsyncProxy.Invoke_Delete(const _MySoapHeader: MySoapHeader; const jsonString: UnicodeString);
 var
   lMessage: IROMessage;
   lTransportChannel: IROTransportChannel;
@@ -983,16 +1193,17 @@ begin
   try
     __AssertProxyNotBusy('Delete');
 
-    lMessage.SetAttributes(lTransportChannel, ['action', 'headerparams', 'location', 'outputchildrennamespace', 'remap_delete', 'remap_deletelist', 'remap_getwarenumbernoticebill', 'remap_initializationmodel', 
-                                               'remap_initializationmodellist', 'remap_insert', 'remap_insertlist', 'remap_isexists', 'remap_p_saleupdateqcontrolwarenumber', 'remap_retrievelist', 'remap_retrievelistbypaging', 
-                                               'remap_update', 'remap_updatelist', 'soapinputmessagenamespace', 'soapinputnameoverride', 'soapoutputmessagenamespace', 'style', 'type', 'use'], ['http://tempuri.org/Delete', 
-                                               'MySoapHeader', 'http://110.52.60.19:6690/Quality/QualityControl/Business/V_QControlWareNumberNoticeBill.asmx', '*', 'http://tempuri.org/Delete', 'http://tempuri.org/DeleteList', 
-                                               'http://tempuri.org/GetWareNumberNoticeBill', 'http://tempuri.org/InitializationModel', 'http://tempuri.org/InitializationModelList', 'http://tempuri.org/Insert', 
-                                               'http://tempuri.org/InsertList', 'http://tempuri.org/IsExists', 'http://tempuri.org/P_SaleUpdateQControlWareNumber', 'http://tempuri.org/RetrieveList', 'http://tempuri.org/RetrieveListByPaging', 
+    lMessage.SetAttributes(lTransportChannel, ['action', 'headerparams', 'location', 'outputchildrennamespace', 'remap_delete', 'remap_deletelist', 'remap_getwarenumbernoticebill', 'remap_getwarenumbernoticebillah', 
+                                               'remap_initializationmodel', 'remap_initializationmodellist', 'remap_insert', 'remap_insertlist', 'remap_isexists', 'remap_p_saleupdateqcontrolwarenumber', 
+                                               'remap_p_saleupdateqcontrolwarenumberah', 'remap_retrievelist', 'remap_retrievelistbypaging', 'remap_update', 'remap_updatelist', 'soapinputmessagenamespace', 
+                                               'soapinputnameoverride', 'soapoutputmessagenamespace', 'style', 'type', 'use'], ['http://tempuri.org/Delete', 'MySoapHeader', 'http://58.243.161.70:6690/Quality/QualityControl/Business/V_QControlWareNumberNoticeBill.asmx', 
+                                               '*', 'http://tempuri.org/Delete', 'http://tempuri.org/DeleteList', 'http://tempuri.org/GetWareNumberNoticeBill', 'http://tempuri.org/GetWareNumberNoticeBillAH', 
+                                               'http://tempuri.org/InitializationModel', 'http://tempuri.org/InitializationModelList', 'http://tempuri.org/Insert', 'http://tempuri.org/InsertList', 'http://tempuri.org/IsExists', 
+                                               'http://tempuri.org/P_SaleUpdateQControlWareNumber', 'http://tempuri.org/P_SaleUpdateQControlWareNumberAH', 'http://tempuri.org/RetrieveList', 'http://tempuri.org/RetrieveListByPaging', 
                                                'http://tempuri.org/Update', 'http://tempuri.org/UpdateList', 'http://tempuri.org/', 'Delete', 'http://tempuri.org/', 'document', 'SOAP', 'literal']);
     lMessage.InitializeRequestMessage(lTransportChannel, 'V_QControlWareNumberNoticeBill', __InterfaceName, 'Delete');
     lMessage.Write('_MySoapHeader', System.TypeInfo(MySoapHeader), _MySoapHeader, []);
-    lMessage.Write('jsonString', System.TypeInfo(WideString_Optional), jsonString, []);
+    lMessage.Write('jsonString', System.TypeInfo(UnicodeString), jsonString, []);
     __DispatchAsyncRequest('Delete', lMessage);
   finally
     lMessage.UnsetAttributes(lTransportChannel);
@@ -1001,7 +1212,7 @@ begin
   end;
 end;
 
-procedure TV_QControlWareNumberNoticeBill_AsyncProxy.Invoke_Update(const _MySoapHeader: MySoapHeader; const initJsonString: WideString_Optional; const newJsonString: WideString_Optional);
+procedure TV_QControlWareNumberNoticeBill_AsyncProxy.Invoke_Update(const _MySoapHeader: MySoapHeader; const initJsonString: UnicodeString; const newJsonString: UnicodeString);
 var
   lMessage: IROMessage;
   lTransportChannel: IROTransportChannel;
@@ -1011,17 +1222,18 @@ begin
   try
     __AssertProxyNotBusy('Update');
 
-    lMessage.SetAttributes(lTransportChannel, ['action', 'headerparams', 'location', 'outputchildrennamespace', 'remap_delete', 'remap_deletelist', 'remap_getwarenumbernoticebill', 'remap_initializationmodel', 
-                                               'remap_initializationmodellist', 'remap_insert', 'remap_insertlist', 'remap_isexists', 'remap_p_saleupdateqcontrolwarenumber', 'remap_retrievelist', 'remap_retrievelistbypaging', 
-                                               'remap_update', 'remap_updatelist', 'soapinputmessagenamespace', 'soapinputnameoverride', 'soapoutputmessagenamespace', 'style', 'type', 'use'], ['http://tempuri.org/Update', 
-                                               'MySoapHeader', 'http://110.52.60.19:6690/Quality/QualityControl/Business/V_QControlWareNumberNoticeBill.asmx', '*', 'http://tempuri.org/Delete', 'http://tempuri.org/DeleteList', 
-                                               'http://tempuri.org/GetWareNumberNoticeBill', 'http://tempuri.org/InitializationModel', 'http://tempuri.org/InitializationModelList', 'http://tempuri.org/Insert', 
-                                               'http://tempuri.org/InsertList', 'http://tempuri.org/IsExists', 'http://tempuri.org/P_SaleUpdateQControlWareNumber', 'http://tempuri.org/RetrieveList', 'http://tempuri.org/RetrieveListByPaging', 
+    lMessage.SetAttributes(lTransportChannel, ['action', 'headerparams', 'location', 'outputchildrennamespace', 'remap_delete', 'remap_deletelist', 'remap_getwarenumbernoticebill', 'remap_getwarenumbernoticebillah', 
+                                               'remap_initializationmodel', 'remap_initializationmodellist', 'remap_insert', 'remap_insertlist', 'remap_isexists', 'remap_p_saleupdateqcontrolwarenumber', 
+                                               'remap_p_saleupdateqcontrolwarenumberah', 'remap_retrievelist', 'remap_retrievelistbypaging', 'remap_update', 'remap_updatelist', 'soapinputmessagenamespace', 
+                                               'soapinputnameoverride', 'soapoutputmessagenamespace', 'style', 'type', 'use'], ['http://tempuri.org/Update', 'MySoapHeader', 'http://58.243.161.70:6690/Quality/QualityControl/Business/V_QControlWareNumberNoticeBill.asmx', 
+                                               '*', 'http://tempuri.org/Delete', 'http://tempuri.org/DeleteList', 'http://tempuri.org/GetWareNumberNoticeBill', 'http://tempuri.org/GetWareNumberNoticeBillAH', 
+                                               'http://tempuri.org/InitializationModel', 'http://tempuri.org/InitializationModelList', 'http://tempuri.org/Insert', 'http://tempuri.org/InsertList', 'http://tempuri.org/IsExists', 
+                                               'http://tempuri.org/P_SaleUpdateQControlWareNumber', 'http://tempuri.org/P_SaleUpdateQControlWareNumberAH', 'http://tempuri.org/RetrieveList', 'http://tempuri.org/RetrieveListByPaging', 
                                                'http://tempuri.org/Update', 'http://tempuri.org/UpdateList', 'http://tempuri.org/', 'Update', 'http://tempuri.org/', 'document', 'SOAP', 'literal']);
     lMessage.InitializeRequestMessage(lTransportChannel, 'V_QControlWareNumberNoticeBill', __InterfaceName, 'Update');
     lMessage.Write('_MySoapHeader', System.TypeInfo(MySoapHeader), _MySoapHeader, []);
-    lMessage.Write('initJsonString', System.TypeInfo(WideString_Optional), initJsonString, []);
-    lMessage.Write('newJsonString', System.TypeInfo(WideString_Optional), newJsonString, []);
+    lMessage.Write('initJsonString', System.TypeInfo(UnicodeString), initJsonString, []);
+    lMessage.Write('newJsonString', System.TypeInfo(UnicodeString), newJsonString, []);
     __DispatchAsyncRequest('Update', lMessage);
   finally
     lMessage.UnsetAttributes(lTransportChannel);
@@ -1030,7 +1242,7 @@ begin
   end;
 end;
 
-procedure TV_QControlWareNumberNoticeBill_AsyncProxy.Invoke_UpdateList(const _MySoapHeader: MySoapHeader; const initJsonString: WideString_Optional; const newJsonString: WideString_Optional);
+procedure TV_QControlWareNumberNoticeBill_AsyncProxy.Invoke_UpdateList(const _MySoapHeader: MySoapHeader; const initJsonString: UnicodeString; const newJsonString: UnicodeString);
 var
   lMessage: IROMessage;
   lTransportChannel: IROTransportChannel;
@@ -1040,17 +1252,18 @@ begin
   try
     __AssertProxyNotBusy('UpdateList');
 
-    lMessage.SetAttributes(lTransportChannel, ['action', 'headerparams', 'location', 'outputchildrennamespace', 'remap_delete', 'remap_deletelist', 'remap_getwarenumbernoticebill', 'remap_initializationmodel', 
-                                               'remap_initializationmodellist', 'remap_insert', 'remap_insertlist', 'remap_isexists', 'remap_p_saleupdateqcontrolwarenumber', 'remap_retrievelist', 'remap_retrievelistbypaging', 
-                                               'remap_update', 'remap_updatelist', 'soapinputmessagenamespace', 'soapinputnameoverride', 'soapoutputmessagenamespace', 'style', 'type', 'use'], ['http://tempuri.org/UpdateList', 
-                                               'MySoapHeader', 'http://110.52.60.19:6690/Quality/QualityControl/Business/V_QControlWareNumberNoticeBill.asmx', '*', 'http://tempuri.org/Delete', 'http://tempuri.org/DeleteList', 
-                                               'http://tempuri.org/GetWareNumberNoticeBill', 'http://tempuri.org/InitializationModel', 'http://tempuri.org/InitializationModelList', 'http://tempuri.org/Insert', 
-                                               'http://tempuri.org/InsertList', 'http://tempuri.org/IsExists', 'http://tempuri.org/P_SaleUpdateQControlWareNumber', 'http://tempuri.org/RetrieveList', 'http://tempuri.org/RetrieveListByPaging', 
+    lMessage.SetAttributes(lTransportChannel, ['action', 'headerparams', 'location', 'outputchildrennamespace', 'remap_delete', 'remap_deletelist', 'remap_getwarenumbernoticebill', 'remap_getwarenumbernoticebillah', 
+                                               'remap_initializationmodel', 'remap_initializationmodellist', 'remap_insert', 'remap_insertlist', 'remap_isexists', 'remap_p_saleupdateqcontrolwarenumber', 
+                                               'remap_p_saleupdateqcontrolwarenumberah', 'remap_retrievelist', 'remap_retrievelistbypaging', 'remap_update', 'remap_updatelist', 'soapinputmessagenamespace', 
+                                               'soapinputnameoverride', 'soapoutputmessagenamespace', 'style', 'type', 'use'], ['http://tempuri.org/UpdateList', 'MySoapHeader', 'http://58.243.161.70:6690/Quality/QualityControl/Business/V_QControlWareNumberNoticeBill.asmx', 
+                                               '*', 'http://tempuri.org/Delete', 'http://tempuri.org/DeleteList', 'http://tempuri.org/GetWareNumberNoticeBill', 'http://tempuri.org/GetWareNumberNoticeBillAH', 
+                                               'http://tempuri.org/InitializationModel', 'http://tempuri.org/InitializationModelList', 'http://tempuri.org/Insert', 'http://tempuri.org/InsertList', 'http://tempuri.org/IsExists', 
+                                               'http://tempuri.org/P_SaleUpdateQControlWareNumber', 'http://tempuri.org/P_SaleUpdateQControlWareNumberAH', 'http://tempuri.org/RetrieveList', 'http://tempuri.org/RetrieveListByPaging', 
                                                'http://tempuri.org/Update', 'http://tempuri.org/UpdateList', 'http://tempuri.org/', 'UpdateList', 'http://tempuri.org/', 'document', 'SOAP', 'literal']);
     lMessage.InitializeRequestMessage(lTransportChannel, 'V_QControlWareNumberNoticeBill', __InterfaceName, 'UpdateList');
     lMessage.Write('_MySoapHeader', System.TypeInfo(MySoapHeader), _MySoapHeader, []);
-    lMessage.Write('initJsonString', System.TypeInfo(WideString_Optional), initJsonString, []);
-    lMessage.Write('newJsonString', System.TypeInfo(WideString_Optional), newJsonString, []);
+    lMessage.Write('initJsonString', System.TypeInfo(UnicodeString), initJsonString, []);
+    lMessage.Write('newJsonString', System.TypeInfo(UnicodeString), newJsonString, []);
     __DispatchAsyncRequest('UpdateList', lMessage);
   finally
     lMessage.UnsetAttributes(lTransportChannel);
@@ -1059,7 +1272,7 @@ begin
   end;
 end;
 
-procedure TV_QControlWareNumberNoticeBill_AsyncProxy.Invoke_RetrieveList(const _MySoapHeader: MySoapHeader; const where: WideString_Optional; const sort: WideString_Optional);
+procedure TV_QControlWareNumberNoticeBill_AsyncProxy.Invoke_RetrieveList(const _MySoapHeader: MySoapHeader; const where: UnicodeString; const sort: UnicodeString);
 var
   lMessage: IROMessage;
   lTransportChannel: IROTransportChannel;
@@ -1069,17 +1282,18 @@ begin
   try
     __AssertProxyNotBusy('RetrieveList');
 
-    lMessage.SetAttributes(lTransportChannel, ['action', 'headerparams', 'location', 'outputchildrennamespace', 'remap_delete', 'remap_deletelist', 'remap_getwarenumbernoticebill', 'remap_initializationmodel', 
-                                               'remap_initializationmodellist', 'remap_insert', 'remap_insertlist', 'remap_isexists', 'remap_p_saleupdateqcontrolwarenumber', 'remap_retrievelist', 'remap_retrievelistbypaging', 
-                                               'remap_update', 'remap_updatelist', 'soapinputmessagenamespace', 'soapinputnameoverride', 'soapoutputmessagenamespace', 'style', 'type', 'use'], ['http://tempuri.org/RetrieveList', 
-                                               'MySoapHeader', 'http://110.52.60.19:6690/Quality/QualityControl/Business/V_QControlWareNumberNoticeBill.asmx', '*', 'http://tempuri.org/Delete', 'http://tempuri.org/DeleteList', 
-                                               'http://tempuri.org/GetWareNumberNoticeBill', 'http://tempuri.org/InitializationModel', 'http://tempuri.org/InitializationModelList', 'http://tempuri.org/Insert', 
-                                               'http://tempuri.org/InsertList', 'http://tempuri.org/IsExists', 'http://tempuri.org/P_SaleUpdateQControlWareNumber', 'http://tempuri.org/RetrieveList', 'http://tempuri.org/RetrieveListByPaging', 
+    lMessage.SetAttributes(lTransportChannel, ['action', 'headerparams', 'location', 'outputchildrennamespace', 'remap_delete', 'remap_deletelist', 'remap_getwarenumbernoticebill', 'remap_getwarenumbernoticebillah', 
+                                               'remap_initializationmodel', 'remap_initializationmodellist', 'remap_insert', 'remap_insertlist', 'remap_isexists', 'remap_p_saleupdateqcontrolwarenumber', 
+                                               'remap_p_saleupdateqcontrolwarenumberah', 'remap_retrievelist', 'remap_retrievelistbypaging', 'remap_update', 'remap_updatelist', 'soapinputmessagenamespace', 
+                                               'soapinputnameoverride', 'soapoutputmessagenamespace', 'style', 'type', 'use'], ['http://tempuri.org/RetrieveList', 'MySoapHeader', 'http://58.243.161.70:6690/Quality/QualityControl/Business/V_QControlWareNumberNoticeBill.asmx', 
+                                               '*', 'http://tempuri.org/Delete', 'http://tempuri.org/DeleteList', 'http://tempuri.org/GetWareNumberNoticeBill', 'http://tempuri.org/GetWareNumberNoticeBillAH', 
+                                               'http://tempuri.org/InitializationModel', 'http://tempuri.org/InitializationModelList', 'http://tempuri.org/Insert', 'http://tempuri.org/InsertList', 'http://tempuri.org/IsExists', 
+                                               'http://tempuri.org/P_SaleUpdateQControlWareNumber', 'http://tempuri.org/P_SaleUpdateQControlWareNumberAH', 'http://tempuri.org/RetrieveList', 'http://tempuri.org/RetrieveListByPaging', 
                                                'http://tempuri.org/Update', 'http://tempuri.org/UpdateList', 'http://tempuri.org/', 'RetrieveList', 'http://tempuri.org/', 'document', 'SOAP', 'literal']);
     lMessage.InitializeRequestMessage(lTransportChannel, 'V_QControlWareNumberNoticeBill', __InterfaceName, 'RetrieveList');
     lMessage.Write('_MySoapHeader', System.TypeInfo(MySoapHeader), _MySoapHeader, []);
-    lMessage.Write('where', System.TypeInfo(WideString_Optional), where, []);
-    lMessage.Write('sort', System.TypeInfo(WideString_Optional), sort, []);
+    lMessage.Write('where', System.TypeInfo(UnicodeString), where, []);
+    lMessage.Write('sort', System.TypeInfo(UnicodeString), sort, []);
     __DispatchAsyncRequest('RetrieveList', lMessage);
   finally
     lMessage.UnsetAttributes(lTransportChannel);
@@ -1088,8 +1302,8 @@ begin
   end;
 end;
 
-procedure TV_QControlWareNumberNoticeBill_AsyncProxy.Invoke_RetrieveListByPaging(const _MySoapHeader: MySoapHeader; const where: WideString_Optional; const sort: WideString_Optional; const pageNumber: Integer; 
-                                                                                 const pageSize: Integer; const groupParameters: WideString_Optional);
+procedure TV_QControlWareNumberNoticeBill_AsyncProxy.Invoke_RetrieveListByPaging(const _MySoapHeader: MySoapHeader; const where: UnicodeString; const sort: UnicodeString; const pageNumber: Integer; const pageSize: Integer; 
+                                                                                 const groupParameters: UnicodeString);
 var
   lMessage: IROMessage;
   lTransportChannel: IROTransportChannel;
@@ -1099,20 +1313,21 @@ begin
   try
     __AssertProxyNotBusy('RetrieveListByPaging');
 
-    lMessage.SetAttributes(lTransportChannel, ['action', 'headerparams', 'location', 'outputchildrennamespace', 'remap_delete', 'remap_deletelist', 'remap_getwarenumbernoticebill', 'remap_initializationmodel', 
-                                               'remap_initializationmodellist', 'remap_insert', 'remap_insertlist', 'remap_isexists', 'remap_p_saleupdateqcontrolwarenumber', 'remap_retrievelist', 'remap_retrievelistbypaging', 
-                                               'remap_update', 'remap_updatelist', 'soapinputmessagenamespace', 'soapinputnameoverride', 'soapoutputmessagenamespace', 'style', 'type', 'use'], ['http://tempuri.org/RetrieveListByPaging', 
-                                               'MySoapHeader', 'http://110.52.60.19:6690/Quality/QualityControl/Business/V_QControlWareNumberNoticeBill.asmx', '*', 'http://tempuri.org/Delete', 'http://tempuri.org/DeleteList', 
-                                               'http://tempuri.org/GetWareNumberNoticeBill', 'http://tempuri.org/InitializationModel', 'http://tempuri.org/InitializationModelList', 'http://tempuri.org/Insert', 
-                                               'http://tempuri.org/InsertList', 'http://tempuri.org/IsExists', 'http://tempuri.org/P_SaleUpdateQControlWareNumber', 'http://tempuri.org/RetrieveList', 'http://tempuri.org/RetrieveListByPaging', 
+    lMessage.SetAttributes(lTransportChannel, ['action', 'headerparams', 'location', 'outputchildrennamespace', 'remap_delete', 'remap_deletelist', 'remap_getwarenumbernoticebill', 'remap_getwarenumbernoticebillah', 
+                                               'remap_initializationmodel', 'remap_initializationmodellist', 'remap_insert', 'remap_insertlist', 'remap_isexists', 'remap_p_saleupdateqcontrolwarenumber', 
+                                               'remap_p_saleupdateqcontrolwarenumberah', 'remap_retrievelist', 'remap_retrievelistbypaging', 'remap_update', 'remap_updatelist', 'soapinputmessagenamespace', 
+                                               'soapinputnameoverride', 'soapoutputmessagenamespace', 'style', 'type', 'use'], ['http://tempuri.org/RetrieveListByPaging', 'MySoapHeader', 'http://58.243.161.70:6690/Quality/QualityControl/Business/V_QControlWareNumberNoticeBill.asmx', 
+                                               '*', 'http://tempuri.org/Delete', 'http://tempuri.org/DeleteList', 'http://tempuri.org/GetWareNumberNoticeBill', 'http://tempuri.org/GetWareNumberNoticeBillAH', 
+                                               'http://tempuri.org/InitializationModel', 'http://tempuri.org/InitializationModelList', 'http://tempuri.org/Insert', 'http://tempuri.org/InsertList', 'http://tempuri.org/IsExists', 
+                                               'http://tempuri.org/P_SaleUpdateQControlWareNumber', 'http://tempuri.org/P_SaleUpdateQControlWareNumberAH', 'http://tempuri.org/RetrieveList', 'http://tempuri.org/RetrieveListByPaging', 
                                                'http://tempuri.org/Update', 'http://tempuri.org/UpdateList', 'http://tempuri.org/', 'RetrieveListByPaging', 'http://tempuri.org/', 'document', 'SOAP', 'literal']);
     lMessage.InitializeRequestMessage(lTransportChannel, 'V_QControlWareNumberNoticeBill', __InterfaceName, 'RetrieveListByPaging');
     lMessage.Write('_MySoapHeader', System.TypeInfo(MySoapHeader), _MySoapHeader, []);
-    lMessage.Write('where', System.TypeInfo(WideString_Optional), where, []);
-    lMessage.Write('sort', System.TypeInfo(WideString_Optional), sort, []);
+    lMessage.Write('where', System.TypeInfo(UnicodeString), where, []);
+    lMessage.Write('sort', System.TypeInfo(UnicodeString), sort, []);
     lMessage.Write('pageNumber', System.TypeInfo(Integer), pageNumber, []);
     lMessage.Write('pageSize', System.TypeInfo(Integer), pageSize, []);
-    lMessage.Write('groupParameters', System.TypeInfo(WideString_Optional), groupParameters, []);
+    lMessage.Write('groupParameters', System.TypeInfo(UnicodeString), groupParameters, []);
     __DispatchAsyncRequest('RetrieveListByPaging', lMessage);
   finally
     lMessage.UnsetAttributes(lTransportChannel);
@@ -1121,7 +1336,7 @@ begin
   end;
 end;
 
-procedure TV_QControlWareNumberNoticeBill_AsyncProxy.Invoke_IsExists(const _MySoapHeader: MySoapHeader; const jsonString: WideString_Optional);
+procedure TV_QControlWareNumberNoticeBill_AsyncProxy.Invoke_IsExists(const _MySoapHeader: MySoapHeader; const jsonString: UnicodeString);
 var
   lMessage: IROMessage;
   lTransportChannel: IROTransportChannel;
@@ -1131,16 +1346,17 @@ begin
   try
     __AssertProxyNotBusy('IsExists');
 
-    lMessage.SetAttributes(lTransportChannel, ['action', 'headerparams', 'location', 'outputchildrennamespace', 'remap_delete', 'remap_deletelist', 'remap_getwarenumbernoticebill', 'remap_initializationmodel', 
-                                               'remap_initializationmodellist', 'remap_insert', 'remap_insertlist', 'remap_isexists', 'remap_p_saleupdateqcontrolwarenumber', 'remap_retrievelist', 'remap_retrievelistbypaging', 
-                                               'remap_update', 'remap_updatelist', 'soapinputmessagenamespace', 'soapinputnameoverride', 'soapoutputmessagenamespace', 'style', 'type', 'use'], ['http://tempuri.org/IsExists', 
-                                               'MySoapHeader', 'http://110.52.60.19:6690/Quality/QualityControl/Business/V_QControlWareNumberNoticeBill.asmx', '*', 'http://tempuri.org/Delete', 'http://tempuri.org/DeleteList', 
-                                               'http://tempuri.org/GetWareNumberNoticeBill', 'http://tempuri.org/InitializationModel', 'http://tempuri.org/InitializationModelList', 'http://tempuri.org/Insert', 
-                                               'http://tempuri.org/InsertList', 'http://tempuri.org/IsExists', 'http://tempuri.org/P_SaleUpdateQControlWareNumber', 'http://tempuri.org/RetrieveList', 'http://tempuri.org/RetrieveListByPaging', 
+    lMessage.SetAttributes(lTransportChannel, ['action', 'headerparams', 'location', 'outputchildrennamespace', 'remap_delete', 'remap_deletelist', 'remap_getwarenumbernoticebill', 'remap_getwarenumbernoticebillah', 
+                                               'remap_initializationmodel', 'remap_initializationmodellist', 'remap_insert', 'remap_insertlist', 'remap_isexists', 'remap_p_saleupdateqcontrolwarenumber', 
+                                               'remap_p_saleupdateqcontrolwarenumberah', 'remap_retrievelist', 'remap_retrievelistbypaging', 'remap_update', 'remap_updatelist', 'soapinputmessagenamespace', 
+                                               'soapinputnameoverride', 'soapoutputmessagenamespace', 'style', 'type', 'use'], ['http://tempuri.org/IsExists', 'MySoapHeader', 'http://58.243.161.70:6690/Quality/QualityControl/Business/V_QControlWareNumberNoticeBill.asmx', 
+                                               '*', 'http://tempuri.org/Delete', 'http://tempuri.org/DeleteList', 'http://tempuri.org/GetWareNumberNoticeBill', 'http://tempuri.org/GetWareNumberNoticeBillAH', 
+                                               'http://tempuri.org/InitializationModel', 'http://tempuri.org/InitializationModelList', 'http://tempuri.org/Insert', 'http://tempuri.org/InsertList', 'http://tempuri.org/IsExists', 
+                                               'http://tempuri.org/P_SaleUpdateQControlWareNumber', 'http://tempuri.org/P_SaleUpdateQControlWareNumberAH', 'http://tempuri.org/RetrieveList', 'http://tempuri.org/RetrieveListByPaging', 
                                                'http://tempuri.org/Update', 'http://tempuri.org/UpdateList', 'http://tempuri.org/', 'IsExists', 'http://tempuri.org/', 'document', 'SOAP', 'literal']);
     lMessage.InitializeRequestMessage(lTransportChannel, 'V_QControlWareNumberNoticeBill', __InterfaceName, 'IsExists');
     lMessage.Write('_MySoapHeader', System.TypeInfo(MySoapHeader), _MySoapHeader, []);
-    lMessage.Write('jsonString', System.TypeInfo(WideString_Optional), jsonString, []);
+    lMessage.Write('jsonString', System.TypeInfo(UnicodeString), jsonString, []);
     __DispatchAsyncRequest('IsExists', lMessage);
   finally
     lMessage.UnsetAttributes(lTransportChannel);
@@ -1255,7 +1471,7 @@ begin
   exit;
 end;
 
-function TV_QControlWareNumberNoticeBill_AsyncProxy.Retrieve_InitializationModel: WideString_Optional;
+function TV_QControlWareNumberNoticeBill_AsyncProxy.Retrieve_GetWareNumberNoticeBillAH: UnicodeString;
 var
   __response: TStream;
   tc: TMyTransportChannel;
@@ -1263,7 +1479,113 @@ var
   lMessage: IROMessage;
   lTransportChannel: IROTransportChannel;
   lFreeStream: Boolean;
-  lResult: WideString_Optional;
+  lResult: UnicodeString;
+begin
+  lMessage := __GetMessage();
+  lTransportChannel := __TransportChannel;
+  lFreeStream := false;
+  try
+    __response := __RetrieveAsyncResponse('GetWareNumberNoticeBillAH');
+    try
+      try
+        try
+          lMessage.ReadFromStream(__response, lFreeStream);
+        except
+          on E: Exception do begin
+            lFreeStream := true;
+            raise;
+          end;
+        end;
+
+        lMessage.Read('GetWareNumberNoticeBillAHResult', System.TypeInfo(UnicodeString), lResult, []);
+      except
+        on E: EROSessionNotFound do begin
+          tc := TMyTransportChannel(lTransportChannel.GetTransportObject());
+          lRetry := false;
+          tc.DoLoginNeeded(lMessage, E, lRetry);
+          if not lRetry then begin
+            raise;
+          end;
+        end;
+        on E: Exception do begin
+          raise;
+        end;
+      end;
+    finally
+      if lFreeStream then begin
+        __response.Free;
+      end;
+    end;
+  finally
+    lMessage := nil;
+    lTransportChannel := nil;
+  end;
+  result := lResult;
+  exit;
+end;
+
+function TV_QControlWareNumberNoticeBill_AsyncProxy.Retrieve_P_SaleUpdateQControlWareNumberAH: UnicodeString;
+var
+  __response: TStream;
+  tc: TMyTransportChannel;
+  lRetry: Boolean;
+  lMessage: IROMessage;
+  lTransportChannel: IROTransportChannel;
+  lFreeStream: Boolean;
+  lResult: UnicodeString;
+begin
+  lMessage := __GetMessage();
+  lTransportChannel := __TransportChannel;
+  lFreeStream := false;
+  try
+    __response := __RetrieveAsyncResponse('P_SaleUpdateQControlWareNumberAH');
+    try
+      try
+        try
+          lMessage.ReadFromStream(__response, lFreeStream);
+        except
+          on E: Exception do begin
+            lFreeStream := true;
+            raise;
+          end;
+        end;
+
+        lMessage.Read('P_SaleUpdateQControlWareNumberAHResult', System.TypeInfo(UnicodeString), lResult, []);
+      except
+        on E: EROSessionNotFound do begin
+          tc := TMyTransportChannel(lTransportChannel.GetTransportObject());
+          lRetry := false;
+          tc.DoLoginNeeded(lMessage, E, lRetry);
+          if not lRetry then begin
+            raise;
+          end;
+        end;
+        on E: Exception do begin
+          raise;
+        end;
+      end;
+    finally
+      if lFreeStream then begin
+        __response.Free;
+      end;
+    end;
+  finally
+    lMessage := nil;
+    lTransportChannel := nil;
+  end;
+  result := lResult;
+  exit;
+end;
+
+function TV_QControlWareNumberNoticeBill_AsyncProxy.Retrieve_InitializationModel: UnicodeString;
+var
+  __response: TStream;
+  tc: TMyTransportChannel;
+  lRetry: Boolean;
+  lMessage: IROMessage;
+  lTransportChannel: IROTransportChannel;
+  lFreeStream: Boolean;
+  lResult: UnicodeString;
 begin
   lMessage := __GetMessage();
   lTransportChannel := __TransportChannel;
@@ -1281,7 +1603,7 @@ begin
           end;
         end;
 
-        lMessage.Read('InitializationModelResult', System.TypeInfo(WideString_Optional), lResult, []);
+        lMessage.Read('InitializationModelResult', System.TypeInfo(UnicodeString), lResult, []);
       except
         on E: EROSessionNotFound do begin
           tc := TMyTransportChannel(lTransportChannel.GetTransportObject());
@@ -1308,7 +1630,7 @@ begin
   exit;
 end;
 
-function TV_QControlWareNumberNoticeBill_AsyncProxy.Retrieve_InitializationModelList: WideString_Optional;
+function TV_QControlWareNumberNoticeBill_AsyncProxy.Retrieve_InitializationModelList: UnicodeString;
 var
   __response: TStream;
   tc: TMyTransportChannel;
@@ -1316,7 +1638,7 @@ var
   lMessage: IROMessage;
   lTransportChannel: IROTransportChannel;
   lFreeStream: Boolean;
-  lResult: WideString_Optional;
+  lResult: UnicodeString;
 begin
   lMessage := __GetMessage();
   lTransportChannel := __TransportChannel;
@@ -1334,7 +1656,7 @@ begin
           end;
         end;
 
-        lMessage.Read('InitializationModelListResult', System.TypeInfo(WideString_Optional), lResult, []);
+        lMessage.Read('InitializationModelListResult', System.TypeInfo(UnicodeString), lResult, []);
       except
         on E: EROSessionNotFound do begin
           tc := TMyTransportChannel(lTransportChannel.GetTransportObject());
@@ -1361,7 +1683,7 @@ begin
   exit;
 end;
 
-function TV_QControlWareNumberNoticeBill_AsyncProxy.Retrieve_Insert: WideString_Optional;
+function TV_QControlWareNumberNoticeBill_AsyncProxy.Retrieve_Insert: UnicodeString;
 var
   __response: TStream;
   tc: TMyTransportChannel;
@@ -1369,7 +1691,7 @@ var
   lMessage: IROMessage;
   lTransportChannel: IROTransportChannel;
   lFreeStream: Boolean;
-  lResult: WideString_Optional;
+  lResult: UnicodeString;
 begin
   lMessage := __GetMessage();
   lTransportChannel := __TransportChannel;
@@ -1387,7 +1709,7 @@ begin
           end;
         end;
 
-        lMessage.Read('InsertResult', System.TypeInfo(WideString_Optional), lResult, []);
+        lMessage.Read('InsertResult', System.TypeInfo(UnicodeString), lResult, []);
       except
         on E: EROSessionNotFound do begin
           tc := TMyTransportChannel(lTransportChannel.GetTransportObject());
@@ -1414,7 +1736,7 @@ begin
   exit;
 end;
 
-function TV_QControlWareNumberNoticeBill_AsyncProxy.Retrieve_InsertList: WideString_Optional;
+function TV_QControlWareNumberNoticeBill_AsyncProxy.Retrieve_InsertList: UnicodeString;
 var
   __response: TStream;
   tc: TMyTransportChannel;
@@ -1422,7 +1744,7 @@ var
   lMessage: IROMessage;
   lTransportChannel: IROTransportChannel;
   lFreeStream: Boolean;
-  lResult: WideString_Optional;
+  lResult: UnicodeString;
 begin
   lMessage := __GetMessage();
   lTransportChannel := __TransportChannel;
@@ -1440,7 +1762,7 @@ begin
           end;
         end;
 
-        lMessage.Read('InsertListResult', System.TypeInfo(WideString_Optional), lResult, []);
+        lMessage.Read('InsertListResult', System.TypeInfo(UnicodeString), lResult, []);
       except
         on E: EROSessionNotFound do begin
           tc := TMyTransportChannel(lTransportChannel.GetTransportObject());
@@ -1467,7 +1789,7 @@ begin
   exit;
 end;
 
-function TV_QControlWareNumberNoticeBill_AsyncProxy.Retrieve_DeleteList: WideString_Optional;
+function TV_QControlWareNumberNoticeBill_AsyncProxy.Retrieve_DeleteList: UnicodeString;
 var
   __response: TStream;
   tc: TMyTransportChannel;
@@ -1475,7 +1797,7 @@ var
   lMessage: IROMessage;
   lTransportChannel: IROTransportChannel;
   lFreeStream: Boolean;
-  lResult: WideString_Optional;
+  lResult: UnicodeString;
 begin
   lMessage := __GetMessage();
   lTransportChannel := __TransportChannel;
@@ -1493,7 +1815,7 @@ begin
           end;
         end;
 
-        lMessage.Read('DeleteListResult', System.TypeInfo(WideString_Optional), lResult, []);
+        lMessage.Read('DeleteListResult', System.TypeInfo(UnicodeString), lResult, []);
       except
         on E: EROSessionNotFound do begin
           tc := TMyTransportChannel(lTransportChannel.GetTransportObject());
@@ -1520,7 +1842,7 @@ begin
   exit;
 end;
 
-function TV_QControlWareNumberNoticeBill_AsyncProxy.Retrieve_Delete: WideString_Optional;
+function TV_QControlWareNumberNoticeBill_AsyncProxy.Retrieve_Delete: UnicodeString;
 var
   __response: TStream;
   tc: TMyTransportChannel;
@@ -1528,7 +1850,7 @@ var
   lMessage: IROMessage;
   lTransportChannel: IROTransportChannel;
   lFreeStream: Boolean;
-  lResult: WideString_Optional;
+  lResult: UnicodeString;
 begin
   lMessage := __GetMessage();
   lTransportChannel := __TransportChannel;
@@ -1546,7 +1868,7 @@ begin
           end;
         end;
 
-        lMessage.Read('DeleteResult', System.TypeInfo(WideString_Optional), lResult, []);
+        lMessage.Read('DeleteResult', System.TypeInfo(UnicodeString), lResult, []);
       except
         on E: EROSessionNotFound do begin
           tc := TMyTransportChannel(lTransportChannel.GetTransportObject());
@@ -1573,7 +1895,7 @@ begin
   exit;
 end;
 
-function TV_QControlWareNumberNoticeBill_AsyncProxy.Retrieve_Update: WideString_Optional;
+function TV_QControlWareNumberNoticeBill_AsyncProxy.Retrieve_Update: UnicodeString;
 var
   __response: TStream;
   tc: TMyTransportChannel;
@@ -1581,7 +1903,7 @@ var
   lMessage: IROMessage;
   lTransportChannel: IROTransportChannel;
   lFreeStream: Boolean;
-  lResult: WideString_Optional;
+  lResult: UnicodeString;
 begin
   lMessage := __GetMessage();
   lTransportChannel := __TransportChannel;
@@ -1599,7 +1921,7 @@ begin
           end;
         end;
 
-        lMessage.Read('UpdateResult', System.TypeInfo(WideString_Optional), lResult, []);
+        lMessage.Read('UpdateResult', System.TypeInfo(UnicodeString), lResult, []);
       except
         on E: EROSessionNotFound do begin
           tc := TMyTransportChannel(lTransportChannel.GetTransportObject());
@@ -1626,7 +1948,7 @@ begin
   exit;
 end;
 
-function TV_QControlWareNumberNoticeBill_AsyncProxy.Retrieve_UpdateList: WideString_Optional;
+function TV_QControlWareNumberNoticeBill_AsyncProxy.Retrieve_UpdateList: UnicodeString;
 var
   __response: TStream;
   tc: TMyTransportChannel;
@@ -1634,7 +1956,7 @@ var
   lMessage: IROMessage;
   lTransportChannel: IROTransportChannel;
   lFreeStream: Boolean;
-  lResult: WideString_Optional;
+  lResult: UnicodeString;
 begin
   lMessage := __GetMessage();
   lTransportChannel := __TransportChannel;
@@ -1652,7 +1974,7 @@ begin
           end;
         end;
 
-        lMessage.Read('UpdateListResult', System.TypeInfo(WideString_Optional), lResult, []);
+        lMessage.Read('UpdateListResult', System.TypeInfo(UnicodeString), lResult, []);
       except
         on E: EROSessionNotFound do begin
           tc := TMyTransportChannel(lTransportChannel.GetTransportObject());
@@ -1679,7 +2001,7 @@ begin
   exit;
 end;
 
-function TV_QControlWareNumberNoticeBill_AsyncProxy.Retrieve_RetrieveList: WideString_Optional;
+function TV_QControlWareNumberNoticeBill_AsyncProxy.Retrieve_RetrieveList: UnicodeString;
 var
   __response: TStream;
   tc: TMyTransportChannel;
@@ -1687,7 +2009,7 @@ var
   lMessage: IROMessage;
   lTransportChannel: IROTransportChannel;
   lFreeStream: Boolean;
-  lResult: WideString_Optional;
+  lResult: UnicodeString;
 begin
   lMessage := __GetMessage();
   lTransportChannel := __TransportChannel;
@@ -1705,7 +2027,7 @@ begin
           end;
         end;
 
-        lMessage.Read('RetrieveListResult', System.TypeInfo(WideString_Optional), lResult, []);
+        lMessage.Read('RetrieveListResult', System.TypeInfo(UnicodeString), lResult, []);
       except
         on E: EROSessionNotFound do begin
           tc := TMyTransportChannel(lTransportChannel.GetTransportObject());
@@ -1732,7 +2054,7 @@ begin
   exit;
 end;
 
-function TV_QControlWareNumberNoticeBill_AsyncProxy.Retrieve_RetrieveListByPaging: WideString_Optional;
+function TV_QControlWareNumberNoticeBill_AsyncProxy.Retrieve_RetrieveListByPaging: UnicodeString;
 var
   __response: TStream;
   tc: TMyTransportChannel;
@@ -1740,7 +2062,7 @@ var
   lMessage: IROMessage;
   lTransportChannel: IROTransportChannel;
   lFreeStream: Boolean;
-  lResult: WideString_Optional;
+  lResult: UnicodeString;
 begin
   lMessage := __GetMessage();
   lTransportChannel := __TransportChannel;
@@ -1758,7 +2080,7 @@ begin
           end;
         end;
 
-        lMessage.Read('RetrieveListByPagingResult', System.TypeInfo(WideString_Optional), lResult, []);
+        lMessage.Read('RetrieveListByPagingResult', System.TypeInfo(UnicodeString), lResult, []);
       except
         on E: EROSessionNotFound do begin
           tc := TMyTransportChannel(lTransportChannel.GetTransportObject());
@@ -1785,7 +2107,7 @@ begin
   exit;
 end;
 
-function TV_QControlWareNumberNoticeBill_AsyncProxy.Retrieve_IsExists: WideString_Optional;
+function TV_QControlWareNumberNoticeBill_AsyncProxy.Retrieve_IsExists: UnicodeString;
 var
   __response: TStream;
   tc: TMyTransportChannel;
@@ -1793,7 +2115,7 @@ var
   lMessage: IROMessage;
   lTransportChannel: IROTransportChannel;
   lFreeStream: Boolean;
-  lResult: WideString_Optional;
+  lResult: UnicodeString;
 begin
   lMessage := __GetMessage();
   lTransportChannel := __TransportChannel;
@@ -1811,7 +2133,7 @@ begin
           end;
         end;
 
-        lMessage.Read('IsExistsResult', System.TypeInfo(WideString_Optional), lResult, []);
+        lMessage.Read('IsExistsResult', System.TypeInfo(UnicodeString), lResult, []);
       except
         on E: EROSessionNotFound do begin
           tc := TMyTransportChannel(lTransportChannel.GetTransportObject());
@@ -1854,13 +2176,14 @@ begin
   lMessage := __GetMessage();
   lTransportChannel := __TransportChannel;
   try
-    lMessage.StoreAttributes2(['action', 'headerparams', 'location', 'outputchildrennamespace', 'remap_delete', 'remap_deletelist', 'remap_getwarenumbernoticebill', 'remap_initializationmodel', 'remap_initializationmodellist', 
-                               'remap_insert', 'remap_insertlist', 'remap_isexists', 'remap_p_saleupdateqcontrolwarenumber', 'remap_retrievelist', 'remap_retrievelistbypaging', 'remap_update', 'remap_updatelist', 
-                               'soapinputmessagenamespace', 'soapinputnameoverride', 'soapoutputmessagenamespace', 'style', 'type', 'use'], ['http://tempuri.org/GetWareNumberNoticeBill', 'MySoapHeader', 
-                               'http://110.52.60.19:6690/Quality/QualityControl/Business/V_QControlWareNumberNoticeBill.asmx', '*', 'http://tempuri.org/Delete', 'http://tempuri.org/DeleteList', 'http://tempuri.org/GetWareNumberNoticeBill', 
-                               'http://tempuri.org/InitializationModel', 'http://tempuri.org/InitializationModelList', 'http://tempuri.org/Insert', 'http://tempuri.org/InsertList', 'http://tempuri.org/IsExists', 
-                               'http://tempuri.org/P_SaleUpdateQControlWareNumber', 'http://tempuri.org/RetrieveList', 'http://tempuri.org/RetrieveListByPaging', 'http://tempuri.org/Update', 'http://tempuri.org/UpdateList', 
-                               'http://tempuri.org/', 'GetWareNumberNoticeBill', 'http://tempuri.org/', 'document', 'SOAP', 'literal']);
+    lMessage.StoreAttributes2(['action', 'headerparams', 'location', 'outputchildrennamespace', 'remap_delete', 'remap_deletelist', 'remap_getwarenumbernoticebill', 'remap_getwarenumbernoticebillah', 'remap_initializationmodel', 
+                               'remap_initializationmodellist', 'remap_insert', 'remap_insertlist', 'remap_isexists', 'remap_p_saleupdateqcontrolwarenumber', 'remap_p_saleupdateqcontrolwarenumberah', 'remap_retrievelist', 
+                               'remap_retrievelistbypaging', 'remap_update', 'remap_updatelist', 'soapinputmessagenamespace', 'soapinputnameoverride', 'soapoutputmessagenamespace', 'style', 'type', 'use'], ['http://tempuri.org/GetWareNumberNoticeBill', 
+                               'MySoapHeader', 'http://58.243.161.70:6690/Quality/QualityControl/Business/V_QControlWareNumberNoticeBill.asmx', '*', 'http://tempuri.org/Delete', 'http://tempuri.org/DeleteList', 
+                               'http://tempuri.org/GetWareNumberNoticeBill', 'http://tempuri.org/GetWareNumberNoticeBillAH', 'http://tempuri.org/InitializationModel', 'http://tempuri.org/InitializationModelList', 
+                               'http://tempuri.org/Insert', 'http://tempuri.org/InsertList', 'http://tempuri.org/IsExists', 'http://tempuri.org/P_SaleUpdateQControlWareNumber', 'http://tempuri.org/P_SaleUpdateQControlWareNumberAH', 
+                               'http://tempuri.org/RetrieveList', 'http://tempuri.org/RetrieveListByPaging', 'http://tempuri.org/Update', 'http://tempuri.org/UpdateList', 'http://tempuri.org/', 'GetWareNumberNoticeBill', 
+                               'http://tempuri.org/', 'document', 'SOAP', 'literal']);
     lMessage.ApplyAttributes2();
     lMessage.InitializeRequestMessage(lTransportChannel, 'V_QControlWareNumberNoticeBill', __InterfaceName, 'GetWareNumberNoticeBill');
     lMessage.Write('_MySoapHeader', System.TypeInfo(MySoapHeader), _MySoapHeader, []);
@@ -1876,7 +2199,7 @@ begin
   exit;
 end;
 
-function TV_QControlWareNumberNoticeBill_AsyncProxyEx.BeginP_SaleUpdateQControlWareNumber(const _MySoapHeader: MySoapHeader; const factoryID: UnicodeString; const fMaterielID: UnicodeString; const fPackingID: UTF8String; 
+function TV_QControlWareNumberNoticeBill_AsyncProxyEx.BeginP_SaleUpdateQControlWareNumber(const _MySoapHeader: MySoapHeader; const factoryID: UnicodeString; const fMaterielID: UnicodeString; const fPackingID: UnicodeString; 
                                                                                           const fWareNumber: UnicodeString; const consignBillID: UnicodeString; const aCallback: TROAsyncCallback; const aUserData: Pointer = nil): IROAsyncRequest;
 var
   lMessage: IROMessage;
@@ -1886,20 +2209,96 @@ begin
   lMessage := __GetMessage();
   lTransportChannel := __TransportChannel;
   try
-    lMessage.StoreAttributes2(['action', 'headerparams', 'location', 'outputchildrennamespace', 'remap_delete', 'remap_deletelist', 'remap_getwarenumbernoticebill', 'remap_initializationmodel', 'remap_initializationmodellist', 
-                               'remap_insert', 'remap_insertlist', 'remap_isexists', 'remap_p_saleupdateqcontrolwarenumber', 'remap_retrievelist', 'remap_retrievelistbypaging', 'remap_update', 'remap_updatelist', 
-                               'soapinputmessagenamespace', 'soapinputnameoverride', 'soapoutputmessagenamespace', 'style', 'type', 'use'], ['http://tempuri.org/P_SaleUpdateQControlWareNumber', 'MySoapHeader', 
-                               'http://110.52.60.19:6690/Quality/QualityControl/Business/V_QControlWareNumberNoticeBill.asmx', '*', 'http://tempuri.org/Delete', 'http://tempuri.org/DeleteList', 'http://tempuri.org/GetWareNumberNoticeBill', 
-                               'http://tempuri.org/InitializationModel', 'http://tempuri.org/InitializationModelList', 'http://tempuri.org/Insert', 'http://tempuri.org/InsertList', 'http://tempuri.org/IsExists', 
-                               'http://tempuri.org/P_SaleUpdateQControlWareNumber', 'http://tempuri.org/RetrieveList', 'http://tempuri.org/RetrieveListByPaging', 'http://tempuri.org/Update', 'http://tempuri.org/UpdateList', 
-                               'http://tempuri.org/', 'P_SaleUpdateQControlWareNumber', 'http://tempuri.org/', 'document', 'SOAP', 'literal']);
+    lMessage.StoreAttributes2(['action', 'headerparams', 'location', 'outputchildrennamespace', 'remap_delete', 'remap_deletelist', 'remap_getwarenumbernoticebill', 'remap_getwarenumbernoticebillah', 'remap_initializationmodel', 
+                               'remap_initializationmodellist', 'remap_insert', 'remap_insertlist', 'remap_isexists', 'remap_p_saleupdateqcontrolwarenumber', 'remap_p_saleupdateqcontrolwarenumberah', 'remap_retrievelist', 
+                               'remap_retrievelistbypaging', 'remap_update', 'remap_updatelist', 'soapinputmessagenamespace', 'soapinputnameoverride', 'soapoutputmessagenamespace', 'style', 'type', 'use'], ['http://tempuri.org/P_SaleUpdateQControlWareNumber', 
+                               'MySoapHeader', 'http://58.243.161.70:6690/Quality/QualityControl/Business/V_QControlWareNumberNoticeBill.asmx', '*', 'http://tempuri.org/Delete', 'http://tempuri.org/DeleteList', 
+                               'http://tempuri.org/GetWareNumberNoticeBill', 'http://tempuri.org/GetWareNumberNoticeBillAH', 'http://tempuri.org/InitializationModel', 'http://tempuri.org/InitializationModelList', 
+                               'http://tempuri.org/Insert', 'http://tempuri.org/InsertList', 'http://tempuri.org/IsExists', 'http://tempuri.org/P_SaleUpdateQControlWareNumber', 'http://tempuri.org/P_SaleUpdateQControlWareNumberAH', 
+                               'http://tempuri.org/RetrieveList', 'http://tempuri.org/RetrieveListByPaging', 'http://tempuri.org/Update', 'http://tempuri.org/UpdateList', 'http://tempuri.org/', 'P_SaleUpdateQControlWareNumber', 
+                               'http://tempuri.org/', 'document', 'SOAP', 'literal']);
     lMessage.ApplyAttributes2();
     lMessage.InitializeRequestMessage(lTransportChannel, 'V_QControlWareNumberNoticeBill', __InterfaceName, 'P_SaleUpdateQControlWareNumber');
     lMessage.Write('_MySoapHeader', System.TypeInfo(MySoapHeader), _MySoapHeader, []);
     lMessage.Write('factoryID', System.TypeInfo(UnicodeString), factoryID, []);
     lMessage.Write('fMaterielID', System.TypeInfo(UnicodeString), fMaterielID, []);
-    lMessage.Write('fPackingID', System.TypeInfo(UTF8String), fPackingID, []);
+    lMessage.Write('fPackingID', System.TypeInfo(UnicodeString), fPackingID, []);
     lMessage.Write('fWareNumber', System.TypeInfo(UnicodeString), fWareNumber, []);
+    lMessage.Write('consignBillID', System.TypeInfo(UnicodeString), consignBillID, []);
+    lResult := __DispatchAsyncRequest(lMessage, aCallback, aUserData);
+  finally
+    lMessage := nil;
+    lTransportChannel := nil;
+  end;
+  result := lResult;
+  exit;
+end;
+
+function TV_QControlWareNumberNoticeBill_AsyncProxyEx.BeginGetWareNumberNoticeBillAH(const _MySoapHeader: MySoapHeader; const fTransportID: UnicodeString; const fFactoryID: UnicodeString; const fMaterielID: UnicodeString; 
+                                                                                     const fPackingID: UnicodeString; const famount: UnicodeString; const fCustomerID: UnicodeString; const aCallback: TROAsyncCallback; 
+                                                                                     const aUserData: Pointer = nil): IROAsyncRequest;
+var
+  lMessage: IROMessage;
+  lTransportChannel: IROTransportChannel;
+  lResult: IROAsyncRequest;
+begin
+  lMessage := __GetMessage();
+  lTransportChannel := __TransportChannel;
+  try
+    lMessage.StoreAttributes2(['action', 'headerparams', 'location', 'outputchildrennamespace', 'remap_delete', 'remap_deletelist', 'remap_getwarenumbernoticebill', 'remap_getwarenumbernoticebillah', 'remap_initializationmodel', 
+                               'remap_initializationmodellist', 'remap_insert', 'remap_insertlist', 'remap_isexists', 'remap_p_saleupdateqcontrolwarenumber', 'remap_p_saleupdateqcontrolwarenumberah', 'remap_retrievelist', 
+                               'remap_retrievelistbypaging', 'remap_update', 'remap_updatelist', 'soapinputmessagenamespace', 'soapinputnameoverride', 'soapoutputmessagenamespace', 'style', 'type', 'use'], ['http://tempuri.org/GetWareNumberNoticeBillAH', 
+                               'MySoapHeader', 'http://58.243.161.70:6690/Quality/QualityControl/Business/V_QControlWareNumberNoticeBill.asmx', '*', 'http://tempuri.org/Delete', 'http://tempuri.org/DeleteList', 
+                               'http://tempuri.org/GetWareNumberNoticeBill', 'http://tempuri.org/GetWareNumberNoticeBillAH', 'http://tempuri.org/InitializationModel', 'http://tempuri.org/InitializationModelList', 
+                               'http://tempuri.org/Insert', 'http://tempuri.org/InsertList', 'http://tempuri.org/IsExists', 'http://tempuri.org/P_SaleUpdateQControlWareNumber', 'http://tempuri.org/P_SaleUpdateQControlWareNumberAH', 
+                               'http://tempuri.org/RetrieveList', 'http://tempuri.org/RetrieveListByPaging', 'http://tempuri.org/Update', 'http://tempuri.org/UpdateList', 'http://tempuri.org/', 'GetWareNumberNoticeBillAH', 
+                               'http://tempuri.org/', 'document', 'SOAP', 'literal']);
+    lMessage.ApplyAttributes2();
+    lMessage.InitializeRequestMessage(lTransportChannel, 'V_QControlWareNumberNoticeBill', __InterfaceName, 'GetWareNumberNoticeBillAH');
+    lMessage.Write('_MySoapHeader', System.TypeInfo(MySoapHeader), _MySoapHeader, []);
+    lMessage.Write('fTransportID', System.TypeInfo(UnicodeString), fTransportID, []);
+    lMessage.Write('fFactoryID', System.TypeInfo(UnicodeString), fFactoryID, []);
+    lMessage.Write('fMaterielID', System.TypeInfo(UnicodeString), fMaterielID, []);
+    lMessage.Write('fPackingID', System.TypeInfo(UnicodeString), fPackingID, []);
+    lMessage.Write('famount', System.TypeInfo(UnicodeString), famount, []);
+    lMessage.Write('fCustomerID', System.TypeInfo(UnicodeString), fCustomerID, []);
+    lResult := __DispatchAsyncRequest(lMessage, aCallback, aUserData);
+  finally
+    lMessage := nil;
+    lTransportChannel := nil;
+  end;
+  result := lResult;
+  exit;
+end;
+
+function TV_QControlWareNumberNoticeBill_AsyncProxyEx.BeginP_SaleUpdateQControlWareNumberAH(const _MySoapHeader: MySoapHeader; const fTransportID: UnicodeString; const factoryID: UnicodeString; const fMaterielID: UnicodeString; 
+                                                                                            const fPackingID: UnicodeString; const fWareNumber: UnicodeString; const famount: UnicodeString; const consignBillID: UnicodeString; 
+                                                                                            const aCallback: TROAsyncCallback; const aUserData: Pointer = nil): IROAsyncRequest;
+var
+  lMessage: IROMessage;
+  lTransportChannel: IROTransportChannel;
+  lResult: IROAsyncRequest;
+begin
+  lMessage := __GetMessage();
+  lTransportChannel := __TransportChannel;
+  try
+    lMessage.StoreAttributes2(['action', 'headerparams', 'location', 'outputchildrennamespace', 'remap_delete', 'remap_deletelist', 'remap_getwarenumbernoticebill', 'remap_getwarenumbernoticebillah', 'remap_initializationmodel', 
+                               'remap_initializationmodellist', 'remap_insert', 'remap_insertlist', 'remap_isexists', 'remap_p_saleupdateqcontrolwarenumber', 'remap_p_saleupdateqcontrolwarenumberah', 'remap_retrievelist', 
+                               'remap_retrievelistbypaging', 'remap_update', 'remap_updatelist', 'soapinputmessagenamespace', 'soapinputnameoverride', 'soapoutputmessagenamespace', 'style', 'type', 'use'], ['http://tempuri.org/P_SaleUpdateQControlWareNumberAH', 
+                               'MySoapHeader', 'http://58.243.161.70:6690/Quality/QualityControl/Business/V_QControlWareNumberNoticeBill.asmx', '*', 'http://tempuri.org/Delete', 'http://tempuri.org/DeleteList', 
+                               'http://tempuri.org/GetWareNumberNoticeBill', 'http://tempuri.org/GetWareNumberNoticeBillAH', 'http://tempuri.org/InitializationModel', 'http://tempuri.org/InitializationModelList', 
+                               'http://tempuri.org/Insert', 'http://tempuri.org/InsertList', 'http://tempuri.org/IsExists', 'http://tempuri.org/P_SaleUpdateQControlWareNumber', 'http://tempuri.org/P_SaleUpdateQControlWareNumberAH', 
+                               'http://tempuri.org/RetrieveList', 'http://tempuri.org/RetrieveListByPaging', 'http://tempuri.org/Update', 'http://tempuri.org/UpdateList', 'http://tempuri.org/', 'P_SaleUpdateQControlWareNumberAH', 
+                               'http://tempuri.org/', 'document', 'SOAP', 'literal']);
+    lMessage.ApplyAttributes2();
+    lMessage.InitializeRequestMessage(lTransportChannel, 'V_QControlWareNumberNoticeBill', __InterfaceName, 'P_SaleUpdateQControlWareNumberAH');
+    lMessage.Write('_MySoapHeader', System.TypeInfo(MySoapHeader), _MySoapHeader, []);
+    lMessage.Write('fTransportID', System.TypeInfo(UnicodeString), fTransportID, []);
+    lMessage.Write('factoryID', System.TypeInfo(UnicodeString), factoryID, []);
+    lMessage.Write('fMaterielID', System.TypeInfo(UnicodeString), fMaterielID, []);
+    lMessage.Write('fPackingID', System.TypeInfo(UnicodeString), fPackingID, []);
+    lMessage.Write('fWareNumber', System.TypeInfo(UnicodeString), fWareNumber, []);
+    lMessage.Write('famount', System.TypeInfo(UnicodeString), famount, []);
     lMessage.Write('consignBillID', System.TypeInfo(UnicodeString), consignBillID, []);
     lResult := __DispatchAsyncRequest(lMessage, aCallback, aUserData);
   finally
@@ -1919,13 +2318,14 @@ begin
   lMessage := __GetMessage();
   lTransportChannel := __TransportChannel;
   try
-    lMessage.StoreAttributes2(['action', 'headerparams', 'location', 'outputchildrennamespace', 'remap_delete', 'remap_deletelist', 'remap_getwarenumbernoticebill', 'remap_initializationmodel', 'remap_initializationmodellist', 
-                               'remap_insert', 'remap_insertlist', 'remap_isexists', 'remap_p_saleupdateqcontrolwarenumber', 'remap_retrievelist', 'remap_retrievelistbypaging', 'remap_update', 'remap_updatelist', 
-                               'soapinputmessagenamespace', 'soapinputnameoverride', 'soapoutputmessagenamespace', 'style', 'type', 'use'], ['http://tempuri.org/InitializationModel', 'MySoapHeader', 'http://110.52.60.19:6690/Quality/QualityControl/Business/V_QControlWareNumberNoticeBill.asmx', 
-                               '*', 'http://tempuri.org/Delete', 'http://tempuri.org/DeleteList', 'http://tempuri.org/GetWareNumberNoticeBill', 'http://tempuri.org/InitializationModel', 'http://tempuri.org/InitializationModelList', 
-                               'http://tempuri.org/Insert', 'http://tempuri.org/InsertList', 'http://tempuri.org/IsExists', 'http://tempuri.org/P_SaleUpdateQControlWareNumber', 'http://tempuri.org/RetrieveList', 
-                               'http://tempuri.org/RetrieveListByPaging', 'http://tempuri.org/Update', 'http://tempuri.org/UpdateList', 'http://tempuri.org/', 'InitializationModel', 'http://tempuri.org/', 
-                               'document', 'SOAP', 'literal']);
+    lMessage.StoreAttributes2(['action', 'headerparams', 'location', 'outputchildrennamespace', 'remap_delete', 'remap_deletelist', 'remap_getwarenumbernoticebill', 'remap_getwarenumbernoticebillah', 'remap_initializationmodel', 
+                               'remap_initializationmodellist', 'remap_insert', 'remap_insertlist', 'remap_isexists', 'remap_p_saleupdateqcontrolwarenumber', 'remap_p_saleupdateqcontrolwarenumberah', 'remap_retrievelist', 
+                               'remap_retrievelistbypaging', 'remap_update', 'remap_updatelist', 'soapinputmessagenamespace', 'soapinputnameoverride', 'soapoutputmessagenamespace', 'style', 'type', 'use'], ['http://tempuri.org/InitializationModel', 
+                               'MySoapHeader', 'http://58.243.161.70:6690/Quality/QualityControl/Business/V_QControlWareNumberNoticeBill.asmx', '*', 'http://tempuri.org/Delete', 'http://tempuri.org/DeleteList', 
+                               'http://tempuri.org/GetWareNumberNoticeBill', 'http://tempuri.org/GetWareNumberNoticeBillAH', 'http://tempuri.org/InitializationModel', 'http://tempuri.org/InitializationModelList', 
+                               'http://tempuri.org/Insert', 'http://tempuri.org/InsertList', 'http://tempuri.org/IsExists', 'http://tempuri.org/P_SaleUpdateQControlWareNumber', 'http://tempuri.org/P_SaleUpdateQControlWareNumberAH', 
+                               'http://tempuri.org/RetrieveList', 'http://tempuri.org/RetrieveListByPaging', 'http://tempuri.org/Update', 'http://tempuri.org/UpdateList', 'http://tempuri.org/', 'InitializationModel', 
+                               'http://tempuri.org/', 'document', 'SOAP', 'literal']);
     lMessage.ApplyAttributes2();
     lMessage.InitializeRequestMessage(lTransportChannel, 'V_QControlWareNumberNoticeBill', __InterfaceName, 'InitializationModel');
     lMessage.Write('_MySoapHeader', System.TypeInfo(MySoapHeader), _MySoapHeader, []);
@@ -1947,13 +2347,14 @@ begin
   lMessage := __GetMessage();
   lTransportChannel := __TransportChannel;
   try
-    lMessage.StoreAttributes2(['action', 'headerparams', 'location', 'outputchildrennamespace', 'remap_delete', 'remap_deletelist', 'remap_getwarenumbernoticebill', 'remap_initializationmodel', 'remap_initializationmodellist', 
-                               'remap_insert', 'remap_insertlist', 'remap_isexists', 'remap_p_saleupdateqcontrolwarenumber', 'remap_retrievelist', 'remap_retrievelistbypaging', 'remap_update', 'remap_updatelist', 
-                               'soapinputmessagenamespace', 'soapinputnameoverride', 'soapoutputmessagenamespace', 'style', 'type', 'use'], ['http://tempuri.org/InitializationModelList', 'MySoapHeader', 
-                               'http://110.52.60.19:6690/Quality/QualityControl/Business/V_QControlWareNumberNoticeBill.asmx', '*', 'http://tempuri.org/Delete', 'http://tempuri.org/DeleteList', 'http://tempuri.org/GetWareNumberNoticeBill', 
-                               'http://tempuri.org/InitializationModel', 'http://tempuri.org/InitializationModelList', 'http://tempuri.org/Insert', 'http://tempuri.org/InsertList', 'http://tempuri.org/IsExists', 
-                               'http://tempuri.org/P_SaleUpdateQControlWareNumber', 'http://tempuri.org/RetrieveList', 'http://tempuri.org/RetrieveListByPaging', 'http://tempuri.org/Update', 'http://tempuri.org/UpdateList', 
-                               'http://tempuri.org/', 'InitializationModelList', 'http://tempuri.org/', 'document', 'SOAP', 'literal']);
+    lMessage.StoreAttributes2(['action', 'headerparams', 'location', 'outputchildrennamespace', 'remap_delete', 'remap_deletelist', 'remap_getwarenumbernoticebill', 'remap_getwarenumbernoticebillah', 'remap_initializationmodel', 
+                               'remap_initializationmodellist', 'remap_insert', 'remap_insertlist', 'remap_isexists', 'remap_p_saleupdateqcontrolwarenumber', 'remap_p_saleupdateqcontrolwarenumberah', 'remap_retrievelist', 
+                               'remap_retrievelistbypaging', 'remap_update', 'remap_updatelist', 'soapinputmessagenamespace', 'soapinputnameoverride', 'soapoutputmessagenamespace', 'style', 'type', 'use'], ['http://tempuri.org/InitializationModelList', 
+                               'MySoapHeader', 'http://58.243.161.70:6690/Quality/QualityControl/Business/V_QControlWareNumberNoticeBill.asmx', '*', 'http://tempuri.org/Delete', 'http://tempuri.org/DeleteList', 
+                               'http://tempuri.org/GetWareNumberNoticeBill', 'http://tempuri.org/GetWareNumberNoticeBillAH', 'http://tempuri.org/InitializationModel', 'http://tempuri.org/InitializationModelList', 
+                               'http://tempuri.org/Insert', 'http://tempuri.org/InsertList', 'http://tempuri.org/IsExists', 'http://tempuri.org/P_SaleUpdateQControlWareNumber', 'http://tempuri.org/P_SaleUpdateQControlWareNumberAH', 
+                               'http://tempuri.org/RetrieveList', 'http://tempuri.org/RetrieveListByPaging', 'http://tempuri.org/Update', 'http://tempuri.org/UpdateList', 'http://tempuri.org/', 'InitializationModelList', 
+                               'http://tempuri.org/', 'document', 'SOAP', 'literal']);
     lMessage.ApplyAttributes2();
     lMessage.InitializeRequestMessage(lTransportChannel, 'V_QControlWareNumberNoticeBill', __InterfaceName, 'InitializationModelList');
     lMessage.Write('_MySoapHeader', System.TypeInfo(MySoapHeader), _MySoapHeader, []);
@@ -1967,7 +2368,7 @@ begin
   exit;
 end;
 
-function TV_QControlWareNumberNoticeBill_AsyncProxyEx.BeginInsert(const _MySoapHeader: MySoapHeader; const jsonString: WideString_Optional; const aCallback: TROAsyncCallback; const aUserData: Pointer = nil): IROAsyncRequest;
+function TV_QControlWareNumberNoticeBill_AsyncProxyEx.BeginInsert(const _MySoapHeader: MySoapHeader; const jsonString: UnicodeString; const aCallback: TROAsyncCallback; const aUserData: Pointer = nil): IROAsyncRequest;
 var
   lMessage: IROMessage;
   lTransportChannel: IROTransportChannel;
@@ -1976,17 +2377,18 @@ begin
   lMessage := __GetMessage();
   lTransportChannel := __TransportChannel;
   try
-    lMessage.StoreAttributes2(['action', 'headerparams', 'location', 'outputchildrennamespace', 'remap_delete', 'remap_deletelist', 'remap_getwarenumbernoticebill', 'remap_initializationmodel', 'remap_initializationmodellist', 
-                               'remap_insert', 'remap_insertlist', 'remap_isexists', 'remap_p_saleupdateqcontrolwarenumber', 'remap_retrievelist', 'remap_retrievelistbypaging', 'remap_update', 'remap_updatelist', 
-                               'soapinputmessagenamespace', 'soapinputnameoverride', 'soapoutputmessagenamespace', 'style', 'type', 'use'], ['http://tempuri.org/Insert', 'MySoapHeader', 'http://110.52.60.19:6690/Quality/QualityControl/Business/V_QControlWareNumberNoticeBill.asmx', 
-                               '*', 'http://tempuri.org/Delete', 'http://tempuri.org/DeleteList', 'http://tempuri.org/GetWareNumberNoticeBill', 'http://tempuri.org/InitializationModel', 'http://tempuri.org/InitializationModelList', 
-                               'http://tempuri.org/Insert', 'http://tempuri.org/InsertList', 'http://tempuri.org/IsExists', 'http://tempuri.org/P_SaleUpdateQControlWareNumber', 'http://tempuri.org/RetrieveList', 
-                               'http://tempuri.org/RetrieveListByPaging', 'http://tempuri.org/Update', 'http://tempuri.org/UpdateList', 'http://tempuri.org/', 'Insert', 'http://tempuri.org/', 'document', 
-                               'SOAP', 'literal']);
+    lMessage.StoreAttributes2(['action', 'headerparams', 'location', 'outputchildrennamespace', 'remap_delete', 'remap_deletelist', 'remap_getwarenumbernoticebill', 'remap_getwarenumbernoticebillah', 'remap_initializationmodel', 
+                               'remap_initializationmodellist', 'remap_insert', 'remap_insertlist', 'remap_isexists', 'remap_p_saleupdateqcontrolwarenumber', 'remap_p_saleupdateqcontrolwarenumberah', 'remap_retrievelist', 
+                               'remap_retrievelistbypaging', 'remap_update', 'remap_updatelist', 'soapinputmessagenamespace', 'soapinputnameoverride', 'soapoutputmessagenamespace', 'style', 'type', 'use'], ['http://tempuri.org/Insert', 
+                               'MySoapHeader', 'http://58.243.161.70:6690/Quality/QualityControl/Business/V_QControlWareNumberNoticeBill.asmx', '*', 'http://tempuri.org/Delete', 'http://tempuri.org/DeleteList', 
+                               'http://tempuri.org/GetWareNumberNoticeBill', 'http://tempuri.org/GetWareNumberNoticeBillAH', 'http://tempuri.org/InitializationModel', 'http://tempuri.org/InitializationModelList', 
+                               'http://tempuri.org/Insert', 'http://tempuri.org/InsertList', 'http://tempuri.org/IsExists', 'http://tempuri.org/P_SaleUpdateQControlWareNumber', 'http://tempuri.org/P_SaleUpdateQControlWareNumberAH', 
+                               'http://tempuri.org/RetrieveList', 'http://tempuri.org/RetrieveListByPaging', 'http://tempuri.org/Update', 'http://tempuri.org/UpdateList', 'http://tempuri.org/', 'Insert', 
+                               'http://tempuri.org/', 'document', 'SOAP', 'literal']);
     lMessage.ApplyAttributes2();
     lMessage.InitializeRequestMessage(lTransportChannel, 'V_QControlWareNumberNoticeBill', __InterfaceName, 'Insert');
     lMessage.Write('_MySoapHeader', System.TypeInfo(MySoapHeader), _MySoapHeader, []);
-    lMessage.Write('jsonString', System.TypeInfo(WideString_Optional), jsonString, []);
+    lMessage.Write('jsonString', System.TypeInfo(UnicodeString), jsonString, []);
     lResult := __DispatchAsyncRequest(lMessage, aCallback, aUserData);
   finally
     lMessage := nil;
@@ -1996,7 +2398,7 @@ begin
   exit;
 end;
 
-function TV_QControlWareNumberNoticeBill_AsyncProxyEx.BeginInsertList(const _MySoapHeader: MySoapHeader; const jsonString: WideString_Optional; const aCallback: TROAsyncCallback; const aUserData: Pointer = nil): IROAsyncRequest;
+function TV_QControlWareNumberNoticeBill_AsyncProxyEx.BeginInsertList(const _MySoapHeader: MySoapHeader; const jsonString: UnicodeString; const aCallback: TROAsyncCallback; const aUserData: Pointer = nil): IROAsyncRequest;
 var
   lMessage: IROMessage;
   lTransportChannel: IROTransportChannel;
@@ -2005,17 +2407,18 @@ begin
   lMessage := __GetMessage();
   lTransportChannel := __TransportChannel;
   try
-    lMessage.StoreAttributes2(['action', 'headerparams', 'location', 'outputchildrennamespace', 'remap_delete', 'remap_deletelist', 'remap_getwarenumbernoticebill', 'remap_initializationmodel', 'remap_initializationmodellist', 
-                               'remap_insert', 'remap_insertlist', 'remap_isexists', 'remap_p_saleupdateqcontrolwarenumber', 'remap_retrievelist', 'remap_retrievelistbypaging', 'remap_update', 'remap_updatelist', 
-                               'soapinputmessagenamespace', 'soapinputnameoverride', 'soapoutputmessagenamespace', 'style', 'type', 'use'], ['http://tempuri.org/InsertList', 'MySoapHeader', 'http://110.52.60.19:6690/Quality/QualityControl/Business/V_QControlWareNumberNoticeBill.asmx', 
-                               '*', 'http://tempuri.org/Delete', 'http://tempuri.org/DeleteList', 'http://tempuri.org/GetWareNumberNoticeBill', 'http://tempuri.org/InitializationModel', 'http://tempuri.org/InitializationModelList', 
-                               'http://tempuri.org/Insert', 'http://tempuri.org/InsertList', 'http://tempuri.org/IsExists', 'http://tempuri.org/P_SaleUpdateQControlWareNumber', 'http://tempuri.org/RetrieveList', 
-                               'http://tempuri.org/RetrieveListByPaging', 'http://tempuri.org/Update', 'http://tempuri.org/UpdateList', 'http://tempuri.org/', 'InsertList', 'http://tempuri.org/', 'document', 
-                               'SOAP', 'literal']);
+    lMessage.StoreAttributes2(['action', 'headerparams', 'location', 'outputchildrennamespace', 'remap_delete', 'remap_deletelist', 'remap_getwarenumbernoticebill', 'remap_getwarenumbernoticebillah', 'remap_initializationmodel', 
+                               'remap_initializationmodellist', 'remap_insert', 'remap_insertlist', 'remap_isexists', 'remap_p_saleupdateqcontrolwarenumber', 'remap_p_saleupdateqcontrolwarenumberah', 'remap_retrievelist', 
+                               'remap_retrievelistbypaging', 'remap_update', 'remap_updatelist', 'soapinputmessagenamespace', 'soapinputnameoverride', 'soapoutputmessagenamespace', 'style', 'type', 'use'], ['http://tempuri.org/InsertList', 
+                               'MySoapHeader', 'http://58.243.161.70:6690/Quality/QualityControl/Business/V_QControlWareNumberNoticeBill.asmx', '*', 'http://tempuri.org/Delete', 'http://tempuri.org/DeleteList', 
+                               'http://tempuri.org/GetWareNumberNoticeBill', 'http://tempuri.org/GetWareNumberNoticeBillAH', 'http://tempuri.org/InitializationModel', 'http://tempuri.org/InitializationModelList', 
+                               'http://tempuri.org/Insert', 'http://tempuri.org/InsertList', 'http://tempuri.org/IsExists', 'http://tempuri.org/P_SaleUpdateQControlWareNumber', 'http://tempuri.org/P_SaleUpdateQControlWareNumberAH', 
+                               'http://tempuri.org/RetrieveList', 'http://tempuri.org/RetrieveListByPaging', 'http://tempuri.org/Update', 'http://tempuri.org/UpdateList', 'http://tempuri.org/', 'InsertList', 
+                               'http://tempuri.org/', 'document', 'SOAP', 'literal']);
     lMessage.ApplyAttributes2();
     lMessage.InitializeRequestMessage(lTransportChannel, 'V_QControlWareNumberNoticeBill', __InterfaceName, 'InsertList');
     lMessage.Write('_MySoapHeader', System.TypeInfo(MySoapHeader), _MySoapHeader, []);
-    lMessage.Write('jsonString', System.TypeInfo(WideString_Optional), jsonString, []);
+    lMessage.Write('jsonString', System.TypeInfo(UnicodeString), jsonString, []);
     lResult := __DispatchAsyncRequest(lMessage, aCallback, aUserData);
   finally
     lMessage := nil;
@@ -2025,7 +2428,7 @@ begin
   exit;
 end;
 
-function TV_QControlWareNumberNoticeBill_AsyncProxyEx.BeginDeleteList(const _MySoapHeader: MySoapHeader; const jsonString: WideString_Optional; const aCallback: TROAsyncCallback; const aUserData: Pointer = nil): IROAsyncRequest;
+function TV_QControlWareNumberNoticeBill_AsyncProxyEx.BeginDeleteList(const _MySoapHeader: MySoapHeader; const jsonString: UnicodeString; const aCallback: TROAsyncCallback; const aUserData: Pointer = nil): IROAsyncRequest;
 var
   lMessage: IROMessage;
   lTransportChannel: IROTransportChannel;
@@ -2034,17 +2437,18 @@ begin
   lMessage := __GetMessage();
   lTransportChannel := __TransportChannel;
   try
-    lMessage.StoreAttributes2(['action', 'headerparams', 'location', 'outputchildrennamespace', 'remap_delete', 'remap_deletelist', 'remap_getwarenumbernoticebill', 'remap_initializationmodel', 'remap_initializationmodellist', 
-                               'remap_insert', 'remap_insertlist', 'remap_isexists', 'remap_p_saleupdateqcontrolwarenumber', 'remap_retrievelist', 'remap_retrievelistbypaging', 'remap_update', 'remap_updatelist', 
-                               'soapinputmessagenamespace', 'soapinputnameoverride', 'soapoutputmessagenamespace', 'style', 'type', 'use'], ['http://tempuri.org/DeleteList', 'MySoapHeader', 'http://110.52.60.19:6690/Quality/QualityControl/Business/V_QControlWareNumberNoticeBill.asmx', 
-                               '*', 'http://tempuri.org/Delete', 'http://tempuri.org/DeleteList', 'http://tempuri.org/GetWareNumberNoticeBill', 'http://tempuri.org/InitializationModel', 'http://tempuri.org/InitializationModelList', 
-                               'http://tempuri.org/Insert', 'http://tempuri.org/InsertList', 'http://tempuri.org/IsExists', 'http://tempuri.org/P_SaleUpdateQControlWareNumber', 'http://tempuri.org/RetrieveList', 
-                               'http://tempuri.org/RetrieveListByPaging', 'http://tempuri.org/Update', 'http://tempuri.org/UpdateList', 'http://tempuri.org/', 'DeleteList', 'http://tempuri.org/', 'document', 
-                               'SOAP', 'literal']);
+    lMessage.StoreAttributes2(['action', 'headerparams', 'location', 'outputchildrennamespace', 'remap_delete', 'remap_deletelist', 'remap_getwarenumbernoticebill', 'remap_getwarenumbernoticebillah', 'remap_initializationmodel', 
+                               'remap_initializationmodellist', 'remap_insert', 'remap_insertlist', 'remap_isexists', 'remap_p_saleupdateqcontrolwarenumber', 'remap_p_saleupdateqcontrolwarenumberah', 'remap_retrievelist', 
+                               'remap_retrievelistbypaging', 'remap_update', 'remap_updatelist', 'soapinputmessagenamespace', 'soapinputnameoverride', 'soapoutputmessagenamespace', 'style', 'type', 'use'], ['http://tempuri.org/DeleteList', 
+                               'MySoapHeader', 'http://58.243.161.70:6690/Quality/QualityControl/Business/V_QControlWareNumberNoticeBill.asmx', '*', 'http://tempuri.org/Delete', 'http://tempuri.org/DeleteList', 
+                               'http://tempuri.org/GetWareNumberNoticeBill', 'http://tempuri.org/GetWareNumberNoticeBillAH', 'http://tempuri.org/InitializationModel', 'http://tempuri.org/InitializationModelList', 
+                               'http://tempuri.org/Insert', 'http://tempuri.org/InsertList', 'http://tempuri.org/IsExists', 'http://tempuri.org/P_SaleUpdateQControlWareNumber', 'http://tempuri.org/P_SaleUpdateQControlWareNumberAH', 
+                               'http://tempuri.org/RetrieveList', 'http://tempuri.org/RetrieveListByPaging', 'http://tempuri.org/Update', 'http://tempuri.org/UpdateList', 'http://tempuri.org/', 'DeleteList', 
+                               'http://tempuri.org/', 'document', 'SOAP', 'literal']);
     lMessage.ApplyAttributes2();
     lMessage.InitializeRequestMessage(lTransportChannel, 'V_QControlWareNumberNoticeBill', __InterfaceName, 'DeleteList');
     lMessage.Write('_MySoapHeader', System.TypeInfo(MySoapHeader), _MySoapHeader, []);
-    lMessage.Write('jsonString', System.TypeInfo(WideString_Optional), jsonString, []);
+    lMessage.Write('jsonString', System.TypeInfo(UnicodeString), jsonString, []);
     lResult := __DispatchAsyncRequest(lMessage, aCallback, aUserData);
   finally
     lMessage := nil;
@@ -2054,7 +2458,7 @@ begin
   exit;
 end;
 
-function TV_QControlWareNumberNoticeBill_AsyncProxyEx.BeginDelete(const _MySoapHeader: MySoapHeader; const jsonString: WideString_Optional; const aCallback: TROAsyncCallback; const aUserData: Pointer = nil): IROAsyncRequest;
+function TV_QControlWareNumberNoticeBill_AsyncProxyEx.BeginDelete(const _MySoapHeader: MySoapHeader; const jsonString: UnicodeString; const aCallback: TROAsyncCallback; const aUserData: Pointer = nil): IROAsyncRequest;
 var
   lMessage: IROMessage;
   lTransportChannel: IROTransportChannel;
@@ -2063,17 +2467,18 @@ begin
   lMessage := __GetMessage();
   lTransportChannel := __TransportChannel;
   try
-    lMessage.StoreAttributes2(['action', 'headerparams', 'location', 'outputchildrennamespace', 'remap_delete', 'remap_deletelist', 'remap_getwarenumbernoticebill', 'remap_initializationmodel', 'remap_initializationmodellist', 
-                               'remap_insert', 'remap_insertlist', 'remap_isexists', 'remap_p_saleupdateqcontrolwarenumber', 'remap_retrievelist', 'remap_retrievelistbypaging', 'remap_update', 'remap_updatelist', 
-                               'soapinputmessagenamespace', 'soapinputnameoverride', 'soapoutputmessagenamespace', 'style', 'type', 'use'], ['http://tempuri.org/Delete', 'MySoapHeader', 'http://110.52.60.19:6690/Quality/QualityControl/Business/V_QControlWareNumberNoticeBill.asmx', 
-                               '*', 'http://tempuri.org/Delete', 'http://tempuri.org/DeleteList', 'http://tempuri.org/GetWareNumberNoticeBill', 'http://tempuri.org/InitializationModel', 'http://tempuri.org/InitializationModelList', 
-                               'http://tempuri.org/Insert', 'http://tempuri.org/InsertList', 'http://tempuri.org/IsExists', 'http://tempuri.org/P_SaleUpdateQControlWareNumber', 'http://tempuri.org/RetrieveList', 
-                               'http://tempuri.org/RetrieveListByPaging', 'http://tempuri.org/Update', 'http://tempuri.org/UpdateList', 'http://tempuri.org/', 'Delete', 'http://tempuri.org/', 'document', 
-                               'SOAP', 'literal']);
+    lMessage.StoreAttributes2(['action', 'headerparams', 'location', 'outputchildrennamespace', 'remap_delete', 'remap_deletelist', 'remap_getwarenumbernoticebill', 'remap_getwarenumbernoticebillah', 'remap_initializationmodel', 
+                               'remap_initializationmodellist', 'remap_insert', 'remap_insertlist', 'remap_isexists', 'remap_p_saleupdateqcontrolwarenumber', 'remap_p_saleupdateqcontrolwarenumberah', 'remap_retrievelist', 
+                               'remap_retrievelistbypaging', 'remap_update', 'remap_updatelist', 'soapinputmessagenamespace', 'soapinputnameoverride', 'soapoutputmessagenamespace', 'style', 'type', 'use'], ['http://tempuri.org/Delete', 
+                               'MySoapHeader', 'http://58.243.161.70:6690/Quality/QualityControl/Business/V_QControlWareNumberNoticeBill.asmx', '*', 'http://tempuri.org/Delete', 'http://tempuri.org/DeleteList', 
+                               'http://tempuri.org/GetWareNumberNoticeBill', 'http://tempuri.org/GetWareNumberNoticeBillAH', 'http://tempuri.org/InitializationModel', 'http://tempuri.org/InitializationModelList', 
+                               'http://tempuri.org/Insert', 'http://tempuri.org/InsertList', 'http://tempuri.org/IsExists', 'http://tempuri.org/P_SaleUpdateQControlWareNumber', 'http://tempuri.org/P_SaleUpdateQControlWareNumberAH', 
+                               'http://tempuri.org/RetrieveList', 'http://tempuri.org/RetrieveListByPaging', 'http://tempuri.org/Update', 'http://tempuri.org/UpdateList', 'http://tempuri.org/', 'Delete', 
+                               'http://tempuri.org/', 'document', 'SOAP', 'literal']);
     lMessage.ApplyAttributes2();
     lMessage.InitializeRequestMessage(lTransportChannel, 'V_QControlWareNumberNoticeBill', __InterfaceName, 'Delete');
     lMessage.Write('_MySoapHeader', System.TypeInfo(MySoapHeader), _MySoapHeader, []);
-    lMessage.Write('jsonString', System.TypeInfo(WideString_Optional), jsonString, []);
+    lMessage.Write('jsonString', System.TypeInfo(UnicodeString), jsonString, []);
     lResult := __DispatchAsyncRequest(lMessage, aCallback, aUserData);
   finally
     lMessage := nil;
@@ -2083,7 +2488,7 @@ begin
   exit;
 end;
 
-function TV_QControlWareNumberNoticeBill_AsyncProxyEx.BeginUpdate(const _MySoapHeader: MySoapHeader; const initJsonString: WideString_Optional; const newJsonString: WideString_Optional; const aCallback: TROAsyncCallback; 
+function TV_QControlWareNumberNoticeBill_AsyncProxyEx.BeginUpdate(const _MySoapHeader: MySoapHeader; const initJsonString: UnicodeString; const newJsonString: UnicodeString; const aCallback: TROAsyncCallback; 
                                                                   const aUserData: Pointer = nil): IROAsyncRequest;
 var
   lMessage: IROMessage;
@@ -2093,18 +2498,19 @@ begin
   lMessage := __GetMessage();
   lTransportChannel := __TransportChannel;
   try
-    lMessage.StoreAttributes2(['action', 'headerparams', 'location', 'outputchildrennamespace', 'remap_delete', 'remap_deletelist', 'remap_getwarenumbernoticebill', 'remap_initializationmodel', 'remap_initializationmodellist', 
-                               'remap_insert', 'remap_insertlist', 'remap_isexists', 'remap_p_saleupdateqcontrolwarenumber', 'remap_retrievelist', 'remap_retrievelistbypaging', 'remap_update', 'remap_updatelist', 
-                               'soapinputmessagenamespace', 'soapinputnameoverride', 'soapoutputmessagenamespace', 'style', 'type', 'use'], ['http://tempuri.org/Update', 'MySoapHeader', 'http://110.52.60.19:6690/Quality/QualityControl/Business/V_QControlWareNumberNoticeBill.asmx', 
-                               '*', 'http://tempuri.org/Delete', 'http://tempuri.org/DeleteList', 'http://tempuri.org/GetWareNumberNoticeBill', 'http://tempuri.org/InitializationModel', 'http://tempuri.org/InitializationModelList', 
-                               'http://tempuri.org/Insert', 'http://tempuri.org/InsertList', 'http://tempuri.org/IsExists', 'http://tempuri.org/P_SaleUpdateQControlWareNumber', 'http://tempuri.org/RetrieveList', 
-                               'http://tempuri.org/RetrieveListByPaging', 'http://tempuri.org/Update', 'http://tempuri.org/UpdateList', 'http://tempuri.org/', 'Update', 'http://tempuri.org/', 'document', 
-                               'SOAP', 'literal']);
+    lMessage.StoreAttributes2(['action', 'headerparams', 'location', 'outputchildrennamespace', 'remap_delete', 'remap_deletelist', 'remap_getwarenumbernoticebill', 'remap_getwarenumbernoticebillah', 'remap_initializationmodel', 
+                               'remap_initializationmodellist', 'remap_insert', 'remap_insertlist', 'remap_isexists', 'remap_p_saleupdateqcontrolwarenumber', 'remap_p_saleupdateqcontrolwarenumberah', 'remap_retrievelist', 
+                               'remap_retrievelistbypaging', 'remap_update', 'remap_updatelist', 'soapinputmessagenamespace', 'soapinputnameoverride', 'soapoutputmessagenamespace', 'style', 'type', 'use'], ['http://tempuri.org/Update', 
+                               'MySoapHeader', 'http://58.243.161.70:6690/Quality/QualityControl/Business/V_QControlWareNumberNoticeBill.asmx', '*', 'http://tempuri.org/Delete', 'http://tempuri.org/DeleteList', 
+                               'http://tempuri.org/GetWareNumberNoticeBill', 'http://tempuri.org/GetWareNumberNoticeBillAH', 'http://tempuri.org/InitializationModel', 'http://tempuri.org/InitializationModelList', 
+                               'http://tempuri.org/Insert', 'http://tempuri.org/InsertList', 'http://tempuri.org/IsExists', 'http://tempuri.org/P_SaleUpdateQControlWareNumber', 'http://tempuri.org/P_SaleUpdateQControlWareNumberAH', 
+                               'http://tempuri.org/RetrieveList', 'http://tempuri.org/RetrieveListByPaging', 'http://tempuri.org/Update', 'http://tempuri.org/UpdateList', 'http://tempuri.org/', 'Update', 
+                               'http://tempuri.org/', 'document', 'SOAP', 'literal']);
     lMessage.ApplyAttributes2();
     lMessage.InitializeRequestMessage(lTransportChannel, 'V_QControlWareNumberNoticeBill', __InterfaceName, 'Update');
     lMessage.Write('_MySoapHeader', System.TypeInfo(MySoapHeader), _MySoapHeader, []);
-    lMessage.Write('initJsonString', System.TypeInfo(WideString_Optional), initJsonString, []);
-    lMessage.Write('newJsonString', System.TypeInfo(WideString_Optional), newJsonString, []);
+    lMessage.Write('initJsonString', System.TypeInfo(UnicodeString), initJsonString, []);
+    lMessage.Write('newJsonString', System.TypeInfo(UnicodeString), newJsonString, []);
     lResult := __DispatchAsyncRequest(lMessage, aCallback, aUserData);
   finally
     lMessage := nil;
@@ -2114,7 +2520,7 @@ begin
   exit;
 end;
 
-function TV_QControlWareNumberNoticeBill_AsyncProxyEx.BeginUpdateList(const _MySoapHeader: MySoapHeader; const initJsonString: WideString_Optional; const newJsonString: WideString_Optional; const aCallback: TROAsyncCallback; 
+function TV_QControlWareNumberNoticeBill_AsyncProxyEx.BeginUpdateList(const _MySoapHeader: MySoapHeader; const initJsonString: UnicodeString; const newJsonString: UnicodeString; const aCallback: TROAsyncCallback; 
                                                                       const aUserData: Pointer = nil): IROAsyncRequest;
 var
   lMessage: IROMessage;
@@ -2124,18 +2530,19 @@ begin
   lMessage := __GetMessage();
   lTransportChannel := __TransportChannel;
   try
-    lMessage.StoreAttributes2(['action', 'headerparams', 'location', 'outputchildrennamespace', 'remap_delete', 'remap_deletelist', 'remap_getwarenumbernoticebill', 'remap_initializationmodel', 'remap_initializationmodellist', 
-                               'remap_insert', 'remap_insertlist', 'remap_isexists', 'remap_p_saleupdateqcontrolwarenumber', 'remap_retrievelist', 'remap_retrievelistbypaging', 'remap_update', 'remap_updatelist', 
-                               'soapinputmessagenamespace', 'soapinputnameoverride', 'soapoutputmessagenamespace', 'style', 'type', 'use'], ['http://tempuri.org/UpdateList', 'MySoapHeader', 'http://110.52.60.19:6690/Quality/QualityControl/Business/V_QControlWareNumberNoticeBill.asmx', 
-                               '*', 'http://tempuri.org/Delete', 'http://tempuri.org/DeleteList', 'http://tempuri.org/GetWareNumberNoticeBill', 'http://tempuri.org/InitializationModel', 'http://tempuri.org/InitializationModelList', 
-                               'http://tempuri.org/Insert', 'http://tempuri.org/InsertList', 'http://tempuri.org/IsExists', 'http://tempuri.org/P_SaleUpdateQControlWareNumber', 'http://tempuri.org/RetrieveList', 
-                               'http://tempuri.org/RetrieveListByPaging', 'http://tempuri.org/Update', 'http://tempuri.org/UpdateList', 'http://tempuri.org/', 'UpdateList', 'http://tempuri.org/', 'document', 
-                               'SOAP', 'literal']);
+    lMessage.StoreAttributes2(['action', 'headerparams', 'location', 'outputchildrennamespace', 'remap_delete', 'remap_deletelist', 'remap_getwarenumbernoticebill', 'remap_getwarenumbernoticebillah', 'remap_initializationmodel', 
+                               'remap_initializationmodellist', 'remap_insert', 'remap_insertlist', 'remap_isexists', 'remap_p_saleupdateqcontrolwarenumber', 'remap_p_saleupdateqcontrolwarenumberah', 'remap_retrievelist', 
+                               'remap_retrievelistbypaging', 'remap_update', 'remap_updatelist', 'soapinputmessagenamespace', 'soapinputnameoverride', 'soapoutputmessagenamespace', 'style', 'type', 'use'], ['http://tempuri.org/UpdateList', 
+                               'MySoapHeader', 'http://58.243.161.70:6690/Quality/QualityControl/Business/V_QControlWareNumberNoticeBill.asmx', '*', 'http://tempuri.org/Delete', 'http://tempuri.org/DeleteList', 
+                               'http://tempuri.org/GetWareNumberNoticeBill', 'http://tempuri.org/GetWareNumberNoticeBillAH', 'http://tempuri.org/InitializationModel', 'http://tempuri.org/InitializationModelList', 
+                               'http://tempuri.org/Insert', 'http://tempuri.org/InsertList', 'http://tempuri.org/IsExists', 'http://tempuri.org/P_SaleUpdateQControlWareNumber', 'http://tempuri.org/P_SaleUpdateQControlWareNumberAH', 
+                               'http://tempuri.org/RetrieveList', 'http://tempuri.org/RetrieveListByPaging', 'http://tempuri.org/Update', 'http://tempuri.org/UpdateList', 'http://tempuri.org/', 'UpdateList', 
+                               'http://tempuri.org/', 'document', 'SOAP', 'literal']);
     lMessage.ApplyAttributes2();
     lMessage.InitializeRequestMessage(lTransportChannel, 'V_QControlWareNumberNoticeBill', __InterfaceName, 'UpdateList');
     lMessage.Write('_MySoapHeader', System.TypeInfo(MySoapHeader), _MySoapHeader, []);
-    lMessage.Write('initJsonString', System.TypeInfo(WideString_Optional), initJsonString, []);
-    lMessage.Write('newJsonString', System.TypeInfo(WideString_Optional), newJsonString, []);
+    lMessage.Write('initJsonString', System.TypeInfo(UnicodeString), initJsonString, []);
+    lMessage.Write('newJsonString', System.TypeInfo(UnicodeString), newJsonString, []);
     lResult := __DispatchAsyncRequest(lMessage, aCallback, aUserData);
   finally
     lMessage := nil;
@@ -2145,8 +2552,7 @@ begin
   exit;
 end;
 
-function TV_QControlWareNumberNoticeBill_AsyncProxyEx.BeginRetrieveList(const _MySoapHeader: MySoapHeader; const where: WideString_Optional; const sort: WideString_Optional; const aCallback: TROAsyncCallback; 
-                                                                        const aUserData: Pointer = nil): IROAsyncRequest;
+function TV_QControlWareNumberNoticeBill_AsyncProxyEx.BeginRetrieveList(const _MySoapHeader: MySoapHeader; const where: UnicodeString; const sort: UnicodeString; const aCallback: TROAsyncCallback; const aUserData: Pointer = nil): IROAsyncRequest;
 var
   lMessage: IROMessage;
   lTransportChannel: IROTransportChannel;
@@ -2155,18 +2561,19 @@ begin
   lMessage := __GetMessage();
   lTransportChannel := __TransportChannel;
   try
-    lMessage.StoreAttributes2(['action', 'headerparams', 'location', 'outputchildrennamespace', 'remap_delete', 'remap_deletelist', 'remap_getwarenumbernoticebill', 'remap_initializationmodel', 'remap_initializationmodellist', 
-                               'remap_insert', 'remap_insertlist', 'remap_isexists', 'remap_p_saleupdateqcontrolwarenumber', 'remap_retrievelist', 'remap_retrievelistbypaging', 'remap_update', 'remap_updatelist', 
-                               'soapinputmessagenamespace', 'soapinputnameoverride', 'soapoutputmessagenamespace', 'style', 'type', 'use'], ['http://tempuri.org/RetrieveList', 'MySoapHeader', 'http://110.52.60.19:6690/Quality/QualityControl/Business/V_QControlWareNumberNoticeBill.asmx', 
-                               '*', 'http://tempuri.org/Delete', 'http://tempuri.org/DeleteList', 'http://tempuri.org/GetWareNumberNoticeBill', 'http://tempuri.org/InitializationModel', 'http://tempuri.org/InitializationModelList', 
-                               'http://tempuri.org/Insert', 'http://tempuri.org/InsertList', 'http://tempuri.org/IsExists', 'http://tempuri.org/P_SaleUpdateQControlWareNumber', 'http://tempuri.org/RetrieveList', 
-                               'http://tempuri.org/RetrieveListByPaging', 'http://tempuri.org/Update', 'http://tempuri.org/UpdateList', 'http://tempuri.org/', 'RetrieveList', 'http://tempuri.org/', 'document', 
-                               'SOAP', 'literal']);
+    lMessage.StoreAttributes2(['action', 'headerparams', 'location', 'outputchildrennamespace', 'remap_delete', 'remap_deletelist', 'remap_getwarenumbernoticebill', 'remap_getwarenumbernoticebillah', 'remap_initializationmodel', 
+                               'remap_initializationmodellist', 'remap_insert', 'remap_insertlist', 'remap_isexists', 'remap_p_saleupdateqcontrolwarenumber', 'remap_p_saleupdateqcontrolwarenumberah', 'remap_retrievelist', 
+                               'remap_retrievelistbypaging', 'remap_update', 'remap_updatelist', 'soapinputmessagenamespace', 'soapinputnameoverride', 'soapoutputmessagenamespace', 'style', 'type', 'use'], ['http://tempuri.org/RetrieveList', 
+                               'MySoapHeader', 'http://58.243.161.70:6690/Quality/QualityControl/Business/V_QControlWareNumberNoticeBill.asmx', '*', 'http://tempuri.org/Delete', 'http://tempuri.org/DeleteList', 
+                               'http://tempuri.org/GetWareNumberNoticeBill', 'http://tempuri.org/GetWareNumberNoticeBillAH', 'http://tempuri.org/InitializationModel', 'http://tempuri.org/InitializationModelList', 
+                               'http://tempuri.org/Insert', 'http://tempuri.org/InsertList', 'http://tempuri.org/IsExists', 'http://tempuri.org/P_SaleUpdateQControlWareNumber', 'http://tempuri.org/P_SaleUpdateQControlWareNumberAH', 
+                               'http://tempuri.org/RetrieveList', 'http://tempuri.org/RetrieveListByPaging', 'http://tempuri.org/Update', 'http://tempuri.org/UpdateList', 'http://tempuri.org/', 'RetrieveList', 
+                               'http://tempuri.org/', 'document', 'SOAP', 'literal']);
     lMessage.ApplyAttributes2();
     lMessage.InitializeRequestMessage(lTransportChannel, 'V_QControlWareNumberNoticeBill', __InterfaceName, 'RetrieveList');
     lMessage.Write('_MySoapHeader', System.TypeInfo(MySoapHeader), _MySoapHeader, []);
-    lMessage.Write('where', System.TypeInfo(WideString_Optional), where, []);
-    lMessage.Write('sort', System.TypeInfo(WideString_Optional), sort, []);
+    lMessage.Write('where', System.TypeInfo(UnicodeString), where, []);
+    lMessage.Write('sort', System.TypeInfo(UnicodeString), sort, []);
     lResult := __DispatchAsyncRequest(lMessage, aCallback, aUserData);
   finally
     lMessage := nil;
@@ -2176,8 +2583,8 @@ begin
   exit;
 end;
 
-function TV_QControlWareNumberNoticeBill_AsyncProxyEx.BeginRetrieveListByPaging(const _MySoapHeader: MySoapHeader; const where: WideString_Optional; const sort: WideString_Optional; const pageNumber: Integer; 
-                                                                                const pageSize: Integer; const groupParameters: WideString_Optional; const aCallback: TROAsyncCallback; const aUserData: Pointer = nil): IROAsyncRequest;
+function TV_QControlWareNumberNoticeBill_AsyncProxyEx.BeginRetrieveListByPaging(const _MySoapHeader: MySoapHeader; const where: UnicodeString; const sort: UnicodeString; const pageNumber: Integer; const pageSize: Integer; 
+                                                                                const groupParameters: UnicodeString; const aCallback: TROAsyncCallback; const aUserData: Pointer = nil): IROAsyncRequest;
 var
   lMessage: IROMessage;
   lTransportChannel: IROTransportChannel;
@@ -2186,21 +2593,22 @@ begin
   lMessage := __GetMessage();
   lTransportChannel := __TransportChannel;
   try
-    lMessage.StoreAttributes2(['action', 'headerparams', 'location', 'outputchildrennamespace', 'remap_delete', 'remap_deletelist', 'remap_getwarenumbernoticebill', 'remap_initializationmodel', 'remap_initializationmodellist', 
-                               'remap_insert', 'remap_insertlist', 'remap_isexists', 'remap_p_saleupdateqcontrolwarenumber', 'remap_retrievelist', 'remap_retrievelistbypaging', 'remap_update', 'remap_updatelist', 
-                               'soapinputmessagenamespace', 'soapinputnameoverride', 'soapoutputmessagenamespace', 'style', 'type', 'use'], ['http://tempuri.org/RetrieveListByPaging', 'MySoapHeader', 'http://110.52.60.19:6690/Quality/QualityControl/Business/V_QControlWareNumberNoticeBill.asmx', 
-                               '*', 'http://tempuri.org/Delete', 'http://tempuri.org/DeleteList', 'http://tempuri.org/GetWareNumberNoticeBill', 'http://tempuri.org/InitializationModel', 'http://tempuri.org/InitializationModelList', 
-                               'http://tempuri.org/Insert', 'http://tempuri.org/InsertList', 'http://tempuri.org/IsExists', 'http://tempuri.org/P_SaleUpdateQControlWareNumber', 'http://tempuri.org/RetrieveList', 
-                               'http://tempuri.org/RetrieveListByPaging', 'http://tempuri.org/Update', 'http://tempuri.org/UpdateList', 'http://tempuri.org/', 'RetrieveListByPaging', 'http://tempuri.org/', 
-                               'document', 'SOAP', 'literal']);
+    lMessage.StoreAttributes2(['action', 'headerparams', 'location', 'outputchildrennamespace', 'remap_delete', 'remap_deletelist', 'remap_getwarenumbernoticebill', 'remap_getwarenumbernoticebillah', 'remap_initializationmodel', 
+                               'remap_initializationmodellist', 'remap_insert', 'remap_insertlist', 'remap_isexists', 'remap_p_saleupdateqcontrolwarenumber', 'remap_p_saleupdateqcontrolwarenumberah', 'remap_retrievelist', 
+                               'remap_retrievelistbypaging', 'remap_update', 'remap_updatelist', 'soapinputmessagenamespace', 'soapinputnameoverride', 'soapoutputmessagenamespace', 'style', 'type', 'use'], ['http://tempuri.org/RetrieveListByPaging', 
+                               'MySoapHeader', 'http://58.243.161.70:6690/Quality/QualityControl/Business/V_QControlWareNumberNoticeBill.asmx', '*', 'http://tempuri.org/Delete', 'http://tempuri.org/DeleteList', 
+                               'http://tempuri.org/GetWareNumberNoticeBill', 'http://tempuri.org/GetWareNumberNoticeBillAH', 'http://tempuri.org/InitializationModel', 'http://tempuri.org/InitializationModelList', 
+                               'http://tempuri.org/Insert', 'http://tempuri.org/InsertList', 'http://tempuri.org/IsExists', 'http://tempuri.org/P_SaleUpdateQControlWareNumber', 'http://tempuri.org/P_SaleUpdateQControlWareNumberAH', 
+                               'http://tempuri.org/RetrieveList', 'http://tempuri.org/RetrieveListByPaging', 'http://tempuri.org/Update', 'http://tempuri.org/UpdateList', 'http://tempuri.org/', 'RetrieveListByPaging', 
+                               'http://tempuri.org/', 'document', 'SOAP', 'literal']);
     lMessage.ApplyAttributes2();
     lMessage.InitializeRequestMessage(lTransportChannel, 'V_QControlWareNumberNoticeBill', __InterfaceName, 'RetrieveListByPaging');
     lMessage.Write('_MySoapHeader', System.TypeInfo(MySoapHeader), _MySoapHeader, []);
-    lMessage.Write('where', System.TypeInfo(WideString_Optional), where, []);
-    lMessage.Write('sort', System.TypeInfo(WideString_Optional), sort, []);
+    lMessage.Write('where', System.TypeInfo(UnicodeString), where, []);
+    lMessage.Write('sort', System.TypeInfo(UnicodeString), sort, []);
     lMessage.Write('pageNumber', System.TypeInfo(Integer), pageNumber, []);
     lMessage.Write('pageSize', System.TypeInfo(Integer), pageSize, []);
-    lMessage.Write('groupParameters', System.TypeInfo(WideString_Optional), groupParameters, []);
+    lMessage.Write('groupParameters', System.TypeInfo(UnicodeString), groupParameters, []);
     lResult := __DispatchAsyncRequest(lMessage, aCallback, aUserData);
   finally
     lMessage := nil;
@@ -2210,7 +2618,7 @@ begin
   exit;
 end;
 
-function TV_QControlWareNumberNoticeBill_AsyncProxyEx.BeginIsExists(const _MySoapHeader: MySoapHeader; const jsonString: WideString_Optional; const aCallback: TROAsyncCallback; const aUserData: Pointer = nil): IROAsyncRequest;
+function TV_QControlWareNumberNoticeBill_AsyncProxyEx.BeginIsExists(const _MySoapHeader: MySoapHeader; const jsonString: UnicodeString; const aCallback: TROAsyncCallback; const aUserData: Pointer = nil): IROAsyncRequest;
 var
   lMessage: IROMessage;
   lTransportChannel: IROTransportChannel;
@@ -2219,17 +2627,18 @@ begin
   lMessage := __GetMessage();
   lTransportChannel := __TransportChannel;
   try
-    lMessage.StoreAttributes2(['action', 'headerparams', 'location', 'outputchildrennamespace', 'remap_delete', 'remap_deletelist', 'remap_getwarenumbernoticebill', 'remap_initializationmodel', 'remap_initializationmodellist', 
-                               'remap_insert', 'remap_insertlist', 'remap_isexists', 'remap_p_saleupdateqcontrolwarenumber', 'remap_retrievelist', 'remap_retrievelistbypaging', 'remap_update', 'remap_updatelist', 
-                               'soapinputmessagenamespace', 'soapinputnameoverride', 'soapoutputmessagenamespace', 'style', 'type', 'use'], ['http://tempuri.org/IsExists', 'MySoapHeader', 'http://110.52.60.19:6690/Quality/QualityControl/Business/V_QControlWareNumberNoticeBill.asmx', 
-                               '*', 'http://tempuri.org/Delete', 'http://tempuri.org/DeleteList', 'http://tempuri.org/GetWareNumberNoticeBill', 'http://tempuri.org/InitializationModel', 'http://tempuri.org/InitializationModelList', 
-                               'http://tempuri.org/Insert', 'http://tempuri.org/InsertList', 'http://tempuri.org/IsExists', 'http://tempuri.org/P_SaleUpdateQControlWareNumber', 'http://tempuri.org/RetrieveList', 
-                               'http://tempuri.org/RetrieveListByPaging', 'http://tempuri.org/Update', 'http://tempuri.org/UpdateList', 'http://tempuri.org/', 'IsExists', 'http://tempuri.org/', 'document', 
-                               'SOAP', 'literal']);
+    lMessage.StoreAttributes2(['action', 'headerparams', 'location', 'outputchildrennamespace', 'remap_delete', 'remap_deletelist', 'remap_getwarenumbernoticebill', 'remap_getwarenumbernoticebillah', 'remap_initializationmodel', 
+                               'remap_initializationmodellist', 'remap_insert', 'remap_insertlist', 'remap_isexists', 'remap_p_saleupdateqcontrolwarenumber', 'remap_p_saleupdateqcontrolwarenumberah', 'remap_retrievelist', 
+                               'remap_retrievelistbypaging', 'remap_update', 'remap_updatelist', 'soapinputmessagenamespace', 'soapinputnameoverride', 'soapoutputmessagenamespace', 'style', 'type', 'use'], ['http://tempuri.org/IsExists', 
+                               'MySoapHeader', 'http://58.243.161.70:6690/Quality/QualityControl/Business/V_QControlWareNumberNoticeBill.asmx', '*', 'http://tempuri.org/Delete', 'http://tempuri.org/DeleteList', 
+                               'http://tempuri.org/GetWareNumberNoticeBill', 'http://tempuri.org/GetWareNumberNoticeBillAH', 'http://tempuri.org/InitializationModel', 'http://tempuri.org/InitializationModelList', 
+                               'http://tempuri.org/Insert', 'http://tempuri.org/InsertList', 'http://tempuri.org/IsExists', 'http://tempuri.org/P_SaleUpdateQControlWareNumber', 'http://tempuri.org/P_SaleUpdateQControlWareNumberAH', 
+                               'http://tempuri.org/RetrieveList', 'http://tempuri.org/RetrieveListByPaging', 'http://tempuri.org/Update', 'http://tempuri.org/UpdateList', 'http://tempuri.org/', 'IsExists', 
+                               'http://tempuri.org/', 'document', 'SOAP', 'literal']);
     lMessage.ApplyAttributes2();
     lMessage.InitializeRequestMessage(lTransportChannel, 'V_QControlWareNumberNoticeBill', __InterfaceName, 'IsExists');
     lMessage.Write('_MySoapHeader', System.TypeInfo(MySoapHeader), _MySoapHeader, []);
-    lMessage.Write('jsonString', System.TypeInfo(WideString_Optional), jsonString, []);
+    lMessage.Write('jsonString', System.TypeInfo(UnicodeString), jsonString, []);
     lResult := __DispatchAsyncRequest(lMessage, aCallback, aUserData);
   finally
     lMessage := nil;
@@ -2259,112 +2668,132 @@ begin
   exit;
 end;
 
-function TV_QControlWareNumberNoticeBill_AsyncProxyEx.EndInitializationModel(const aRequest: IROAsyncRequest): WideString_Optional;
+function TV_QControlWareNumberNoticeBill_AsyncProxyEx.EndGetWareNumberNoticeBillAH(const aRequest: IROAsyncRequest): UnicodeString;
 var
-  lResult: WideString_Optional;
+  lResult: UnicodeString;
 begin
   aRequest.ReadResponse();
-  aRequest.Message.Read('InitializationModelResult', System.TypeInfo(WideString_Optional), lResult, []);
+  aRequest.Message.Read('GetWareNumberNoticeBillAHResult', System.TypeInfo(UnicodeString), lResult, []);
   result := lResult;
   exit;
 end;
 
-function TV_QControlWareNumberNoticeBill_AsyncProxyEx.EndInitializationModelList(const aRequest: IROAsyncRequest): WideString_Optional;
+function TV_QControlWareNumberNoticeBill_AsyncProxyEx.EndP_SaleUpdateQControlWareNumberAH(const aRequest: IROAsyncRequest): UnicodeString;
 var
-  lResult: WideString_Optional;
+  lResult: UnicodeString;
 begin
   aRequest.ReadResponse();
-  aRequest.Message.Read('InitializationModelListResult', System.TypeInfo(WideString_Optional), lResult, []);
+  aRequest.Message.Read('P_SaleUpdateQControlWareNumberAHResult', System.TypeInfo(UnicodeString), lResult, []);
   result := lResult;
   exit;
 end;
 
-function TV_QControlWareNumberNoticeBill_AsyncProxyEx.EndInsert(const aRequest: IROAsyncRequest): WideString_Optional;
+function TV_QControlWareNumberNoticeBill_AsyncProxyEx.EndInitializationModel(const aRequest: IROAsyncRequest): UnicodeString;
 var
-  lResult: WideString_Optional;
+  lResult: UnicodeString;
 begin
   aRequest.ReadResponse();
-  aRequest.Message.Read('InsertResult', System.TypeInfo(WideString_Optional), lResult, []);
+  aRequest.Message.Read('InitializationModelResult', System.TypeInfo(UnicodeString), lResult, []);
   result := lResult;
   exit;
 end;
 
-function TV_QControlWareNumberNoticeBill_AsyncProxyEx.EndInsertList(const aRequest: IROAsyncRequest): WideString_Optional;
+function TV_QControlWareNumberNoticeBill_AsyncProxyEx.EndInitializationModelList(const aRequest: IROAsyncRequest): UnicodeString;
 var
-  lResult: WideString_Optional;
+  lResult: UnicodeString;
 begin
   aRequest.ReadResponse();
-  aRequest.Message.Read('InsertListResult', System.TypeInfo(WideString_Optional), lResult, []);
+  aRequest.Message.Read('InitializationModelListResult', System.TypeInfo(UnicodeString), lResult, []);
   result := lResult;
   exit;
 end;
 
-function TV_QControlWareNumberNoticeBill_AsyncProxyEx.EndDeleteList(const aRequest: IROAsyncRequest): WideString_Optional;
+function TV_QControlWareNumberNoticeBill_AsyncProxyEx.EndInsert(const aRequest: IROAsyncRequest): UnicodeString;
 var
-  lResult: WideString_Optional;
+  lResult: UnicodeString;
 begin
   aRequest.ReadResponse();
-  aRequest.Message.Read('DeleteListResult', System.TypeInfo(WideString_Optional), lResult, []);
+  aRequest.Message.Read('InsertResult', System.TypeInfo(UnicodeString), lResult, []);
   result := lResult;
   exit;
 end;
 
-function TV_QControlWareNumberNoticeBill_AsyncProxyEx.EndDelete(const aRequest: IROAsyncRequest): WideString_Optional;
+function TV_QControlWareNumberNoticeBill_AsyncProxyEx.EndInsertList(const aRequest: IROAsyncRequest): UnicodeString;
 var
-  lResult: WideString_Optional;
+  lResult: UnicodeString;
 begin
   aRequest.ReadResponse();
-  aRequest.Message.Read('DeleteResult', System.TypeInfo(WideString_Optional), lResult, []);
+  aRequest.Message.Read('InsertListResult', System.TypeInfo(UnicodeString), lResult, []);
   result := lResult;
   exit;
 end;
 
-function TV_QControlWareNumberNoticeBill_AsyncProxyEx.EndUpdate(const aRequest: IROAsyncRequest): WideString_Optional;
+function TV_QControlWareNumberNoticeBill_AsyncProxyEx.EndDeleteList(const aRequest: IROAsyncRequest): UnicodeString;
 var
-  lResult: WideString_Optional;
+  lResult: UnicodeString;
 begin
   aRequest.ReadResponse();
-  aRequest.Message.Read('UpdateResult', System.TypeInfo(WideString_Optional), lResult, []);
+  aRequest.Message.Read('DeleteListResult', System.TypeInfo(UnicodeString), lResult, []);
   result := lResult;
   exit;
 end;
 
-function TV_QControlWareNumberNoticeBill_AsyncProxyEx.EndUpdateList(const aRequest: IROAsyncRequest): WideString_Optional;
+function TV_QControlWareNumberNoticeBill_AsyncProxyEx.EndDelete(const aRequest: IROAsyncRequest): UnicodeString;
 var
-  lResult: WideString_Optional;
+  lResult: UnicodeString;
 begin
   aRequest.ReadResponse();
-  aRequest.Message.Read('UpdateListResult', System.TypeInfo(WideString_Optional), lResult, []);
+  aRequest.Message.Read('DeleteResult', System.TypeInfo(UnicodeString), lResult, []);
   result := lResult;
   exit;
 end;
 
-function TV_QControlWareNumberNoticeBill_AsyncProxyEx.EndRetrieveList(const aRequest: IROAsyncRequest): WideString_Optional;
+function TV_QControlWareNumberNoticeBill_AsyncProxyEx.EndUpdate(const aRequest: IROAsyncRequest): UnicodeString;
 var
-  lResult: WideString_Optional;
+  lResult: UnicodeString;
 begin
   aRequest.ReadResponse();
-  aRequest.Message.Read('RetrieveListResult', System.TypeInfo(WideString_Optional), lResult, []);
+  aRequest.Message.Read('UpdateResult', System.TypeInfo(UnicodeString), lResult, []);
   result := lResult;
   exit;
 end;
 
-function TV_QControlWareNumberNoticeBill_AsyncProxyEx.EndRetrieveListByPaging(const aRequest: IROAsyncRequest): WideString_Optional;
+function TV_QControlWareNumberNoticeBill_AsyncProxyEx.EndUpdateList(const aRequest: IROAsyncRequest): UnicodeString;
 var
-  lResult: WideString_Optional;
+  lResult: UnicodeString;
 begin
   aRequest.ReadResponse();
-  aRequest.Message.Read('RetrieveListByPagingResult', System.TypeInfo(WideString_Optional), lResult, []);
+  aRequest.Message.Read('UpdateListResult', System.TypeInfo(UnicodeString), lResult, []);
   result := lResult;
   exit;
 end;
 
-function TV_QControlWareNumberNoticeBill_AsyncProxyEx.EndIsExists(const aRequest: IROAsyncRequest): WideString_Optional;
+function TV_QControlWareNumberNoticeBill_AsyncProxyEx.EndRetrieveList(const aRequest: IROAsyncRequest): UnicodeString;
 var
-  lResult: WideString_Optional;
+  lResult: UnicodeString;
 begin
   aRequest.ReadResponse();
-  aRequest.Message.Read('IsExistsResult', System.TypeInfo(WideString_Optional), lResult, []);
+  aRequest.Message.Read('RetrieveListResult', System.TypeInfo(UnicodeString), lResult, []);
+  result := lResult;
+  exit;
+end;
+
+function TV_QControlWareNumberNoticeBill_AsyncProxyEx.EndRetrieveListByPaging(const aRequest: IROAsyncRequest): UnicodeString;
+var
+  lResult: UnicodeString;
+begin
+  aRequest.ReadResponse();
+  aRequest.Message.Read('RetrieveListByPagingResult', System.TypeInfo(UnicodeString), lResult, []);
+  result := lResult;
+  exit;
+end;
+
+function TV_QControlWareNumberNoticeBill_AsyncProxyEx.EndIsExists(const aRequest: IROAsyncRequest): UnicodeString;
+var
+  lResult: UnicodeString;
+begin
+  aRequest.ReadResponse();
+  aRequest.Message.Read('IsExistsResult', System.TypeInfo(UnicodeString), lResult, []);
   result := lResult;
   exit;
 end;

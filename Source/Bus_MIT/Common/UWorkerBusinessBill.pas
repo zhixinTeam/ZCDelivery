@@ -2031,6 +2031,11 @@ begin
               SF('P_PrintNum', 1, sfVal)
               ], sTable_PoundLog, '', True);
       FListA.Add(nSQL);
+
+      nSQL := 'Update %s Set T_PDate=%s Where T_Truck=''%s''';
+      nSQL := Format(nSQL, [sTable_ZTTrucks, sField_SQLServer_Now,
+                            nBills[nInt].FTruck]);
+      FListA.Add(nSQL); //更新过皮时间,厂内排队时可参考该时间排队
     end;
   end else
 
@@ -2215,7 +2220,7 @@ begin
         FListB.Delete(i);
       //排除本次称重
 
-      {$IFDEF ZZZC}
+      {$IFDEF SyncDataByWSDL}
       if FYSValid = sFlag_Yes then
       begin
         nSQL := MakeSQLByStr([SF('L_Value', 0, sfVal),

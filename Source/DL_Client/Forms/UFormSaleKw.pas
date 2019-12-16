@@ -228,7 +228,7 @@ end;
 
 //Desc: 保存
 procedure TfFormSaleKw.BtnOKClick(Sender: TObject);
-var nStr,nSQL,nStockNo: string;
+var nStr,nSQL,nStockNo,nHint: string;
     nIdx: Integer;
     nValue,nNewValue: Double;
     nNewBatchCode: string;
@@ -276,6 +276,14 @@ begin
 
     if Length(EditID.Text) > 0 then//更换订单
     begin
+      {$IFDEF SyncDataByWSDL}
+      nNewBatchCode := GetHhSaleWareNumberWSDL(EditID.Text, FloatToStr(nNewValue), nHint);
+      if nNewBatchCode = '' then
+      begin
+        ShowMsg('获取批次号失败:' + nHint,sHint);
+        Exit;
+      end;
+      {$ELSE}
       nStr := 'Select D_ParamB From %s Where D_Name = ''%s'' ' +
               'And D_Memo=''%s'' and D_Value like ''%%%s%%''';
       nStr := Format(nStr, [sTable_SysDict, sFlag_StockItem,
@@ -301,6 +309,7 @@ begin
         ShowMsg('获取批次号失败',sHint);
         Exit;
       end;
+      {$ENDIF}
 
       nSQL := 'Update %s Set L_StockNo=''%s'',L_StockName=''%s'',L_ZhiKa=''%s'','+
               ' L_Truck=''%s'',L_PValue=''%s'',L_MValue=''%s'',L_Value=''%s'','+

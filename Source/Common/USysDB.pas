@@ -264,7 +264,10 @@ const
   sFlag_AICMHYDaiPCount= 'AICMHYDaiPCount';          //自助机袋装化验单打印次数
   sFlag_SafeVoice     = 'SafeVoice';                 //安全语音
   sFlag_NoOrderCardTime= 'NoOrderCardTime';          //禁止办卡时间
-
+  sFlag_ManuAudit     = 'ManuAudit';                 //不自动审核
+  sFlag_KDTime        = 'KDTime';                    //自助机开单间隔
+  sFlag_ReportFileMap = 'ReportFileMap';             //化验单模板匹配
+  
   sFlag_BusGroup      = 'BusFunction';               //业务编码组
   sFlag_BillNo        = 'Bus_Bill';                  //交货单号
   sFlag_PoundID       = 'Bus_Pound';                 //称重记录

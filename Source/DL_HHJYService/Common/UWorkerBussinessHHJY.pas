@@ -106,7 +106,7 @@ type
     function GetHhOrderDetailID(var nData: string): Boolean;
     //获取新增普通原材料收货明细ID
     function GetOrderDetailJSonString(const nLID, nDelete: string; var nExits: Boolean;
-                                     var nInit: string; var nNewStr: string): string;
+                                     var nInit: string; var nNewStr: string; var nSyncAgain: string): string;
     //获取普通原材料采购单上传明细数据
     function SyncHhNdOrderPlan(var nData: string): Boolean;
     //获取内倒原材料进厂计划
@@ -1501,6 +1501,7 @@ begin
     FlistA.Values['FPackingID'] := VarToStr(nJS.Field['FPackingID'].Value);
     FlistA.Values['FWareNumber'] := VarToStr(nJS.Field['FWareNumber'].Value);
     FlistA.Values['FConsignBillID'] := VarToStr(nJS.Field['FBillID'].Value);
+    FlistA.Values['Amount'] := VarToStr(nJS.Field['FDeliveryAmount'].Value);
 
     if FListD.Values['Status'] = '1' then//出厂消息
     begin
@@ -1557,11 +1558,24 @@ var nStr, nSQL, nUrl, nDate: string;
     nInt, nIdx: Integer;
     nJSInit, nJSNew: TlkJSONobject;
     nOut: TWorkerBusinessCommand;
+    nManuAudit: string;
 begin
   Result := '';
+  nManuAudit := '';
   FListA.Clear;
   FListB.Clear;
   FListC.Clear;
+
+  nSQL := 'Select D_Value From %s Where D_Name=''%s'' ';
+  nSQL := Format(nSQL, [sTable_SysDict, sFlag_ManuAudit]);
+
+  with gDBConnManager.WorkerQuery(FDBConn, nSQL)  do
+  begin
+    if RecordCount > 0 then
+    begin
+      nManuAudit := Fields[0].AsString;
+    end;
+  end;
 
   nExits := TBusWorkerBusinessHHJY.CallMe(cBC_IsHhSaleDetailExits
            ,PackerEncodeStr(nLID),'',@nOut);
@@ -1640,10 +1654,12 @@ begin
       if FieldByName('L_PValue').AsString <> ''  then
         FListA.Values['FTare']                := FieldByName('L_PValue').AsString;
 
-      FListA.Values['FAuditingSign']          := '1';
-      FListA.Values['FAssessor']              := FieldByName('L_MMan').AsString;
-      FListA.Values['FAuditingTime']          := FieldByName('L_MDate').AsString;
-
+      if nManuAudit = sFlag_Yes then
+      begin
+        FListA.Values['FAuditingSign']          := '1';
+        FListA.Values['FAssessor']              := FieldByName('L_MMan').AsString;
+        FListA.Values['FAuditingTime']          := FieldByName('L_MDate').AsString;
+      end;
       FListA.Values['FStatus']                := '2';
 
       FListA.Values['FDeliveryer']            := FieldByName('L_MMan').AsString;
@@ -2405,12 +2421,20 @@ begin
       FHttp.TargetUrl := nUrl;
     end; //config web service channel
 
-
+   {$IFDEF SpecialSeal}
+   nStr := IV_QControlWareNumberNoticeBill(nHHJYChannel^.FChannel).GetWareNumberNoticeBillAH(nSoapHeader,
+                                   '1',
+                                   FlistA.Values['FactoryID'],
+                                   FlistA.Values['StockID'],
+                                   FlistA.Values['PackingID'],
+                                   FlistA.Values['Amount'],
+                                   FlistA.Values['CusID']);
+   {$ELSE}
     nStr := IV_QControlWareNumberNoticeBill(nHHJYChannel^.FChannel).GetWareNumberNoticeBill(nSoapHeader,
                                    FlistA.Values['FactoryID'],
                                    FlistA.Values['StockID'],
                                    FlistA.Values['PackingID']);
-
+    {$ENDIF}
     WriteLog('获取批次号出参'+nStr);
 
     nStr := UTF8Encode(nStr);
@@ -2611,13 +2635,23 @@ begin
       FHttp.TargetUrl := nUrl;
     end; //config web service channel
 
+    {$IFDEF SpecialSeal}
+    nStr := IV_QControlWareNumberNoticeBill(nHHJYChannel^.FChannel).P_SaleUpdateQControlWareNumberAH(nSoapHeader,
+                                   '1',
+                                   FlistA.Values['FFactoryID'],
+                                   FlistA.Values['FMaterielID'],
+                                   FlistA.Values['FPackingID'],
+                                   FlistA.Values['FWareNumber'],
+                                   FlistA.Values['Amount'],
+                                   FlistA.Values['FConsignBillID']);
+   {$ELSE}
     nStr := IV_QControlWareNumberNoticeBill(nHHJYChannel^.FChannel).P_SaleUpdateQControlWareNumber(nSoapHeader,
                                    FlistA.Values['FFactoryID'],
                                    FlistA.Values['FMaterielID'],
                                    FlistA.Values['FPackingID'],
                                    FlistA.Values['FWareNumber'],
                                    FlistA.Values['FConsignBillID']);
-
+    {$ENDIF}
 
     WriteLog('同步提货单批次号出参'+nStr);
 
@@ -2633,6 +2667,7 @@ begin
       Exit;
     end;
 
+    {$IFDEF ZZZC}
     if nJS.Field['Data'] is TlkJSONlist then
     begin
       nJSRow := nJS.Field['Data'] as TlkJSONlist;
@@ -2665,6 +2700,11 @@ begin
       FOut.FData := '';
       FOut.FBase.FResult := True;
     end;
+    {$ELSE}
+    Result := True;
+    FOut.FData := '';
+    FOut.FBase.FResult := True;
+    {$ENDIF}
   finally
     gChannelManager.ReleaseChannel(nHHJYChannel);
     if Assigned(nJS) then
@@ -3137,7 +3177,7 @@ var nStr, nUrl: string;
     nJSCol: TlkJSONobject;
     nHHJYChannel: PChannelItem;
     nExits: Boolean;
-    nInitStr, nNewStr: string;
+    nInitStr, nNewStr, nSyncAgain: string;
 begin
   Result := False;
   nExits := False;
@@ -3147,7 +3187,7 @@ begin
   WriteLog('同步普通原材料采购单准备数据入参:' + FListD.Text);
 
   nData := GetOrderDetailJSonString(FListD.Values['ID'], FListD.Values['Delete'], nExits,
-                                    nInitStr, nNewStr);
+                                    nInitStr, nNewStr, nSyncAgain);
   if nData <> '' then
   begin
     WriteLog('同步普通原材料采购单准备数据结果:' + nData);
@@ -3195,6 +3235,22 @@ begin
     begin
       nStr := IT_SupplyMaterialReceiveBill(nHHJYChannel^.FChannel).Insert(nSoapHeader,
                                      nNewStr);
+      if nSyncAgain = sFlag_Yes then
+      begin
+        WriteLog('启动二次上传...');
+        nInitStr := '';
+        nNewStr := '';
+        nData := GetOrderDetailJSonString(FListD.Values['ID'], FListD.Values['Delete'], nExits,
+                                          nInitStr, nNewStr, nSyncAgain);
+        if nData <> '' then
+        begin
+          WriteLog('同步普通原材料采购单准备数据结果:' + nData);
+          Exit;
+        end;
+
+        nStr := IT_SupplyMaterialReceiveBill(nHHJYChannel^.FChannel).Update(nSoapHeader,
+                               nInitStr, nNewStr);
+      end;
     end;
 
     WriteLog('同步普通原材料采购单出参'+nStr);
@@ -3228,7 +3284,7 @@ begin
 end;
 
 function TBusWorkerBusinessHHJY.GetOrderDetailJSonString(const nLID, nDelete: string;
- var nExits: Boolean; var nInit, nNewStr: string): string;
+ var nExits: Boolean; var nInit, nNewStr, nSyncAgain: string): string;
 var nStr, nSQL, nUrl, nDate: string;
     nInt, nIdx: Integer;
     nJSInit, nJSNew: TlkJSONobject;
@@ -3241,7 +3297,7 @@ begin
   FListB.Clear;
   FListC.Clear;
 
-  nSQL := 'Select D_Value From %s Where D_Name=''%s'' and D_Memo=''%s'' ';
+  nSQL := 'Select D_Value,D_ParamB From %s Where D_Name=''%s'' and D_Memo=''%s'' ';
   nSQL := Format(nSQL, [sTable_SysDict, sFlag_SysParam, sFlag_HHJYDepotID]);
 
   with gDBConnManager.WorkerQuery(FDBConn, nSQL)  do
@@ -3253,6 +3309,7 @@ begin
       Exit;
     end;
     nDepot := Fields[0].AsString;
+    nSyncAgain := Fields[1].AsString;
   end;
 
   nExits := TBusWorkerBusinessHHJY.CallMe(cBC_IsHhOrderDetailExits
@@ -3336,7 +3393,17 @@ begin
     FListA.Values['FImpurity']              := FloatToStr(StrToFLoatDef(
                                          FieldByName('D_KZValue').AsString,0));
     FListA.Values['FDeductAmount']          := '0';
-    FListA.Values['FStatus']                := '254';
+
+    if nSyncAgain = sFlag_Yes then
+    begin
+      if nExits then
+        FListA.Values['FStatus']                := '254'
+      else
+        FListA.Values['FStatus']                := '0';
+    end
+    else
+      FListA.Values['FStatus']                := '254';
+
     FListA.Values['FDepotID']               := nDepot;
 
     if nDelete = sFlag_Yes then
@@ -5011,16 +5078,6 @@ begin
   if nExits then
     FListB.Text := PackerDecodeStr(nOut.FData);
 
-  if nExits and (nDelete = sFlag_Yes) then
-  begin
-    if FListB.Values['FStatus'] = '254' then
-    begin
-      Result := '磅单号[ %s ]已审核,无法删除,请在ERP先进行反审核.';
-      Result := Format(Result, [nLID]);
-      Exit;
-    end;
-  end;
-  
   nSQL := 'select *,(P_MValue-P_PValue - isnull(P_KZValue,0)) as D_NetWeight From %s a,'+
   ' %s b where a.R_ID=b.P_OrderBak and b.P_ID = ''%s'' ';
 
@@ -5069,7 +5126,12 @@ begin
     FListA.Values['FCompanyID']             := nCompany;
     FListA.Values['FVer']                   := nVer;
     FListA.Values['FReamrk']                := '';
-    FListA.Values['FStatus']                := '254';
+
+    if nDelete = sFlag_Yes then
+      FListA.Values['FStatus']                := '1'
+    else
+      FListA.Values['FStatus']                := '0';
+
     FListA.Values['FWeighTimes']            := '2';
     FListA.Values['FMaterielName']          := FieldByName('P_MName').AsString;
 
