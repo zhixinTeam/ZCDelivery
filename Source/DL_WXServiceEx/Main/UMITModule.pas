@@ -123,6 +123,9 @@ begin
         if nStr = sFlag_WXErpMima then
           gSysParam.FWXMiMa := Fields[0].AsString;
          //Œ –≈’Àªß
+
+        if nStr = sFlag_WXToken then
+          gSysParam.FWXToken := Fields[0].AsString;
         
         Next;
       end;

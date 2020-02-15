@@ -82,13 +82,13 @@ begin
       end;
     end;
 
-    if (not Result) and (Pos(#10#13, nData) < 1) then
-    begin
-      nData := Format('来源: %s,%s' + #13#10 + '对象: %s',
-               [gSysParam.FAppFlag, gSysParam.FLocalName,
-               nWorker.FunctionName]) + #13#10#13#10 + nData;
-      //xxxxx
-    end;
+//    if (not Result) and (Pos(#10#13, nData) < 1) then
+//    begin
+//      nData := Format('来源: %s,%s' + #13#10 + '对象: %s',
+//               [gSysParam.FAppFlag, gSysParam.FLocalName,
+//               nWorker.FunctionName]) + #13#10#13#10 + nData;
+//      //xxxxx
+//    end;
   finally
     gTaskMonitor.DelTask(FTaskID);
     gBusinessWorkerManager.RelaseWorker(nWorker);

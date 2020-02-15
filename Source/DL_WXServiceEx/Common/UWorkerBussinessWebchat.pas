@@ -137,6 +137,8 @@ type
     //获取车辆信息
     function SyncShopTruckState(var nData: string): boolean;                    // Dl--->WxService
     //同步车辆审核状态
+    function getQuerySaleDtl(var nData: string): Boolean;
+    //获取销售明细信息
                                                                                 // WxService--->Dl
     function SearchClient(var nData: string): Boolean;
     function SearchMateriel(var nData: string): Boolean;
@@ -519,6 +521,10 @@ begin
         FPackOut := True;
         Result   := SyncShopTruckState(nData);
       end;
+    cBC_WX_get_QuerySaleDtl:
+    begin
+      Result := getQuerySaleDtl(nData);
+    end;
 //    cBC_WX_DownLoadPic:
 //      begin
 //        FPackOut := True;
@@ -779,22 +785,22 @@ begin
   BuildDefaultXML;
   nMoney := 0 ;
 
-  TBusWorkerBusinessHHJY.CallMe(cBC_GetLoginToken,
-              gSysParam.FWXZhangHu,gSysParam.FWXMiMa, @nOut);
-  if not  TBusWorkerBusinessHHJY.CallMe(cBC_GetSaleInfo,'','',@nOut) then
-  begin
-    nData := '客户(%s)读取ERP订单失败.';
-    nData := Format(nData, [FIn.FData]);
-
-    with FPacker.XMLBuilder.Root.NodeNew('EXMG') do
-    begin
-      NodeNew('MsgTxt').ValueAsString     := nData;
-      NodeNew('MsgResult').ValueAsString  := sFlag_No;
-      NodeNew('MsgCommand').ValueAsString := IntToStr(FIn.FCommand);
-    end;
-    nData := FPacker.XMLBuilder.WriteToString;
-    Exit;
-  end;
+//  TBusWorkerBusinessHHJY.CallMe(cBC_GetLoginToken,
+//              gSysParam.FWXZhangHu,gSysParam.FWXMiMa, @nOut);
+//  if not  TBusWorkerBusinessHHJY.CallMe(cBC_GetSaleInfo,'','',@nOut) then
+//  begin
+//    nData := '客户(%s)读取ERP订单失败.';
+//    nData := Format(nData, [FIn.FData]);
+//
+//    with FPacker.XMLBuilder.Root.NodeNew('EXMG') do
+//    begin
+//      NodeNew('MsgTxt').ValueAsString     := nData;
+//      NodeNew('MsgResult').ValueAsString  := sFlag_No;
+//      NodeNew('MsgCommand').ValueAsString := IntToStr(FIn.FCommand);
+//    end;
+//    nData := FPacker.XMLBuilder.WriteToString;
+//    Exit;
+//  end;
 
 
   nStr := 'select O_Order,' +                    //销售卡片编号
@@ -3417,6 +3423,162 @@ begin
     FListD.Free;
     FListE.Free;
   end;
+end;
+
+function TBusWorkerBusinessWebchat.getQuerySaleDtl(
+  var nData: string): Boolean;
+var
+  nStr, nClientNo, nStockNo, nType, nSearch : string;
+  nStart, nEnd, nSumStr : string;
+  nNode,  nheader  : TXmlNode;
+
+  function GetLeftStr(SubStr, Str: string): string;
+  begin
+    Result := Copy(Str, 1, Pos(SubStr, Str) - 1);
+  end;
+  function GetRightStr(SubStr, Str: string): string;
+  var
+     i: integer;
+  begin
+     i := pos(SubStr, Str);
+     if i > 0 then
+       Result := Copy(Str
+         , i + Length(SubStr)
+         , Length(Str) - i - Length(SubStr) + 1)
+     else
+       Result := '';
+  end;
+begin
+  Result := False;
+
+  with FPacker.XMLBuilder do
+  begin
+    try
+      ReadFromString(nData);
+      nData  := '加载请求参数失败';
+
+      nheader := Root.FindNode('Head');
+      //************************************************************
+      try
+        nClientNo := nheader.NodeByName('Data').ValueAsString;
+        nType     := nheader.NodeByName('Type').ValueAsString;
+        nSumStr   := nheader.NodeByName('ExtParam').ValueAsString;
+        nSearch   := nheader.NodeByName('Search').ValueAsString;
+
+        nStart    := GetLeftStr(';', nSumStr);
+        nEnd      := GetRightStr(';',nSumStr);
+
+        if (nClientNo = '') or (nType = '') then
+        begin
+          nData := '加载请求参数失败.';
+          with Root.NodeNew('EXMG') do
+          begin
+            NodeNew('MsgTxt').ValueAsString     := nData;
+            NodeNew('MsgResult').ValueAsString  := sFlag_No;
+            NodeNew('MsgCommand').ValueAsString := IntToStr(FIn.FCommand);
+          end;
+          nData := FPacker.XMLBuilder.WriteToString;
+          Exit;
+        end;
+      except
+        on Ex : Exception do
+        begin
+          nData  := nData + '查询报表信息失败!'+Ex.Message;
+          WriteLog(nData);
+        end;
+      end;
+   finally
+   end;
+  end;
+
+  BuildDefaultXML;
+  if nType = '1' then
+  begin
+    if Trim(nSearch) = '' then
+    begin
+      nStr := ' Select L_ID, L_ZhiKa, L_CusName, L_Truck, L_Value, L_MValue, L_PValue,'+
+              ' L_Price, (L_Value * L_Price) as L_Money,L_OutFact,L_HYDan, L_StockNo,'+
+              ' L_StockName, COUNT(*) as nCount from %s a, %s b '+
+              ' where a.L_CusName = b.C_Name and b.C_ID = ''%s'' and L_OutFact >= ''%s'' and L_OutFact <= ''%s'' ' +
+              ' Group by L_ID, L_ZhiKa, L_CusName, L_Truck, L_Value, L_MValue, L_PValue,'+
+              ' L_Price, L_OutFact,L_HYDan, L_StockNo, L_StockName ' ;
+      nStr := Format(nStr, [sTable_Bill,sTable_Customer, nClientNo,nStart,nEnd]);
+    end
+    else
+    begin
+      nStr := ' Select L_ID, L_ZhiKa, L_CusName, L_Truck, L_Value, L_MValue, L_PValue,'+
+              ' L_Price, (L_Value * L_Price) as L_Money,L_OutFact,L_HYDan, L_StockNo,'+
+              ' L_StockName, COUNT(*) as nCount from %s a, %s b '+
+              ' where a.L_CusName = b.C_Name and b.C_ID = ''%s'' and ((L_Truck like ''%%%s%%'') or (L_StockName like ''%%%s%%'') ) '+
+              ' and L_OutFact >= ''%s'' and L_OutFact <= ''%s'' ' +
+              ' Group by L_ID, L_ZhiKa, L_CusName, L_Truck, L_Value, L_MValue, L_PValue,'+
+              ' L_Price, L_OutFact,L_HYDan, L_StockNo, L_StockName ' ;
+      nStr := Format(nStr, [sTable_Bill,sTable_Customer, nClientNo,nSearch,nSearch,nStart,nEnd]);
+    end;
+  end
+  else
+  begin
+    nStr := ' Select b.D_ID as L_ID,a.O_BID as L_ZhiKa,O_ProName as L_CusName,D_Truck as L_Truck,'+
+            ' D_Value as L_Value, D_MValue as L_MValue,D_PValue as L_PValue, 0 as L_Price, 0 as L_Money,'+
+            ' D_OutFact as L_OutFact, '''' as L_HYDan, a.O_StockNo as L_StockNo,a.O_StockName as L_StockName, COUNT(*) as nCount  from %s a, %s b '+
+            ' where a.O_ID = b.D_OID and a.O_ProID = ''%s'' and b.D_OutFact >= ''%s'' and b.D_OutFact <= ''%s'' ' +
+            ' Group by D_ID, O_BID, O_ProName, D_Truck, D_Value, D_MValue, D_PValue,'+
+            ' D_OutFact, O_StockNo,O_StockName ' ;
+    nStr := Format(nStr, [sTable_Order, sTable_OrderDtl, nClientNo,nStart,nEnd]);
+  end;
+
+  with gDBConnManager.WorkerQuery(FDBConn, nStr), FPacker.XMLBuilder do
+  begin
+    if RecordCount < 1 then
+    begin
+      nData := '此客户在本期间内无单据.';
+      with Root.NodeNew('EXMG') do
+      begin
+        NodeNew('MsgTxt').ValueAsString     := nData;
+        NodeNew('MsgResult').ValueAsString  := sFlag_No;
+        NodeNew('MsgCommand').ValueAsString := IntToStr(FIn.FCommand);
+      end;
+      nData := FPacker.XMLBuilder.WriteToString;
+      Exit;
+    end;
+
+    First;
+    nNode := Root.NodeNew('Items');
+    while not Eof do
+    begin
+      with nNode.NodeNew('Item') do
+      begin
+        NodeNew('LID').ValueAsString        := FieldByName('L_ID').AsString;
+        NodeNew('Zhika').ValueAsString      := FieldByName('L_ZhiKa').AsString;
+        NodeNew('CusName').ValueAsString    := FieldByName('L_CusName').AsString;
+        NodeNew('Truck').ValueAsString      := FieldByName('L_Truck').AsString;
+        NodeNew('Value').ValueAsString      := FieldByName('L_Value').AsString;
+        NodeNew('MValue').ValueAsString     := FieldByName('L_MValue').AsString;
+        NodeNew('PValue').ValueAsString     := FieldByName('L_PValue').AsString;
+        NodeNew('Price').ValueAsString      := FieldByName('L_Price').AsString;
+        NodeNew('Money').ValueAsString      := FieldByName('L_Money').AsString;
+        NodeNew('OutFact').ValueAsString    := FieldByName('L_OutFact').AsString;
+        NodeNew('HYDan').ValueAsString      := FieldByName('L_HYDan').AsString;
+        NodeNew('StockNo').ValueAsString    := FieldByName('L_StockNo').AsString;
+        NodeNew('StockName').ValueAsString  := FieldByName('L_StockName').AsString;
+        NodeNew('Count').ValueAsString      := FieldByName('nCount').AsString;
+      end;
+      
+      nExt;
+    end;
+
+    nNode := Root.NodeNew('EXMG');
+    with nNode do
+    begin
+      NodeNew('MsgTxt').ValueAsString     := '业务执行成功';
+      NodeNew('MsgResult').ValueAsString  := sFlag_Yes;
+      NodeNew('MsgCommand').ValueAsString := IntToStr(FIn.FCommand);
+    end;
+
+  end;
+  
+  nData  := FPacker.XMLBuilder.WriteToString;
+  Result := True;
 end;
 
 initialization

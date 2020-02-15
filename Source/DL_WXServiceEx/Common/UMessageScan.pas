@@ -10,7 +10,7 @@ interface
 uses
   Windows, Classes, SysUtils, DateUtils, UBusinessConst, UMgrDBConn,
   UBusinessWorker, UWaitItem, ULibFun, USysDB, UMITConst, USysLoger,
-  UBusinessPacker, NativeXml, UMgrParam, UWorkerBussinessWebchat ;
+  UBusinessPacker, NativeXml, UMgrParam, UWorkerBussinessWebchat, UWorkerBussinessHHJY ;
 
 type
   TMessageScan = class;
@@ -30,6 +30,7 @@ type
     //同步锁定
     FNumOutFactMsg: Integer;
     //提货单出厂消息推送计时计数
+    FNumSaleInfo: Integer;
   protected
     function SendSaleMsgToWebMall(nList: TStrings):Boolean;
     //销售发送消息
@@ -180,6 +181,8 @@ var nErr, nSuccessCount, nFailCount: Integer;
 begin
   FNumOutFactMsg := 0;
 
+  FNumSaleInfo   := 0;
+
   while not Terminated do
   try
     FWaiter.EnterWait;
@@ -187,8 +190,13 @@ begin
 
     Inc(FNumOutFactMsg);
 
+    Inc(FNumSaleInfo);
+
     if FNumOutFactMsg >= 3 then
       FNumOutFactMsg := 0;
+
+    if FNumSaleInfo >= 9 then
+      FNumSaleInfo := 0;
 
     //--------------------------------------------------------------------------
     if not FSyncLock.SyncLockEnter() then Continue;
@@ -203,6 +211,13 @@ begin
       if FNumOutFactMsg = 0 then
       begin
         DoSaveOutFactMsg;
+      end;
+
+      if FNumSaleInfo = 1 then
+      begin
+        TBusWorkerBusinessHHJY.CallMe(cBC_GetLoginToken,
+                    gSysParam.FWXZhangHu,gSysParam.FWXMiMa, @nOut);
+        TBusWorkerBusinessHHJY.CallMe(cBC_GetSaleInfo,'','',@nOut); 
       end;
 
       nStr:= 'select top 100 * from %s where WOM_SyncNum <= %d And WOM_deleted <> ''%s''';

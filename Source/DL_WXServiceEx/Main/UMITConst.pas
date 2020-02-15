@@ -82,6 +82,7 @@ type
     FWXERPUrl   : string;                            //问信服务器地址
     FWXZhangHu  : string;                            //问信账户
     FWXMiMa     : string;                            //问信密码
+    FWXToken    : string;                            //问信Token
   end;
   //系统参数
 

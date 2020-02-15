@@ -185,6 +185,7 @@ begin
   FidHttp := TIdHTTP.Create(nil);
   FidHttp.ConnectTimeout := cHttpTimeOut * 1000;
   FidHttp.ReadTimeout := cHttpTimeOut * 1000;
+  Ftoken := '04f72336-b832-4920-a4fc-479a1293486a';
   inherited;
 end;
 
@@ -510,6 +511,7 @@ begin
       raise;
     end;
   finally
+    FidHttp.Disconnect;
     ReStream.Free;
     nDataStream.Free;
     wParam.Free;
@@ -731,6 +733,7 @@ begin
       raise;
     end;
   finally
+    FidHttp.Disconnect;
     ReStream.Free;
     nDataStream.Free;
     PostStream.Free;
@@ -746,6 +749,7 @@ var
   wParam: TStrings;
   ReStream:TStringstream;
 begin
+  {
   Result   := True;
   wParam   := TStringList.Create;
   ReStream := TStringstream.Create('');
@@ -789,7 +793,11 @@ begin
   finally
     ReStream.Free;
     wParam.Free;
-  end;
+  end; }
+  Ftoken := gSysParam.FWXToken;
+  Result := True;
+  FOut.FData := sFlag_Yes;
+  FOut.FBase.FResult := True;
 end;
 
 function TBusWorkerBusinessHHJY.UnicodeToChinese(inputstr: string): string;
