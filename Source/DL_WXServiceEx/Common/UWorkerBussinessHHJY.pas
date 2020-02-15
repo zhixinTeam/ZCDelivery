@@ -49,7 +49,6 @@ type
     FIn: TWorkerHHJYData;
     FOut: TWorkerHHJYData;
     //in out
-    FIdHttp : TIdHTTP;
     FUrl    : string;
     Ftoken  : string;
   protected
@@ -182,9 +181,6 @@ begin
   FListC := TStringList.Create;
   FListD := TStringList.Create;
   FListE := TStringList.Create;
-  FidHttp := TIdHTTP.Create(nil);
-  FidHttp.ConnectTimeout := cHttpTimeOut * 1000;
-  FidHttp.ReadTimeout := cHttpTimeOut * 1000;
   Ftoken := '04f72336-b832-4920-a4fc-479a1293486a';
   inherited;
 end;
@@ -196,7 +192,6 @@ begin
   FreeAndNil(FListC);
   FreeAndNil(FListD);
   FreeAndNil(FListE);
-  FreeAndNil(FidHttp);
   inherited;
 end;
 
@@ -289,6 +284,7 @@ var nStr, nProStr, nMatStr, nYearStr, nSQL : string;
     nO_Valid: string;
     nYear, nMonth, nDays : Word;
     nDataStream: TMsMultiPartFormDataStream;
+    FIdHttp : TIdHTTP;
 begin
   Result := False;
 
@@ -301,6 +297,10 @@ begin
   wParam      := TStringList.Create;
   ReStream    := TStringstream.Create('');
   nDataStream := TMsMultiPartFormDataStream.Create;
+
+  FidHttp := TIdHTTP.Create(nil);
+  FidHttp.ConnectTimeout := cHttpTimeOut * 1000;
+  FidHttp.ReadTimeout := cHttpTimeOut * 1000;
 
   FListA.Text := PackerDecodeStr(FIn.FData);
   try
@@ -515,6 +515,7 @@ begin
     ReStream.Free;
     nDataStream.Free;
     wParam.Free;
+    FreeAndNil(FidHttp);
   end;
 end;
 
@@ -530,12 +531,17 @@ var nStr,nSQL, nProStr, nMatStr, nYearStr: string;
     nIdx: Integer;
     nYear, nMonth, nDays : Word;
     nDataStream: TMsMultiPartFormDataStream;
+    FIdHttp : TIdHTTP;
 begin
   Result := True;
 
   wParam      := TStringList.Create;
   ReStream    := TStringstream.Create('');
   nDataStream := TMsMultiPartFormDataStream.Create;
+
+  FidHttp := TIdHTTP.Create(nil);
+  FidHttp.ConnectTimeout := cHttpTimeOut * 1000;
+  FidHttp.ReadTimeout := cHttpTimeOut * 1000;
 
   FListA.Text := PackerDecodeStr(FIn.FData);
   try
@@ -738,6 +744,7 @@ begin
     nDataStream.Free;
     PostStream.Free;
     wParam.Free;
+    FreeAndNil(FidHttp);
   end;
 end;
 

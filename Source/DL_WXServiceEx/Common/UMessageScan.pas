@@ -195,7 +195,7 @@ begin
     if FNumOutFactMsg >= 3 then
       FNumOutFactMsg := 0;
 
-    if FNumSaleInfo >= 9 then
+    if FNumSaleInfo >= 6 then
       FNumSaleInfo := 0;
 
     //--------------------------------------------------------------------------
