@@ -140,7 +140,11 @@ begin
 
         if nStr = sFlag_WXErpMima then
           gSysParam.FWXMiMa := Fields[0].AsString;
-         //问信账户
+         //问信密码
+
+        if nStr = sFlag_WXToken then
+          gSysParam.FWXToken := Fields[0].AsString;
+        //问信固定Token
         
         Next;
       end;
