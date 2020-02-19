@@ -213,12 +213,12 @@ begin
         DoSaveOutFactMsg;
       end;
 
-      if FNumSaleInfo = 1 then
-      begin
-        TBusWorkerBusinessHHJY.CallMe(cBC_GetLoginToken,
-                    gSysParam.FWXZhangHu,gSysParam.FWXMiMa, @nOut);
-        TBusWorkerBusinessHHJY.CallMe(cBC_GetSaleInfo,'','',@nOut); 
-      end;
+//      if FNumSaleInfo = 1 then
+//      begin
+//        TBusWorkerBusinessHHJY.CallMe(cBC_GetLoginToken,
+//                    gSysParam.FWXZhangHu,gSysParam.FWXMiMa, @nOut);
+//        TBusWorkerBusinessHHJY.CallMe(cBC_GetSaleInfo,'','',@nOut); 
+//      end;
 
       nStr:= 'select top 100 * from %s where WOM_SyncNum <= %d And WOM_deleted <> ''%s''';
       nStr:= Format(nStr,[sTable_WebOrderMatch, gMessageScan.FSyncTime, sFlag_Yes]);

@@ -779,28 +779,39 @@ var nStr, nType: string;
     nNode: TXmlNode;
     nValue,nMoney: Double;
     nOut: TWorkerBusinessCommand;
-    nBeginDate, nEndDate: string;
+    nBeginDate, nEndDate, nCName: string;
 begin
   Result := False;
   BuildDefaultXML;
   nMoney := 0 ;
+  nCName := '';
+  nStr :=
+        ' Select C_Name ' +                    
+        ' from %s b ' +
+        ' where b.C_ID = ''%s'' ';
+        //订单有效
+  nStr := Format(nStr,[sTable_Customer,FIn.FData]);
+  with gDBConnManager.WorkerQuery(FDBConn, nStr) do
+  begin
+    nCName := FieldByName('C_Name').AsString;
+  end;
 
-//  TBusWorkerBusinessHHJY.CallMe(cBC_GetLoginToken,
-//              gSysParam.FWXZhangHu,gSysParam.FWXMiMa, @nOut);
-//  if not  TBusWorkerBusinessHHJY.CallMe(cBC_GetSaleInfo,'','',@nOut) then
-//  begin
-//    nData := '客户(%s)读取ERP订单失败.';
-//    nData := Format(nData, [FIn.FData]);
-//
-//    with FPacker.XMLBuilder.Root.NodeNew('EXMG') do
-//    begin
-//      NodeNew('MsgTxt').ValueAsString     := nData;
-//      NodeNew('MsgResult').ValueAsString  := sFlag_No;
-//      NodeNew('MsgCommand').ValueAsString := IntToStr(FIn.FCommand);
-//    end;
-//    nData := FPacker.XMLBuilder.WriteToString;
-//    Exit;
-//  end;
+  TBusWorkerBusinessHHJY.CallMe(cBC_GetLoginToken,
+              gSysParam.FWXZhangHu,gSysParam.FWXMiMa, @nOut);
+  if not  TBusWorkerBusinessHHJY.CallMe(cBC_GetSaleInfo,nCName,'',@nOut) then
+  begin
+    nData := '客户(%s)读取ERP订单失败.';
+    nData := Format(nData, [FIn.FData]);
+
+    with FPacker.XMLBuilder.Root.NodeNew('EXMG') do
+    begin
+      NodeNew('MsgTxt').ValueAsString     := nData;
+      NodeNew('MsgResult').ValueAsString  := sFlag_No;
+      NodeNew('MsgCommand').ValueAsString := IntToStr(FIn.FCommand);
+    end;
+    nData := FPacker.XMLBuilder.WriteToString;
+    Exit;
+  end;
 
 
   nStr := 'select O_Order,' +                    //销售卡片编号

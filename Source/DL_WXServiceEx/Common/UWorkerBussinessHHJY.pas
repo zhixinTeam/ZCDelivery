@@ -14,7 +14,7 @@ uses
   Variants, uSuperObject, MsMultiPartFormData, uLkJSON, DateUtils;
 
 const
-  cHttpTimeOut          = 10;
+  cHttpTimeOut          = 30;
   
 type
   TMITDBWorker = class(TBusinessWorkerBase)
@@ -548,7 +548,11 @@ begin
     wParam.Clear;
     wParam.Values['token']     := Ftoken;
 
-    wParam.Values['starttime'] := DateTime2Str(IncMonth(Now,-12));
+    if FListA.Text <> '' then
+      wParam.Values['starttime'] := DateTime2Str(IncMonth(Now,-12))
+    else
+      wParam.Values['starttime'] := DateTime2Str(IncMonth(Now,-2));
+
     wParam.Values['endtime']   := DateTime2Str(Now);
 
     if FListA.Text <> '' then
@@ -558,8 +562,10 @@ begin
     WriteLog('查询销售订单入参：' + wParam.Text);
 
     nDataStream.AddFormField('token', Ftoken);
-    nDataStream.AddFormField('starttime', DateTime2Str(IncMonth(Now,-12)));
-
+    if FListA.Text <> '' then
+      nDataStream.AddFormField('starttime', DateTime2Str(IncMonth(Now,-12)))
+    else
+      nDataStream.AddFormField('starttime', DateTime2Str(IncMonth(Now,-2)));
 
     if FListA.Text <> '' then
     begin
